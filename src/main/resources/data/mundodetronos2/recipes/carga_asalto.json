@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "GGG",
+    "GTG",
+    "GGG"
+  ],
+  "key": {
+    "T": {
+      "item": "mundodetronos2:tnt_base"
+    },
+    "G": {
+      "item": "minecraft:gold_ingot"
+    }
+  },
+  "result": {
+    "item": "mundodetronos2:carga_asalto",
+    "count": 2
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "mundodetronos2:role_dimension",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "features": false,
+      "lakes": false,
+      "layers": [
+        {
+          "block": "minecraft:air",
+          "height": 64
+        }
+      ],
+      "biome": "minecraft:the_void"
+    }
+  }
+}

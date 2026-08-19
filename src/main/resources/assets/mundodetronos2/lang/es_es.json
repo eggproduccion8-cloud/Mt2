@@ -1,0 +1,58 @@
+{
+  "block.mundodetronos2.role_anvil": "Yunque de Roles",
+  "item.mundodetronos2.role_anvil": "Yunque de Roles",
+  "block.mundodetronos2.mesa_herrero": "Mesa del Herrero del Rey",
+  "item.mundodetronos2.mesa_herrero": "Mesa del Herrero del Rey",
+  "item.mundodetronos2.role_card.unassigned": "Carnet de Identidad de Base",
+  "item.mundodetronos2.role_card.warrior": "Carnet de Guerrero",
+  "item.mundodetronos2.role_card.berserker": "Carnet de Berserker",
+  "item.mundodetronos2.role_card.mage": "Carnet de Mago",
+  "item.mundodetronos2.role_card.guerrero": "Carnet de Guerrero",
+  "item.mundodetronos2.role_card.mago": "Carnet de Mago",
+  "item.mundodetronos2.role_card.arquero": "Carnet de Arquero",
+  "item.mundodetronos2.role_card.paladin": "Carnet de Paladín",
+  "item.mundodetronos2.role_card.draconico": "Carnet de Dracónico",
+  "item.mundodetronos2.role_card.clerigo": "Carnet de Clérigo",
+  "item.mundodetronos2.role_card.tooltip_unassigned": "§7Haz clic derecho para vincular tu carnet.",
+  "chat.mundodetronos2.no_role": "§cNo tienes ningún rol asignado. Visita el altar de roles en la dimensión de selección para elegir tu camino.",
+
+  "gui.mundodetronos2.role_selection.title": "LA DIOSA MARÍA TE OBSERVA",
+  "gui.mundodetronos2.role_selection.subtitle": "¿QUÉ CAMINO ELEGIRÁS?",
+  "gui.mundodetronos2.role_selection.warrior": "GUERRERO",
+  "gui.mundodetronos2.role_selection.berserker": "BERSERKER",
+  "gui.mundodetronos2.role_selection.mage": "MAGO",
+  "gui.mundodetronos2.role_selection.archer": "ARQUERO",
+  "gui.mundodetronos2.role_selection.paladin": "PALADÍN",
+  "gui.mundodetronos2.role_selection.draconico": "DRACÓNICO",
+  "gui.mundodetronos2.role_selection.clerigo": "CLÉRIGO",
+
+  "gui.mundodetronos2.role_desc.berserker": "Daño brutal y combate agresivo.",
+  "gui.mundodetronos2.role_desc.warrior": "Combate equilibrado y armaduras vanilla.",
+  "gui.mundodetronos2.role_desc.mage": "Magia y habilidades arcanas.",
+  "gui.mundodetronos2.role_desc.archer": "Combate a distancia.",
+  "gui.mundodetronos2.role_desc.paladin": "Defensa y protección.",
+  "gui.mundodetronos2.role_desc.draconico": "Poder ancestral y criaturas especiales.",
+  "gui.mundodetronos2.role_desc.clerigo": "Soporte y curación.",
+
+  "chat.mundodetronos2.godess.intro": "La Diosa María te observa...",
+  "chat.mundodetronos2.godess.revealed": "Tu destino ha sido revelado.",
+  "chat.mundodetronos2.godess.selected": "Has sido seleccionado como %s.",
+
+  "chat.mundodetronos2.godess.msg.warrior": "✦ LA DIOSA MARÍA ✦\nHas sido seleccionado como GUERRERO.\n\nTu fuerza será tu camino.\nAprende a dominar tu poder y\ndefiende aquello que juraste proteger.",
+  "chat.mundodetronos2.godess.msg.berserker": "✦ LA DIOSA MARÍA ✦\nHas sido seleccionado como BERSERKER.\n\nLa furia corre por tus venas.\nAprende a controlar tu ira\nbantes de que ella te controle a ti.",
+  "chat.mundodetronos2.godess.msg.mage": "✦ LA DIOSA MARÍA ✦\nHas sido seleccionado como MAGO.\n\nEl conocimiento será tu arma.\nAprende a dominar el poder\nque ahora descansa en tus manos.",
+
+  "gui.mundodetronos2.role_card.title": "CARNET DE %s",
+  "gui.mundodetronos2.role_card.blessing": "BENDICIÓN",
+  "gui.mundodetronos2.role_card.godess": "DIOSA MARÍA",
+  "gui.mundodetronos2.role_card.level": "NIVEL: %d",
+  "gui.mundodetronos2.role_card.role": "ROL: %s",
+
+  "key.categories.mundodetronos2": "Mundo de Tronos 2",
+  "key.mundodetronos2.open_gui": "Menú Principal",
+  "key.mundodetronos2.open_skills": "Árbol de Habilidades",
+
+  "block.mundodetronos2.carga_asalto_block": "Carga de Asalto",
+  "item.mundodetronos2.carga_asalto": "Carga de Asalto",
+  "item.mundodetronos2.tnt_base": "TNT de Base"
+}

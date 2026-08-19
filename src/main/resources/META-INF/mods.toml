@@ -1,0 +1,30 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="Licencias de eggproduccion"
+issueTrackerURL="https://github.com/mundodetronos2/issues"
+
+[[mods]]
+modId="mundodetronos2"
+version="1.0.0"
+displayName="Mundo de Tronos 2"
+displayURL="https://github.com/mundodetronos2"
+authors="WYLDUNE"
+description='''
+Prototipo base para Forge 1.20.1 de Mundo de Tronos 2.
+Desarrollado bajo las licencias de eggproduccion por WYLDUNE.
+Manejo de reinos, tronos, vidas, eventos, cooldowns de reparación, GUI nativa interactiva y comandos completos para OPs y jugadores.
+'''
+
+[[dependencies.mundodetronos2]]
+modId="forge"
+mandatory=true
+versionRange="[47,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.mundodetronos2]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1]"
+ordering="NONE"
+side="BOTH"

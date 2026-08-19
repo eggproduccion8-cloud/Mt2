@@ -1,0 +1,33 @@
+{
+  "altar_ambience": {
+    "category": "ambient",
+    "sounds": [
+      {
+        "name": "minecraft:ambient/cave/cave1",
+        "stream": true
+      }
+    ]
+  },
+  "role_selection_done": {
+    "category": "player",
+    "sounds": [
+      "minecraft:entity/player/levelup"
+    ]
+  },
+  "npc_manuel_001": { "category": "voice", "sounds": [ "mundodetronos2:npc/manuel_001" ] },
+  "npc_manuel_002": { "category": "voice", "sounds": [ "mundodetronos2:npc/manuel_002" ] },
+  "npc_manuel_003": { "category": "voice", "sounds": [ "mundodetronos2:npc/manuel_003" ] },
+  "npc_laura_001": { "category": "voice", "sounds": [ "mundodetronos2:npc/laura_001" ] },
+  "npc_laura_002": { "category": "voice", "sounds": [ "mundodetronos2:npc/laura_002" ] },
+  "npc_oscar_001": { "category": "voice", "sounds": [ "mundodetronos2:npc/oscar_001" ] },
+  "npc_oscar_002": { "category": "voice", "sounds": [ "mundodetronos2:npc/oscar_002" ] },
+  "npc_samuel_001": { "category": "voice", "sounds": [ "mundodetronos2:npc/samuel_001" ] },
+  "npc_samuel_002": { "category": "voice", "sounds": [ "mundodetronos2:npc/samuel_002" ] },
+  "npc_heraldo_001": { "category": "voice", "sounds": [ "mundodetronos2:npc/heraldo_001" ] },
+  "npc_heraldo_002": { "category": "voice", "sounds": [ "mundodetronos2:npc/heraldo_002" ] },
+  "npc_guardia_001": { "category": "voice", "sounds": [ "mundodetronos2:npc/guardia_001" ] },
+  "npc_sacerdote_001": { "category": "voice", "sounds": [ "mundodetronos2:npc/sacerdote_001" ] },
+  "npc_sacerdote_002": { "category": "voice", "sounds": [ "mundodetronos2:npc/sacerdote_002" ] },
+  "npc_capitan_001": { "category": "voice", "sounds": [ "mundodetronos2:npc/capitan_001" ] },
+  "npc_maestro_001": { "category": "voice", "sounds": [ "mundodetronos2:npc/maestro_001" ] }
+}
