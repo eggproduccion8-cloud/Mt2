@@ -22,18 +22,17 @@ public class PlayerStatusHudRenderer {
 
         Font font = mc.font;
 
-        // 1. DIBUJAR PERFIL Y BARRAS DEL JUGADOR (PLAYER_CARD)
-        HudLayoutManager.ComponentConfig cardConfig = HudLayoutManager.getConfig(HudLayoutManager.ComponentId.PLAYER_CARD);
-        if (cardConfig.visible) {
-            int startX = HudLayoutManager.getRenderX(HudLayoutManager.ComponentId.PLAYER_CARD, screenWidth, screenHeight);
-            int startY = HudLayoutManager.getRenderY(HudLayoutManager.ComponentId.PLAYER_CARD, screenWidth, screenHeight);
-            float scale = cardConfig.scale;
+        // 1. RETRATO DEL JUGADOR
+        HudLayoutManager.ComponentConfig headConfig = HudLayoutManager.getConfig(HudLayoutManager.ComponentId.HEAD_AVATAR);
+        if (headConfig.visible) {
+            int x = HudLayoutManager.getRenderX(headConfig, screenWidth, screenHeight);
+            int y = HudLayoutManager.getRenderY(headConfig, screenWidth, screenHeight);
+            float scale = headConfig.scale;
 
             graphics.pose().pushPose();
-            graphics.pose().translate(startX, startY, 0);
+            graphics.pose().translate(x, y, 0);
             graphics.pose().scale(scale, scale, 1.0f);
 
-            int headSize = 22;
             ResourceLocation skinTexture = DefaultPlayerSkin.getDefaultSkin(player.getUUID());
             try {
                 if (mc.getConnection() != null) {
@@ -42,82 +41,141 @@ public class PlayerStatusHudRenderer {
                 }
             } catch (Exception ignored) {}
 
-            graphics.fill(-2, -2, headSize + 2, headSize + 2, 0xFF4488FF);
-            graphics.fill(-1, -1, headSize + 1, headSize + 1, 0xFF0D121D);
-            PlayerFaceRenderer.draw(graphics, skinTexture, 0, 0, headSize);
+            PlayerFaceRenderer.draw(graphics, skinTexture, 0, 0, 24);
+            graphics.pose().popPose();
+        }
 
-            // NOMBRE Y NIVEL
-            int infoX = headSize + 8;
+        // 2. NOMBRE Y NIVEL
+        HudLayoutManager.ComponentConfig nameConfig = HudLayoutManager.getConfig(HudLayoutManager.ComponentId.PLAYER_NAME);
+        if (nameConfig.visible) {
+            int x = HudLayoutManager.getRenderX(nameConfig, screenWidth, screenHeight);
+            int y = HudLayoutManager.getRenderY(nameConfig, screenWidth, screenHeight);
+            float scale = nameConfig.scale;
+
+            graphics.pose().pushPose();
+            graphics.pose().translate(x, y, 0);
+            graphics.pose().scale(scale, scale, 1.0f);
+
             String nameStr = player.getGameProfile().getName();
             int level = ClientPacketHandler.hudPlayerLevel;
-            graphics.drawString(font, nameStr + " §7[Lvl " + level + "]", infoX, -2, 0xFFFFFFFF, true);
+            graphics.drawString(font, nameStr + " §7[Lvl " + level + "]", 0, 0, 0xFFFFFFFF, true);
+            graphics.pose().popPose();
+        }
 
-            // BARRA DE VIDA
-            int barX = infoX;
-            int barY = 10;
+        // 3. BARRA DE VIDA JUGADOR
+        HudLayoutManager.ComponentConfig hpConfig = HudLayoutManager.getConfig(HudLayoutManager.ComponentId.HEALTH_BAR);
+        if (hpConfig.visible) {
+            int x = HudLayoutManager.getRenderX(hpConfig, screenWidth, screenHeight);
+            int y = HudLayoutManager.getRenderY(hpConfig, screenWidth, screenHeight);
+            float scale = hpConfig.scale;
+
+            graphics.pose().pushPose();
+            graphics.pose().translate(x, y, 0);
+            graphics.pose().scale(scale, scale, 1.0f);
+
             int barWidth = 100;
             int barHeight = 6;
-
             float currentHp = player.getHealth();
             float maxHp = player.getMaxHealth();
             float hpRatio = Math.max(0.0f, Math.min(1.0f, currentHp / Math.max(1.0f, maxHp)));
 
-            graphics.fill(barX - 1, barY - 1, barX + barWidth + 1, barY + barHeight + 1, 0x88000000);
-            graphics.fill(barX, barY, barX + barWidth, barY + barHeight, 0xAA220808);
+            graphics.fill(-1, -1, barWidth + 1, barHeight + 1, 0x88000000);
+            graphics.fill(0, 0, barWidth, barHeight, 0xAA220808);
             int hpFill = (int) (barWidth * hpRatio);
             if (hpFill > 0) {
-                graphics.fill(barX, barY, barX + hpFill, barY + barHeight, 0xFFFF3333);
-                graphics.fill(barX, barY, barX + hpFill, barY + 1, 0xFFFF8888);
+                graphics.fill(0, 0, hpFill, barHeight, 0xFFFF3333);
             }
-
-            graphics.blit(HEART_ICON, barX - 10, barY - 2, 0, 0, 8, 8, 8, 8);
-            graphics.drawString(font, (int) currentHp + "/" + (int) maxHp, barX + barWidth + 6, barY - 1, 0xFFFF5555, true);
-
-            // BARRA DE ABSORCIÓN DEDICADA
-            float absorption = player.getAbsorptionAmount();
-            int lastBarY = barY;
-            if (absorption > 0) {
-                int absY = barY + 10;
-                float absRatio = Math.min(1.0f, absorption / maxHp);
-                int absFill = (int) (barWidth * absRatio);
-
-                graphics.fill(barX - 1, absY - 1, barX + barWidth + 1, absY + barHeight + 1, 0x88000000);
-                graphics.fill(barX, absY, barX + barWidth, absY + barHeight, 0xAA222005);
-                if (absFill > 0) {
-                    graphics.fill(barX, absY, barX + absFill, absY + barHeight, 0xFFFFD700);
-                    graphics.fill(barX, absY, barX + absFill, absY + 1, 0xFFFFFF88);
-                }
-                graphics.drawString(font, "+" + (int) absorption + " Abs", barX + barWidth + 6, absY - 1, 0xFFFFD700, true);
-                lastBarY = absY;
-            }
-
-            // LÍNEAS DE INFORMACIÓN DE REINO / JUGADOR
-            int lineY = lastBarY + 10;
-            String role = ClientEvents.getClientPlayerRole();
-            if (role == null || role.isEmpty() || role.equalsIgnoreCase("none")) {
-                role = "ASPIRANTE";
-            } else {
-                role = role.toUpperCase();
-            }
-
-            int totalSecs = ClientPacketHandler.hudRemainingSeconds;
-            int hrs = totalSecs / 3600;
-            int mins = (totalSecs % 3600) / 60;
-            int secs = totalSecs % 60;
-            String timeStr = String.format("%d:%02d:%02d", hrs, mins, secs);
-
-            graphics.drawString(font, "❤ Pts Equipo: §a" + ClientPacketHandler.hudSharedPoints, barX - 10, lineY, 0xFFFFFFFF, true);
-            lineY += 10;
-            graphics.drawString(font, "♛ Trono: §c" + ClientPacketHandler.hudThroneLives, barX - 10, lineY, 0xFFFFFFFF, true);
-            lineY += 10;
-            graphics.drawString(font, "⌛ Tiempo: §b" + timeStr, barX - 10, lineY, 0xFFFFFFFF, true);
-            lineY += 10;
-            graphics.drawString(font, "⚔ Rol: §e" + role, barX - 10, lineY, 0xFFFFFFFF, true);
+            graphics.drawString(font, (int) currentHp + "/" + (int) maxHp, barWidth + 4, -1, 0xFFFF5555, true);
 
             graphics.pose().popPose();
         }
 
-        // 2. PIEZAS DE ARMADURA FLOTANTES INDEPENDIENTES (ARMOR_PANEL)
+        // 4. BARRA DE HAMBRE
+        HudLayoutManager.ComponentConfig foodConfig = HudLayoutManager.getConfig(HudLayoutManager.ComponentId.HUNGER_BAR);
+        if (foodConfig.visible) {
+            int x = HudLayoutManager.getRenderX(foodConfig, screenWidth, screenHeight);
+            int y = HudLayoutManager.getRenderY(foodConfig, screenWidth, screenHeight);
+            float scale = foodConfig.scale;
+
+            graphics.pose().pushPose();
+            graphics.pose().translate(x, y, 0);
+            graphics.pose().scale(scale, scale, 1.0f);
+
+            int barWidth = 100;
+            int barHeight = 5;
+            int foodLevel = player.getFoodData().getFoodLevel();
+            float foodRatio = Math.max(0.0f, Math.min(1.0f, foodLevel / 20.0f));
+
+            graphics.fill(-1, -1, barWidth + 1, barHeight + 1, 0x88000000);
+            graphics.fill(0, 0, barWidth, barHeight, 0xAA221100);
+            int foodFill = (int) (barWidth * foodRatio);
+            if (foodFill > 0) {
+                graphics.fill(0, 0, foodFill, barHeight, 0xFFFF9900);
+            }
+            graphics.drawString(font, foodLevel + "/20", barWidth + 4, -2, 0xFFFF9900, true);
+
+            graphics.pose().popPose();
+        }
+
+        // 5. BARRA DE ABSORCIÓN
+        HudLayoutManager.ComponentConfig absConfig = HudLayoutManager.getConfig(HudLayoutManager.ComponentId.ABSORPTION_BAR);
+        if (absConfig.visible && player.getAbsorptionAmount() > 0) {
+            int x = HudLayoutManager.getRenderX(absConfig, screenWidth, screenHeight);
+            int y = HudLayoutManager.getRenderY(absConfig, screenWidth, screenHeight);
+            float scale = absConfig.scale;
+
+            graphics.pose().pushPose();
+            graphics.pose().translate(x, y, 0);
+            graphics.pose().scale(scale, scale, 1.0f);
+
+            int barWidth = 100;
+            int barHeight = 5;
+            float abs = player.getAbsorptionAmount();
+            float absRatio = Math.min(1.0f, abs / Math.max(1.0f, player.getMaxHealth()));
+
+            graphics.fill(-1, -1, barWidth + 1, barHeight + 1, 0x88000000);
+            graphics.fill(0, 0, barWidth, barHeight, 0xAA222005);
+            int absFill = (int) (barWidth * absRatio);
+            if (absFill > 0) {
+                graphics.fill(0, 0, absFill, barHeight, 0xFFFFD700);
+            }
+            graphics.drawString(font, "+" + (int) abs, barWidth + 4, -2, 0xFFFFD700, true);
+
+            graphics.pose().popPose();
+        }
+
+        // 6. BARRA DE RESPIRACIÓN DE AGUA
+        HudLayoutManager.ComponentConfig waterConfig = HudLayoutManager.getConfig(HudLayoutManager.ComponentId.WATER_BREATHING);
+        if (waterConfig.visible && player.getAirSupply() < player.getMaxAirSupply()) {
+            int x = HudLayoutManager.getRenderX(waterConfig, screenWidth, screenHeight);
+            int y = HudLayoutManager.getRenderY(waterConfig, screenWidth, screenHeight);
+            float scale = waterConfig.scale;
+
+            graphics.pose().pushPose();
+            graphics.pose().translate(x, y, 0);
+            graphics.pose().scale(scale, scale, 1.0f);
+
+            int barWidth = 100;
+            int barHeight = 5;
+            int air = player.getAirSupply();
+            int maxAir = player.getMaxAirSupply();
+            float airRatio = Math.max(0.0f, Math.min(1.0f, (float) air / (float) maxAir));
+
+            graphics.fill(-1, -1, barWidth + 1, barHeight + 1, 0x88000000);
+            graphics.fill(0, 0, barWidth, barHeight, 0xAA001122);
+            int airFill = (int) (barWidth * airRatio);
+            if (airFill > 0) {
+                graphics.fill(0, 0, airFill, barHeight, 0xFF55FFFF);
+            }
+            graphics.drawString(font, "≈ " + (air / 20) + "s", barWidth + 4, -2, 0xFF55FFFF, true);
+
+            graphics.pose().popPose();
+        }
+
+        // 7. INDICADORES COMPACTOS: VIDAS EQUIPO, TRONO, TIEMPO, TEAM, ROL
+        renderCompactIndicators(graphics, screenWidth, screenHeight, font);
+
+        // 8. PIEZAS DE ARMADURA FLOTANTES INDEPENDIENTES (ARMOR_PANEL)
         HudLayoutManager.ComponentConfig armorConfig = HudLayoutManager.getConfig(HudLayoutManager.ComponentId.ARMOR_PANEL);
         if (armorConfig.visible) {
             EquipmentSlot[] slots = new EquipmentSlot[]{
@@ -160,6 +218,84 @@ public class PlayerStatusHudRenderer {
                 }
                 graphics.pose().popPose();
             }
+        }
+    }
+
+    private static void renderCompactIndicators(GuiGraphics graphics, int screenWidth, int screenHeight, Font font) {
+        // ♥ VIDAS EQUIPO
+        HudLayoutManager.ComponentConfig teamLivesCfg = HudLayoutManager.getConfig(HudLayoutManager.ComponentId.TEAM_LIVES);
+        if (teamLivesCfg.visible) {
+            int x = HudLayoutManager.getRenderX(teamLivesCfg, screenWidth, screenHeight);
+            int y = HudLayoutManager.getRenderY(teamLivesCfg, screenWidth, screenHeight);
+            graphics.pose().pushPose();
+            graphics.pose().translate(x, y, 0);
+            graphics.pose().scale(teamLivesCfg.scale, teamLivesCfg.scale, 1.0f);
+            graphics.drawString(font, "♥ " + ClientPacketHandler.hudSharedPoints, 0, 0, 0xFFFF5555, true);
+            graphics.pose().popPose();
+        }
+
+        // ♛ VIDAS TRONO
+        HudLayoutManager.ComponentConfig throneLivesCfg = HudLayoutManager.getConfig(HudLayoutManager.ComponentId.THRONE_LIVES);
+        if (throneLivesCfg.visible) {
+            int x = HudLayoutManager.getRenderX(throneLivesCfg, screenWidth, screenHeight);
+            int y = HudLayoutManager.getRenderY(throneLivesCfg, screenWidth, screenHeight);
+            graphics.pose().pushPose();
+            graphics.pose().translate(x, y, 0);
+            graphics.pose().scale(throneLivesCfg.scale, throneLivesCfg.scale, 1.0f);
+            graphics.drawString(font, "♛ " + ClientPacketHandler.hudThroneLives, 0, 0, 0xFFFFD700, true);
+            graphics.pose().popPose();
+        }
+
+        // ◷ TIEMPO
+        HudLayoutManager.ComponentConfig timeCfg = HudLayoutManager.getConfig(HudLayoutManager.ComponentId.GAME_TIME);
+        if (timeCfg.visible) {
+            int x = HudLayoutManager.getRenderX(timeCfg, screenWidth, screenHeight);
+            int y = HudLayoutManager.getRenderY(timeCfg, screenWidth, screenHeight);
+            graphics.pose().pushPose();
+            graphics.pose().translate(x, y, 0);
+            graphics.pose().scale(timeCfg.scale, timeCfg.scale, 1.0f);
+
+            int totalSecs = ClientPacketHandler.hudRemainingSeconds;
+            int hrs = totalSecs / 3600;
+            int mins = (totalSecs % 3600) / 60;
+            int secs = totalSecs % 60;
+            String timeStr = String.format("%d:%02d:%02d", hrs, mins, secs);
+
+            graphics.drawString(font, "◷ " + timeStr, 0, 0, 0xFF55FFFF, true);
+            graphics.pose().popPose();
+        }
+
+        // ⚔ TEAM
+        HudLayoutManager.ComponentConfig teamCfg = HudLayoutManager.getConfig(HudLayoutManager.ComponentId.TEAM_NAME);
+        if (teamCfg.visible) {
+            int x = HudLayoutManager.getRenderX(teamCfg, screenWidth, screenHeight);
+            int y = HudLayoutManager.getRenderY(teamCfg, screenWidth, screenHeight);
+            graphics.pose().pushPose();
+            graphics.pose().translate(x, y, 0);
+            graphics.pose().scale(teamCfg.scale, teamCfg.scale, 1.0f);
+            String tName = ClientPacketHandler.targetThroneRealmName != null && !ClientPacketHandler.targetThroneRealmName.isEmpty() ? ClientPacketHandler.targetThroneRealmName : "SIN TEAM";
+            graphics.drawString(font, "⚔ " + tName, 0, 0, 0xFFAAAAFF, true);
+            graphics.pose().popPose();
+        }
+
+        // ◆ ROL DEL JUGADOR
+        HudLayoutManager.ComponentConfig roleCfg = HudLayoutManager.getConfig(HudLayoutManager.ComponentId.PLAYER_ROLE);
+        if (roleCfg.visible) {
+            int x = HudLayoutManager.getRenderX(roleCfg, screenWidth, screenHeight);
+            int y = HudLayoutManager.getRenderY(roleCfg, screenWidth, screenHeight);
+            graphics.pose().pushPose();
+            graphics.pose().translate(x, y, 0);
+            graphics.pose().scale(roleCfg.scale, roleCfg.scale, 1.0f);
+
+            String role = ClientEvents.getClientPlayerRole();
+            if (role == null || role.isEmpty() || role.equalsIgnoreCase("none")) {
+                role = "ASPIRANTE";
+            } else {
+                role = role.toUpperCase();
+            }
+
+            graphics.drawString(font, "◆ " + role, 0, 0, 0xFFFFD700, true);
+            graphics.pose().popPose();
         }
     }
 }

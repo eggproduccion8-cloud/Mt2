@@ -2,6 +2,8 @@ package com.mundodetronos2.gui;
 
 import com.mundodetronos2.client.ClientEvents;
 import com.mundodetronos2.client.ClientPacketHandler;
+import com.mundodetronos2.client.InventoryLayoutManager;
+import com.mundodetronos2.client.InventoryLayoutManager.InventoryComponentId;
 import com.mundodetronos2.role.EquipmentRestrictions;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
@@ -24,6 +26,7 @@ import java.util.Set;
 
 public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu> {
 
+    public static final ResourceLocation LOGO_T2 = new ResourceLocation("mundodetronos2", "textures/gui/t2.png");
     public static final ResourceLocation LOGO_EGG = new ResourceLocation("mundodetronos2", "textures/gui/egg.png");
     public static final ResourceLocation BUTTON_TEX = new ResourceLocation("mundodetronos2", "textures/gui/button.png");
     public static final ResourceLocation SLOTS_TEX = new ResourceLocation("mundodetronos2", "textures/gui/slots.png");
@@ -61,6 +64,7 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
     private static final List<CraftingRecipe> recentRecipes = new ArrayList<>();
     private CraftingRecipe selectedRecipe = null;
     private int recipePageIndex = 0;
+    private int modScrollOffset = 0;
     private String lastSearchQuery = "";
 
     public RPGInventoryScreen(RPGInventoryMenu menu, Inventory playerInventory, Component title) {
@@ -184,6 +188,10 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
             this.minecraft.setScreen(new com.mundodetronos2.gui.HudEditorScreen());
             return true;
         }
+        if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_Y && (this.searchBox == null || !this.searchBox.isFocused())) {
+            this.minecraft.setScreen(new com.mundodetronos2.gui.InventoryEditorScreen());
+            return true;
+        }
         if (currentTab == Tab.FABRICACION && this.searchBox != null && this.searchBox.isFocused()) {
             if (this.searchBox.keyPressed(keyCode, scanCode, modifiers)) {
                 if (!lastSearchQuery.equals(this.searchBox.getValue())) {
@@ -216,19 +224,26 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         int h = this.height;
 
         if (button == 0) {
-            // Navigation tabs
+            // Navigation tabs & Edit UI button
             int navY = 12;
-            int tabWidth = 120;
+            int tabWidth = 110;
             int tabHeight = 22;
             Tab[] tabs = Tab.values();
-            int startX = (w - (tabs.length * (tabWidth + 15))) / 2;
+            int startX = (w - ((tabs.length + 1) * (tabWidth + 12))) / 2;
 
             for (int i = 0; i < tabs.length; i++) {
-                int tx = startX + i * (tabWidth + 15);
+                int tx = startX + i * (tabWidth + 12);
                 if (mouseX >= tx && mouseX <= tx + tabWidth && mouseY >= navY && mouseY <= navY + tabHeight) {
                     setTab(tabs[i]);
                     return true;
                 }
+            }
+
+            // BOTÓN DE EDITAR UI
+            int editX = startX + tabs.length * (tabWidth + 12);
+            if (mouseX >= editX && mouseX <= editX + tabWidth && mouseY >= navY && mouseY <= navY + tabHeight) {
+                this.minecraft.setScreen(new com.mundodetronos2.gui.InventoryEditorScreen());
+                return true;
             }
 
             // Fabricar button & Recipe paging buttons in FABRICACION tab
@@ -240,18 +255,20 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
                 int modY = 52;
                 int modW = 58;
                 int modH = 14;
-                for (int i = 0; i < availableMods.size() && i < 10; i++) {
+                int visibleMods = Math.min(10, availableMods.size() - modScrollOffset);
+                for (int i = 0; i < visibleMods; i++) {
+                    int modIdx = modScrollOffset + i;
                     int mx = catalogX + 10 + (i % 5) * (modW + 4);
                     int my = modY + (i / 5) * (modH + 4);
                     if (mouseX >= mx && mouseX <= mx + modW && mouseY >= my && mouseY <= my + modH) {
-                        this.currentModFilter = availableMods.get(i);
+                        this.currentModFilter = availableMods.get(modIdx);
                         updateRecipeList();
                         return true;
                     }
                 }
 
                 // Category Filter Buttons
-                int catY = modY + (availableMods.size() > 5 ? 32 : 18);
+                int catY = modY + (visibleMods > 5 ? 32 : 18);
                 int catW = 58;
                 int catH = 14;
                 RecipeCategory[] categories = RecipeCategory.values();
@@ -289,6 +306,18 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
                     }
                 }
 
+                // BOTÓN FABRICAR EN LA ESTACIÓN
+                int craftGridX = InventoryLayoutManager.getRenderX(InventoryComponentId.CRAFTING_STATION_3X3, w, h);
+                int craftGridY = InventoryLayoutManager.getRenderY(InventoryComponentId.CRAFTING_STATION_3X3, w, h);
+                int fabBtnX = craftGridX + 130;
+                int fabBtnY = craftGridY + 60;
+                if (mouseX >= fabBtnX && mouseX <= fabBtnX + 65 && mouseY >= fabBtnY && mouseY <= fabBtnY + 18) {
+                    if (this.minecraft.gameMode != null) {
+                        this.minecraft.gameMode.handleInventoryMouseClick(this.menu.containerId, 5, 0, net.minecraft.world.inventory.ClickType.PICKUP, this.minecraft.player);
+                    }
+                    return true;
+                }
+
                 // Paging buttons
                 int navButtonsY = h - 30;
                 if (mouseX >= catalogX + 10 && mouseX <= catalogX + 80 && mouseY >= navButtonsY && mouseY <= navButtonsY + 18) {
@@ -317,20 +346,20 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
             this.searchBox.setVisible(isCrafting);
         }
 
-        // 1. ARMADURA (0..3) -> Pestaña PERSONAJE (Lado izquierdo)
-        int armorX = 30;
-        int armorY = 50;
+        // 1. ARMADURA (0..3) -> Pestaña PERSONAJE
+        int eqX = InventoryLayoutManager.getRenderX(InventoryComponentId.EQUIPMENT_SLOTS, w, h);
+        int eqY = InventoryLayoutManager.getRenderY(InventoryComponentId.EQUIPMENT_SLOTS, w, h);
         for (int i = 0; i < 4; i++) {
-            this.menu.setSlotState(i, armorX + 5, armorY + i * 32 + 5, isPersonaje);
+            this.menu.setSlotState(i, eqX + 5, eqY + i * 32 + 5, isPersonaje);
         }
 
-        // 2. SEGUNDA MANO (4) -> Pestaña PERSONAJE (Lado izquierdo)
-        int offhandY = armorY + 4 * 32 + 10;
-        this.menu.setSlotState(4, armorX + 5, offhandY + 5, isPersonaje);
+        // 2. SEGUNDA MANO (4) -> Pestaña PERSONAJE
+        int offhandY = eqY + 4 * 32 + 10;
+        this.menu.setSlotState(4, eqX + 5, offhandY + 5, isPersonaje);
 
-        // 3. CRAFTEO 3x3 (5 RESULTADO, 6..14 GRILLA) -> Pestaña FABRICACIÓN (Lado Izquierdo)
-        int craftGridX = 30;
-        int craftGridY = 55;
+        // 3. CRAFTEO 3x3 (5 RESULTADO, 6..14 GRILLA) -> Pestaña FABRICACIÓN
+        int craftGridX = InventoryLayoutManager.getRenderX(InventoryComponentId.CRAFTING_STATION_3X3, w, h);
+        int craftGridY = InventoryLayoutManager.getRenderY(InventoryComponentId.CRAFTING_STATION_3X3, w, h);
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 3; col++) {
                 this.menu.setSlotState(6 + col + row * 3, craftGridX + col * 26 + 5, craftGridY + row * 26 + 5, isCrafting);
@@ -339,30 +368,24 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         this.menu.setSlotState(5, craftGridX + 140 + 5, craftGridY + 26 + 5, isCrafting);
 
         // 4. MOCHILA (15..59) -> Pestaña MOCHILA
-        int backpackX = (w - (9 * 26)) / 2;
-        int backpackY = 100;
+        int mochilaX = InventoryLayoutManager.getRenderX(InventoryComponentId.MOCHILA_CONTAINER, w, h);
+        int mochilaY = InventoryLayoutManager.getRenderY(InventoryComponentId.MOCHILA_CONTAINER, w, h);
         for (int row = 0; row < 5; row++) {
             for (int col = 0; col < 9; col++) {
-                this.menu.setSlotState(15 + col + row * 9, backpackX + col * 26 + 5, backpackY + row * 26 + 5, isBackpack);
+                this.menu.setSlotState(15 + col + row * 9, mochilaX + col * 26 + 5, mochilaY + row * 26 + 5, isBackpack);
             }
         }
 
         // 5. INVENTARIO PRINCIPAL REAL DEL JUGADOR 27 SLOTS (60..86)
-        com.mundodetronos2.client.HudLayoutManager.ComponentConfig invConfig = com.mundodetronos2.client.HudLayoutManager.getConfig(com.mundodetronos2.client.HudLayoutManager.ComponentId.RPG_INVENTORY);
-        int customInvX = com.mundodetronos2.client.HudLayoutManager.getRenderX(invConfig, w, h);
-        int customInvY = com.mundodetronos2.client.HudLayoutManager.getRenderY(invConfig, w, h);
+        int invX = InventoryLayoutManager.getRenderX(InventoryComponentId.PLAYER_INVENTORY_GRID, w, h);
+        int invY = InventoryLayoutManager.getRenderY(InventoryComponentId.PLAYER_INVENTORY_GRID, w, h);
 
-        int invX = (w - (9 * 26)) / 2;
-        int invY = h - 95;
-        if (isPersonaje) {
-            invX = customInvX;
-            invY = customInvY;
-        } else if (isCrafting) {
-            invX = 30;
-            invY = h - 95;
+        if (isCrafting) {
+            invX = craftGridX;
+            invY = craftGridY + 110;
         } else if (isBackpack) {
-            invX = (w - (9 * 26)) / 2;
-            invY = backpackY + 5 * 26 + 25;
+            invX = mochilaX;
+            invY = mochilaY + 5 * 26 + 25;
         }
 
         boolean invActive = isPersonaje || isCrafting || isBackpack;
@@ -403,20 +426,27 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         String roleStr = ClientEvents.getClientPlayerRole().toUpperCase();
         if (roleStr.equals("NONE") || roleStr.isEmpty()) roleStr = "ASPIRANTE";
 
-        // LOGO EGG.png EN ESQUINA INFERIOR IZQUIERDA (Proporción 1:1)
-        graphics.blit(LOGO_EGG, 12, h - 30, 0, 0, 22, 22, 1254, 1254);
-        graphics.drawString(this.font, "EGPRODUCCION", 38, h - 22, 0xAAFFFFFF, true);
+        // LOGO T2.png ~3X MÁS GRANDE MANTENIENDO ASPECT RATIO (1672:940 -> 1.7787)
+        int logoX = InventoryLayoutManager.getRenderX(InventoryComponentId.LOGO_T2, w, h);
+        int logoY = InventoryLayoutManager.getRenderY(InventoryComponentId.LOGO_T2, w, h);
+        int logoW = 120;
+        int logoH = (int) (logoW / 1.7787f);
+        graphics.blit(LOGO_T2, logoX, logoY, 0, 0, logoW, logoH, 1672, 940);
+
+        // LOGO EGG.png EN ESQUINA INFERIOR IZQUIERDA
+        graphics.blit(LOGO_EGG, 12, h - 28, 0, 0, 20, 20, 1254, 1254);
+        graphics.drawString(this.font, "EGPRODUCCION", 36, h - 22, 0xAAFFFFFF, true);
 
         // 1. NAVEGACIÓN SUPERIOR CON BUTTON.PNG
         int navY = 12;
-        int tabWidth = 120;
+        int tabWidth = 110;
         int tabHeight = 22;
         Tab[] tabs = Tab.values();
-        int startX = (w - (tabs.length * (tabWidth + 15))) / 2;
+        int startX = (w - ((tabs.length + 1) * (tabWidth + 12))) / 2;
 
         for (int i = 0; i < tabs.length; i++) {
             Tab tab = tabs[i];
-            int tx = startX + i * (tabWidth + 15);
+            int tx = startX + i * (tabWidth + 12);
             boolean isSelected = (tab == currentTab);
             boolean isHovered = mouseX >= tx && mouseX <= tx + tabWidth && mouseY >= navY && mouseY <= navY + tabHeight;
 
@@ -431,6 +461,12 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
             graphics.drawString(this.font, tabName, tx + (tabWidth - tw) / 2, navY + 6, isSelected ? 0xFFFFD700 : 0xFFFFFFFF, true);
         }
 
+        // BOTÓN EDITAR UI EN CABECERA
+        int editX = startX + tabs.length * (tabWidth + 12);
+        boolean editHov = mouseX >= editX && mouseX <= editX + tabWidth && mouseY >= navY && mouseY <= navY + tabHeight;
+        graphics.blit(BUTTON_TEX, editX, navY, 0, editHov ? 10 : 0, tabWidth, tabHeight, tabWidth, tabHeight);
+        graphics.drawString(this.font, "⚙ EDITAR UI", editX + 16, navY + 6, 0xFFFFD700, true);
+
         // 2. RENDERING ESPECÍFICO SEGÚN PESTAÑA
         if (currentTab == Tab.PERSONAJE) {
             renderPersonajeTab(graphics, w, h, mouseX, mouseY, player, name, roleStr);
@@ -443,8 +479,8 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
 
     private void renderPersonajeTab(GuiGraphics graphics, int w, int h, int mouseX, int mouseY, Player player, String name, String roleStr) {
         // LADO IZQUIERDO: EQUIPAMIENTO
-        int armorX = 30;
-        int armorY = 50;
+        int armorX = InventoryLayoutManager.getRenderX(InventoryComponentId.EQUIPMENT_SLOTS, w, h);
+        int armorY = InventoryLayoutManager.getRenderY(InventoryComponentId.EQUIPMENT_SLOTS, w, h);
 
         graphics.drawString(this.font, "EQUIPAMIENTO", armorX, armorY - 14, 0xFFFFD700, true);
 
@@ -483,17 +519,17 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
             graphics.drawString(this.font, "VACÍO", armorX + 32, offhandY + 14, 0x44FFFFFF, false);
         }
 
-        // CENTRO-IZQUIERDA: PERSONAJE 3D LIGERAMENTE MÁS CHICO Y CENTRADO
-        int entityX = (w / 2) - 60;
-        int entityY = h - 80;
+        // CENTRO: PERSONAJE 3D ~2X EL TAMAÑO ANTERIOR EN POSE ESTÁTICA FIXA (SIN ROTACIÓN CON EL MOUSE)
+        int entityX = InventoryLayoutManager.getRenderX(InventoryComponentId.MODEL_3D, w, h);
+        int entityY = InventoryLayoutManager.getRenderY(InventoryComponentId.MODEL_3D, w, h);
         if (player != null) {
-            int modelScale = Math.min(150, h / 4);
+            int modelScale = Math.min(180, h / 3);
             InventoryScreen.renderEntityInInventoryFollowsMouse(graphics, entityX, entityY, modelScale, 0.0f, 0.0f, player);
         }
 
         // DERECHA: ATRIBUTOS Y STATS DEL PERSONAJE / CARNET DE JUGADOR
-        int statsX = w - 244;
-        int statsY = 42;
+        int statsX = InventoryLayoutManager.getRenderX(InventoryComponentId.PLAYER_STATS, w, h);
+        int statsY = InventoryLayoutManager.getRenderY(InventoryComponentId.PLAYER_STATS, w, h);
         graphics.drawString(this.font, "CARNET DE JUGADOR", statsX, statsY, 0xFFFFD700, true);
 
         int level = ClientPacketHandler.hudPlayerLevel;
@@ -520,9 +556,8 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         graphics.renderItem(carnetItem, statsX + 180, statsY);
 
         // LADO DERECHO (ENMEDIO): INVENTARIO REAL COMPLETO Y FUNCIONAL DEL JUGADOR
-        com.mundodetronos2.client.HudLayoutManager.ComponentConfig invConfig = com.mundodetronos2.client.HudLayoutManager.getConfig(com.mundodetronos2.client.HudLayoutManager.ComponentId.RPG_INVENTORY);
-        int invX = com.mundodetronos2.client.HudLayoutManager.getRenderX(invConfig, w, h);
-        int invY = com.mundodetronos2.client.HudLayoutManager.getRenderY(invConfig, w, h);
+        int invX = InventoryLayoutManager.getRenderX(InventoryComponentId.PLAYER_INVENTORY_GRID, w, h);
+        int invY = InventoryLayoutManager.getRenderY(InventoryComponentId.PLAYER_INVENTORY_GRID, w, h);
 
         graphics.drawString(this.font, "INVENTARIO DEL JUGADOR", invX, invY - 14, 0xFFFFD700, true);
         drawInventoryGrid(graphics, invX, invY, mouseX, mouseY);
@@ -530,8 +565,8 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
 
     private void renderFabricacionTab(GuiGraphics graphics, int w, int h, int mouseX, int mouseY) {
         // LADO IZQUIERDO: CRAFTEO 3x3 Y RECETA SELECCIONADA
-        int craftGridX = 30;
-        int craftGridY = 55;
+        int craftGridX = InventoryLayoutManager.getRenderX(InventoryComponentId.CRAFTING_STATION_3X3, w, h);
+        int craftGridY = InventoryLayoutManager.getRenderY(InventoryComponentId.CRAFTING_STATION_3X3, w, h);
 
         graphics.drawString(this.font, "ESTACIÓN DE FABRICACIÓN", craftGridX, craftGridY - 14, 0xFFFFD700, true);
 
@@ -549,10 +584,17 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         boolean resHov = mouseX >= craftGridX + 140 && mouseX <= craftGridX + 166 && mouseY >= craftGridY + 26 && mouseY <= craftGridY + 52;
         drawSlotFrame(graphics, craftGridX + 140, craftGridY + 26, resHov, 26);
 
+        // BOTÓN FABRICAR (button.png)
+        int fabBtnX = craftGridX + 130;
+        int fabBtnY = craftGridY + 60;
+        boolean fabHov = mouseX >= fabBtnX && mouseX <= fabBtnX + 65 && mouseY >= fabBtnY && mouseY <= fabBtnY + 18;
+        graphics.blit(BUTTON_TEX, fabBtnX, fabBtnY, 0, fabHov ? 10 : 0, 65, 18, 65, 18);
+        graphics.drawString(this.font, "FABRICAR", fabBtnX + 8, fabBtnY + 4, 0xFFFFFFFF, true);
+
         // RENDER DE RECETA SELECCIONADA (FANTASMAS DE INGREDIENTES Y RESULTADO)
         if (selectedRecipe != null) {
             ItemStack selRes = selectedRecipe.getResultItem(this.minecraft.level.registryAccess());
-            graphics.drawString(this.font, "RECETA: §a" + selRes.getHoverName().getString(), craftGridX, craftGridY + 90, 0xFFFFFFFF, true);
+            graphics.drawString(this.font, "RECETA: §a" + selRes.getHoverName().getString(), craftGridX, craftGridY + 86, 0xFFFFFFFF, true);
 
             // Renderizar el resultado en el slot de salida fantasma
             graphics.renderItem(selRes, craftGridX + 145, craftGridY + 31);
@@ -597,27 +639,30 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
                 }
             }
         } else {
-            graphics.drawString(this.font, "Selecciona un ítem del catálogo", craftGridX, craftGridY + 90, 0x88FFFFFF, false);
+            graphics.drawString(this.font, "Selecciona un ítem del catálogo", craftGridX, craftGridY + 86, 0x88FFFFFF, false);
         }
 
         // ABAJO IZQUIERDA: INVENTARIO DEL JUGADOR
-        int invX = 30;
-        int invY = h - 95;
+        int invX = craftGridX;
+        int invY = craftGridY + 110;
         graphics.drawString(this.font, "MATERIALES / INVENTARIO", invX, invY - 14, 0xFFFFD700, true);
         drawInventoryGrid(graphics, invX, invY, mouseX, mouseY);
 
-        // LADO DERECHO: CATÁLOGO DE PESTAÑAS POR MODS Y CATEGORÍAS
-        int catalogX = (int) (w * 0.42);
+        // LADO DERECHO: CATÁLOGO COMPLETO
+        int catalogX = InventoryLayoutManager.getRenderX(InventoryComponentId.CRAFTING_CATALOG, w, h);
+        int catalogY = InventoryLayoutManager.getRenderY(InventoryComponentId.CRAFTING_CATALOG, w, h);
         int catalogWidth = w - catalogX - 15;
 
-        graphics.drawString(this.font, "CATÁLOGO (" + filteredRecipes.size() + ")", catalogX + 10, 20, 0xFFFFD700, true);
+        graphics.drawString(this.font, "CATÁLOGO DE RECETAS (" + filteredRecipes.size() + ")", catalogX + 10, 18, 0xFFFFD700, true);
 
-        // Pestañas por Mods
+        // Pestañas de Mods (Filtro)
         int modY = 52;
         int modW = 58;
         int modH = 14;
-        for (int i = 0; i < availableMods.size() && i < 10; i++) {
-            String modId = availableMods.get(i);
+        int visibleMods = Math.min(10, availableMods.size() - modScrollOffset);
+        for (int i = 0; i < visibleMods; i++) {
+            int modIdx = modScrollOffset + i;
+            String modId = availableMods.get(modIdx);
             int mx = catalogX + 10 + (i % 5) * (modW + 4);
             int my = modY + (i / 5) * (modH + 4);
             boolean isSel = modId.equalsIgnoreCase(currentModFilter);
@@ -629,8 +674,8 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
             graphics.drawString(this.font, modLabel, mx + 3, my + 3, isSel ? 0xFFFFD700 : 0xFFFFFFFF, false);
         }
 
-        // Categorías dentro del mod
-        int catY = modY + (availableMods.size() > 5 ? 32 : 18);
+        // Categorías universales dentro del mod
+        int catY = modY + (visibleMods > 5 ? 32 : 18);
         int catW = 58;
         int catH = 14;
         RecipeCategory[] categories = RecipeCategory.values();
@@ -695,12 +740,12 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
 
     private void renderMochilaTab(GuiGraphics graphics, int w, int h, int mouseX, int mouseY) {
         int tier = this.menu.getBackpackTier();
-        int backpackX = (w - (9 * 26)) / 2;
-        int backpackY = 100;
+        int backpackX = InventoryLayoutManager.getRenderX(InventoryComponentId.MOCHILA_CONTAINER, w, h);
+        int backpackY = InventoryLayoutManager.getRenderY(InventoryComponentId.MOCHILA_CONTAINER, w, h);
         int maxUnlocked = tier * 15;
 
-        // ENCABEZADO Y PESO (CONSERVA EL DISEÑO QUE LE GUSTA AL USUARIO SIN LÍNEAS AZULES)
-        int headerY = 50;
+        // ENCABEZADO Y PESO (CONSERVA SU DISEÑO FAVORITO)
+        int headerY = backpackY - 45;
         graphics.drawString(this.font, "MOCHILA DEL AVENTURERO (TIER " + tier + ")", backpackX, headerY, 0xFFFFD700, true);
 
         int iconW = 18;
