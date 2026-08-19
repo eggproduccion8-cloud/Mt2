@@ -561,8 +561,8 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
             // Renderizar los ingredientes en la grilla 3x3
             net.minecraft.core.NonNullList<net.minecraft.world.item.crafting.Ingredient> ingredients = selectedRecipe.getIngredients();
             if (selectedRecipe instanceof net.minecraft.world.item.crafting.ShapedRecipe shaped) {
-                int sWidth = shaped.getRecipeWidth();
-                int sHeight = shaped.getRecipeHeight();
+                int sWidth = shaped.getWidth();
+                int sHeight = shaped.getHeight();
                 for (int r = 0; r < sHeight; r++) {
                     for (int c = 0; c < sWidth; c++) {
                         int index = r * sWidth + c;
