@@ -66,8 +66,8 @@ public class ClientPacketHandler {
     public static void handleShowMessage(String message, boolean isError) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player != null) {
-            String cleanMsg = message.replaceAll("§[0-9a-fk-or]", "");
-            com.mundodetronos2.client.ClientEvents.addNotification(isError ? "⚠ ERROR" : "✓ ÉXITO", cleanMsg, "", isError);
+            // Mostrar en Action Bar encima de los ítems de la barra para evitar saturar notificaciones laterales
+            mc.player.displayClientMessage(Component.literal(message), true);
         }
     }
 

@@ -183,7 +183,7 @@ public class RPGInventoryMenu extends AbstractContainerMenu {
             }
         }
 
-        // 6. SLOTS DE HOTBAR (87..95)
+        // 6. SLOTS DE HOTBAR (87..95) - Posicionados funcionalmente en la grilla del inventario sin duplicar hotbar separada
         for (int col = 0; col < 9; col++) {
             this.addSlot(new ResizableSlot(playerInventory, col, 8 + col * 18, 142));
         }

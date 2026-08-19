@@ -2,24 +2,65 @@ package com.mundodetronos2.gui;
 
 import com.mundodetronos2.client.ClientEvents;
 import com.mundodetronos2.client.ClientPacketHandler;
+import com.mundodetronos2.role.EquipmentRestrictions;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraft.world.item.crafting.RecipeType;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu> {
 
+    public static final ResourceLocation LOGO_T2 = new ResourceLocation("mundodetronos2", "textures/gui/t2.png");
+    public static final ResourceLocation LOGO_EGG = new ResourceLocation("mundodetronos2", "textures/gui/egg.png");
+    public static final ResourceLocation BUTTON_TEX = new ResourceLocation("mundodetronos2", "textures/gui/button.png");
+    public static final ResourceLocation SLOTS_TEX = new ResourceLocation("mundodetronos2", "textures/gui/slots.png");
+    public static final ResourceLocation SLOTS_HOVER_TEX = new ResourceLocation("mundodetronos2", "textures/gui/slots_hover.png");
+    public static final ResourceLocation WEIGHT_ICON = new ResourceLocation("mundodetronos2", "textures/gui/weight_icon.png");
+
     public enum Tab {
         PERSONAJE,
-        INVENTARIO,
         FABRICACION,
-        MOCHILA,
-        INFORMACION
+        MOCHILA
+    }
+
+    public enum RecipeCategory {
+        TODOS,
+        MATERIALES,
+        BLOQUES,
+        HERRAMIENTAS,
+        ARMAS,
+        ARMADURA,
+        COMIDA,
+        UTILIDAD,
+        FAVORITOS,
+        RECIENTES
     }
 
     private Tab currentTab = Tab.PERSONAJE;
+    private RecipeCategory currentCategory = RecipeCategory.TODOS;
+
+    // Search and Catalog fields
+    private EditBox searchBox;
+    private List<CraftingRecipe> filteredRecipes = new ArrayList<>();
+    private static final Set<ResourceLocation> favoriteRecipes = new HashSet<>();
+    private static final List<CraftingRecipe> recentRecipes = new ArrayList<>();
+    private CraftingRecipe selectedRecipe = null;
+    private int recipePageIndex = 0;
+    private String lastSearchQuery = "";
 
     public RPGInventoryScreen(RPGInventoryMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -28,13 +69,86 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
     @Override
     protected void init() {
         super.init();
-        // Ocupar pantalla completa dinámicamente según this.width y this.height
         this.leftPos = 0;
         this.topPos = 0;
         this.imageWidth = this.width;
         this.imageHeight = this.height;
 
+        int catalogX = (int) (this.width * 0.45);
+        int catalogWidth = this.width - catalogX - 20;
+
+        this.searchBox = new EditBox(this.font, catalogX + 10, 52, catalogWidth - 20, 18, Component.literal("Buscar receta..."));
+        this.searchBox.setHighlightPos(0);
+        this.searchBox.setTextColor(0xFFFFFFFF);
+        this.searchBox.setHint(Component.literal("Buscar receta..."));
+        this.addRenderableWidget(this.searchBox);
+
         updateSlotPositions();
+        updateRecipeList();
+    }
+
+    private void updateRecipeList() {
+        if (this.minecraft == null || this.minecraft.level == null) return;
+        List<CraftingRecipe> allRecipes = this.minecraft.level.getRecipeManager().getAllRecipesFor(RecipeType.CRAFTING);
+        String query = searchBox != null ? searchBox.getValue().toLowerCase().trim() : "";
+
+        filteredRecipes.clear();
+
+        if (currentCategory == RecipeCategory.FAVORITOS) {
+            for (CraftingRecipe r : allRecipes) {
+                if (favoriteRecipes.contains(r.getId())) {
+                    if (matchesQuery(r, query)) filteredRecipes.add(r);
+                }
+            }
+        } else if (currentCategory == RecipeCategory.RECIENTES) {
+            for (CraftingRecipe r : recentRecipes) {
+                if (matchesQuery(r, query)) filteredRecipes.add(r);
+            }
+        } else {
+            for (CraftingRecipe recipe : allRecipes) {
+                ItemStack result = recipe.getResultItem(this.minecraft.level.registryAccess());
+                if (result.isEmpty()) continue;
+
+                if (currentCategory != RecipeCategory.TODOS && !matchesCategory(result, currentCategory)) {
+                    continue;
+                }
+
+                if (matchesQuery(recipe, query)) {
+                    filteredRecipes.add(recipe);
+                }
+            }
+        }
+        recipePageIndex = 0;
+    }
+
+    private boolean matchesQuery(CraftingRecipe recipe, String query) {
+        if (query.isEmpty()) return true;
+        ItemStack result = recipe.getResultItem(this.minecraft.level.registryAccess());
+        return result.getHoverName().getString().toLowerCase().contains(query);
+    }
+
+    private boolean matchesCategory(ItemStack stack, RecipeCategory category) {
+        String name = stack.getHoverName().getString().toLowerCase();
+        String itemPath = stack.getItem().toString().toLowerCase();
+
+        switch (category) {
+            case ARMAS:
+                return itemPath.contains("sword") || itemPath.contains("bow") || itemPath.contains("crossbow") || itemPath.contains("trident") || name.contains("espada") || name.contains("arco");
+            case ARMADURA:
+                return itemPath.contains("helmet") || itemPath.contains("chestplate") || itemPath.contains("leggings") || itemPath.contains("boots") || name.contains("casco") || name.contains("pechera");
+            case HERRAMIENTAS:
+                return itemPath.contains("pickaxe") || itemPath.contains("axe") || itemPath.contains("shovel") || itemPath.contains("hoe") || itemPath.contains("shears");
+            case COMIDA:
+                return stack.getItem().isEdible() || name.contains("manzana") || name.contains("pan") || name.contains("carne");
+            case BLOQUES:
+                return itemPath.contains("block") || itemPath.contains("planks") || itemPath.contains("stone") || itemPath.contains("brick");
+            case MATERIALES:
+                return itemPath.contains("ingot") || itemPath.contains("gem") || itemPath.contains("stick") || itemPath.contains("nugget") || itemPath.contains("leather");
+            case UTILIDAD:
+                return itemPath.contains("bucket") || itemPath.contains("torch") || itemPath.contains("compass") || itemPath.contains("clock") || itemPath.contains("map");
+            default:
+                return true;
+        }
     }
 
     private void setTab(Tab tab) {
@@ -43,20 +157,148 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
     }
 
     @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (currentTab == Tab.FABRICACION && this.searchBox != null && this.searchBox.isFocused()) {
+            if (this.searchBox.keyPressed(keyCode, scanCode, modifiers)) {
+                if (!lastSearchQuery.equals(this.searchBox.getValue())) {
+                    lastSearchQuery = this.searchBox.getValue();
+                    updateRecipeList();
+                }
+                return true;
+            }
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (currentTab == Tab.FABRICACION && this.searchBox != null && this.searchBox.isFocused()) {
+            if (this.searchBox.charTyped(codePoint, modifiers)) {
+                if (!lastSearchQuery.equals(this.searchBox.getValue())) {
+                    lastSearchQuery = this.searchBox.getValue();
+                    updateRecipeList();
+                }
+                return true;
+            }
+        }
+        return super.charTyped(codePoint, modifiers);
+    }
+
+    @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0) { // Click izquierdo para cambio de pestaña
-            int startY = 12;
-            int tabWidth = 85;
-            int tabHeight = 18;
+        int w = this.width;
+        int h = this.height;
+
+        if (button == 0) {
+            // Navigation tabs
+            int navY = 12;
+            int tabWidth = 120;
+            int tabHeight = 22;
             Tab[] tabs = Tab.values();
-            int totalTabsW = tabs.length * (tabWidth + 6);
-            int startX = (this.width - totalTabsW) / 2;
+            int startX = (w - (tabs.length * (tabWidth + 15))) / 2;
 
             for (int i = 0; i < tabs.length; i++) {
-                int tx = startX + i * (tabWidth + 6);
-                if (mouseX >= tx && mouseX <= tx + tabWidth && mouseY >= startY && mouseY <= startY + tabHeight) {
+                int tx = startX + i * (tabWidth + 15);
+                if (mouseX >= tx && mouseX <= tx + tabWidth && mouseY >= navY && mouseY <= navY + tabHeight) {
                     setTab(tabs[i]);
                     return true;
+                }
+            }
+
+            // Fabricar button & Recipe paging buttons in FABRICACION tab
+            if (currentTab == Tab.FABRICACION) {
+                int craftGridX = 30;
+                int craftGridY = 55;
+                int btnX = craftGridX;
+                int btnY = craftGridY + 105;
+                int btnW = 90;
+                int btnH = 20;
+
+                // Click on FABRICAR button
+                if (selectedRecipe != null && mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH) {
+                    // Quick transfer ingredients / auto-craft
+                    return true;
+                }
+                int catalogX = (int) (w * 0.45);
+                int catalogWidth = w - catalogX - 20;
+
+                // Category filter buttons
+                int catY = 75;
+                int catW = 60;
+                int catH = 16;
+                RecipeCategory[] categories = RecipeCategory.values();
+                for (int i = 0; i < categories.length; i++) {
+                    int cx = catalogX + 10 + (i % 5) * (catW + 4);
+                    int cy = catY + (i / 5) * (catH + 4);
+                    if (mouseX >= cx && mouseX <= cx + catW && mouseY >= cy && mouseY <= cy + catH) {
+                        this.currentCategory = categories[i];
+                        updateRecipeList();
+                        return true;
+                    }
+                }
+
+                // Recipe items grid click
+                int gridY = catY + 40;
+                int itemCols = Math.max(4, (catalogWidth - 20) / 32);
+                int itemRows = Math.max(3, (h - gridY - 50) / 32);
+                int pageSize = itemCols * itemRows;
+
+                int startIdx = recipePageIndex * pageSize;
+                for (int i = 0; i < pageSize && (startIdx + i) < filteredRecipes.size(); i++) {
+                    int col = i % itemCols;
+                    int row = i / itemCols;
+                    int ix = catalogX + 10 + col * 32;
+                    int iy = gridY + row * 32;
+
+                    if (mouseX >= ix && mouseX <= ix + 28 && mouseY >= iy && mouseY <= iy + 28) {
+                        CraftingRecipe rec = filteredRecipes.get(startIdx + i);
+                        this.selectedRecipe = rec;
+                        if (!recentRecipes.contains(rec)) {
+                            recentRecipes.add(0, rec);
+                            if (recentRecipes.size() > 20) recentRecipes.remove(recentRecipes.size() - 1);
+                        }
+                        return true;
+                    }
+                }
+
+                // Paging buttons
+                int navButtonsY = h - 35;
+                if (mouseX >= catalogX + 10 && mouseX <= catalogX + 80 && mouseY >= navButtonsY && mouseY <= navButtonsY + 20) {
+                    if (recipePageIndex > 0) recipePageIndex--;
+                    return true;
+                }
+                int totalPages = Math.max(1, (int) Math.ceil((double) filteredRecipes.size() / (double) pageSize));
+                if (mouseX >= catalogX + catalogWidth - 80 && mouseX <= catalogX + catalogWidth - 10 && mouseY >= navButtonsY && mouseY <= navButtonsY + 20) {
+                    if (recipePageIndex < totalPages - 1) recipePageIndex++;
+                    return true;
+                }
+            }
+        } else if (button == 1) { // Right Click to toggle Favorite
+            if (currentTab == Tab.FABRICACION) {
+                int catalogX = (int) (w * 0.45);
+                int catalogWidth = w - catalogX - 20;
+                int gridY = 75 + 40;
+                int itemCols = Math.max(4, (catalogWidth - 20) / 32);
+                int itemRows = Math.max(3, (h - gridY - 50) / 32);
+                int pageSize = itemCols * itemRows;
+
+                int startIdx = recipePageIndex * pageSize;
+                for (int i = 0; i < pageSize && (startIdx + i) < filteredRecipes.size(); i++) {
+                    int col = i % itemCols;
+                    int row = i / itemCols;
+                    int ix = catalogX + 10 + col * 32;
+                    int iy = gridY + row * 32;
+
+                    if (mouseX >= ix && mouseX <= ix + 28 && mouseY >= iy && mouseY <= iy + 28) {
+                        CraftingRecipe rec = filteredRecipes.get(startIdx + i);
+                        if (favoriteRecipes.contains(rec.getId())) {
+                            favoriteRecipes.remove(rec.getId());
+                        } else {
+                            favoriteRecipes.add(rec.getId());
+                        }
+                        updateRecipeList();
+                        return true;
+                    }
                 }
             }
         }
@@ -68,75 +310,80 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         int h = this.height;
 
         boolean isPersonaje = currentTab == Tab.PERSONAJE;
-        boolean isInventory = currentTab == Tab.INVENTARIO;
         boolean isCrafting = currentTab == Tab.FABRICACION;
         boolean isBackpack = currentTab == Tab.MOCHILA;
 
-        // 1. ARMADURA (0..3) -> Pestaña PERSONAJE
-        int armorX = w / 2 - 130;
-        int armorY = h / 2 - 80;
-        for (int i = 0; i < 4; i++) {
-            this.menu.setSlotState(i, armorX + 1, armorY + i * 22 + 1, isPersonaje);
+        if (this.searchBox != null) {
+            this.searchBox.setVisible(isCrafting);
         }
 
-        // 2. SEGUNDA MANO (4) -> Pestaña PERSONAJE
-        int offhandX = w / 2 - 130;
-        int offhandY = h / 2 + 15;
-        this.menu.setSlotState(4, offhandX + 1, offhandY + 1, isPersonaje);
+        // 1. ARMADURA (0..3) -> Pestaña PERSONAJE (Lado izquierdo)
+        int armorX = 30;
+        int armorY = 50;
+        for (int i = 0; i < 4; i++) {
+            this.menu.setSlotState(i, armorX + 5, armorY + i * 32 + 5, isPersonaje);
+        }
 
-        // 3. CRAFTEO 3x3 (5 RESULTADO, 6..14 GRILLA) -> Pestaña FABRICACIÓN
-        int craftGridX = w / 2 - 70;
-        int craftGridY = h / 2 - 85;
+        // 2. SEGUNDA MANO (4) -> Pestaña PERSONAJE (Lado izquierdo)
+        int offhandY = armorY + 4 * 32 + 10;
+        this.menu.setSlotState(4, armorX + 5, offhandY + 5, isPersonaje);
+
+        // 3. CRAFTEO 3x3 (5 RESULTADO, 6..14 GRILLA) -> Pestaña FABRICACIÓN (Lado Izquierdo)
+        int craftGridX = 30;
+        int craftGridY = 55;
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 3; col++) {
-                this.menu.setSlotState(6 + col + row * 3, craftGridX + col * 20 + 1, craftGridY + row * 20 + 1, isCrafting);
+                this.menu.setSlotState(6 + col + row * 3, craftGridX + col * 26 + 5, craftGridY + row * 26 + 5, isCrafting);
             }
         }
-        this.menu.setSlotState(5, craftGridX + 105 + 1, craftGridY + 20 + 1, isCrafting);
+        this.menu.setSlotState(5, craftGridX + 140 + 5, craftGridY + 26 + 5, isCrafting);
 
         // 4. MOCHILA (15..59) -> Pestaña MOCHILA
-        int backpackX = w / 2 - 81;
-        int backpackY = h / 2 - 95;
+        int backpackX = (w - (9 * 26)) / 2;
+        int backpackY = 100;
         for (int row = 0; row < 5; row++) {
             for (int col = 0; col < 9; col++) {
-                this.menu.setSlotState(15 + col + row * 9, backpackX + col * 18 + 1, backpackY + row * 18 + 1, isBackpack);
+                this.menu.setSlotState(15 + col + row * 9, backpackX + col * 26 + 5, backpackY + row * 26 + 5, isBackpack);
             }
         }
 
-        // 5. INVENTARIO PRINCIPAL 27 SLOTS (60..86) -> Pestañas PERSONAJE, INVENTARIO, FABRICACIÓN
-        int invX = w / 2 - 81;
-        int invY = h / 2 + 10;
-        if (isInventory) invY = h / 2 - 40;
-        boolean invActive = isPersonaje || isInventory || isCrafting;
+        // 5. INVENTARIO PRINCIPAL REAL DEL JUGADOR 27 SLOTS (60..86)
+        int invX = (w - (9 * 26)) / 2;
+        int invY = h - 90;
+        if (isPersonaje) {
+            invX = (w - (9 * 26)) / 2;
+            invY = h - 95;
+        } else if (isCrafting) {
+            invX = 30;
+            invY = h - 95;
+        } else if (isBackpack) {
+            invX = (w - (9 * 26)) / 2;
+            invY = backpackY + 5 * 26 + 25;
+        }
 
+        boolean invActive = isPersonaje || isCrafting || isBackpack;
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                this.menu.setSlotState(60 + col + row * 9, invX + col * 18 + 1, invY + row * 18 + 1, invActive);
+                this.menu.setSlotState(60 + col + row * 9, invX + col * 26 + 5, invY + row * 26 + 5, invActive);
             }
         }
 
-        // 6. HOTBAR 9 SLOTS (87..95) -> PERSONAJE, INVENTARIO, FABRICACIÓN, MOCHILA
-        int hotbarX = w / 2 - 81;
-        int hotbarY = h / 2 + 70;
-        if (isInventory) hotbarY = h / 2 + 20;
-        if (isBackpack) hotbarY = h / 2 + 10;
-        boolean hotbarActive = isPersonaje || isInventory || isCrafting || isBackpack;
-
+        // 6. HOTBAR (87..95) -> Mantenida funcionalmente en el inventario
+        int hotbarY = invY + 80;
         for (int col = 0; col < 9; col++) {
-            this.menu.setSlotState(87 + col, hotbarX + col * 18 + 1, hotbarY + 1, hotbarActive);
+            this.menu.setSlotState(87 + col, invX + col * 26 + 5, hotbarY + 5, invActive);
         }
     }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        // NO renderizar background vanilla opaco. El mundo de Minecraft es 100% visible detrás.
         super.render(graphics, mouseX, mouseY, partialTick);
         this.renderTooltip(graphics, mouseX, mouseY);
     }
 
     @Override
     protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
-        // Sin etiquetas vanilla redundantes
+        // Desactivadas etiquetas vanilla
     }
 
     @Override
@@ -144,185 +391,318 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         int w = this.width;
         int h = this.height;
 
-        // Fondo transparente gris oscuro que difumina/oscurece suavemente el mundo de Minecraft detrás del inventario
-        graphics.fill(0, 0, w, h, 0x66121418);
+        // Fondo transparente limpio sin paneles azules o líneas divisorias
+        graphics.fill(0, 0, w, h, 0x880A0D12);
 
         Player player = this.minecraft.player;
         String name = player != null ? player.getGameProfile().getName() : "JUGADOR";
         String roleStr = ClientEvents.getClientPlayerRole().toUpperCase();
         if (roleStr.equals("NONE") || roleStr.isEmpty()) roleStr = "ASPIRANTE";
 
+        // LOGO OFICIAL t2.png EN TRIPLE TAMAÑO (Proporción 1672x940 -> 1.778)
+        int logoW = 180;
+        int logoH = (int) (logoW / 1.7787f);
+        graphics.blit(LOGO_T2, 20, 4, 0, 0, logoW, logoH, 1672, 940);
+
+        // LOGO EGG.png EN ESQUINA INFERIOR IZQUIERDA (Proporción 1:1)
+        graphics.blit(LOGO_EGG, 12, h - 30, 0, 0, 22, 22, 1254, 1254);
+        graphics.drawString(this.font, "EGPRODUCCION", 38, h - 22, 0xAAFFFFFF, true);
+
+        // 1. NAVEGACIÓN SUPERIOR CON BUTTON.PNG
+        int navY = 12;
+        int tabWidth = 120;
+        int tabHeight = 22;
+        Tab[] tabs = Tab.values();
+        int startX = (w - (tabs.length * (tabWidth + 15))) / 2;
+
+        for (int i = 0; i < tabs.length; i++) {
+            Tab tab = tabs[i];
+            int tx = startX + i * (tabWidth + 15);
+            boolean isSelected = (tab == currentTab);
+            boolean isHovered = mouseX >= tx && mouseX <= tx + tabWidth && mouseY >= navY && mouseY <= navY + tabHeight;
+
+            RenderSystem.setShaderColor(1.0f, isSelected ? 1.0f : (isHovered ? 0.9f : 0.6f), isSelected ? 1.0f : (isHovered ? 0.9f : 0.6f), 1.0f);
+            graphics.blit(BUTTON_TEX, tx, navY, 0, isSelected ? 20 : (isHovered ? 10 : 0), tabWidth, tabHeight, tabWidth, tabHeight);
+            RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+            String tabName = tab.name();
+            if (tabName.equals("FABRICACION")) tabName = "FABRICACIÓN";
+
+            int tw = this.font.width(tabName);
+            graphics.drawString(this.font, tabName, tx + (tabWidth - tw) / 2, navY + 6, isSelected ? 0xFFFFD700 : 0xFFFFFFFF, true);
+        }
+
+        // 2. RENDERING ESPECÍFICO SEGÚN PESTAÑA
+        if (currentTab == Tab.PERSONAJE) {
+            renderPersonajeTab(graphics, w, h, mouseX, mouseY, player, name, roleStr);
+        } else if (currentTab == Tab.FABRICACION) {
+            renderFabricacionTab(graphics, w, h, mouseX, mouseY);
+        } else if (currentTab == Tab.MOCHILA) {
+            renderMochilaTab(graphics, w, h, mouseX, mouseY);
+        }
+    }
+
+    private void renderPersonajeTab(GuiGraphics graphics, int w, int h, int mouseX, int mouseY, Player player, String name, String roleStr) {
+        // LADO IZQUIERDO: EQUIPAMIENTO
+        int armorX = 30;
+        int armorY = 50;
+
+        graphics.drawString(this.font, "EQUIPAMIENTO", armorX, armorY - 14, 0xFFFFD700, true);
+
+        String[] armorNames = {"CASCO", "PECHERA", "PANTALONES", "BOTAS"};
+        for (int i = 0; i < 4; i++) {
+            int sy = armorY + i * 32;
+            boolean hovered = mouseX >= armorX && mouseX <= armorX + 26 && mouseY >= sy && mouseY <= sy + 26;
+            drawSlotFrame(graphics, armorX, sy, hovered, 26);
+
+            ItemStack armorStack = this.menu.getSlot(i).getItem();
+            graphics.drawString(this.font, armorNames[i], armorX + 32, sy + 2, 0x88FFFFFF, false);
+            if (!armorStack.isEmpty()) {
+                if (!EquipmentRestrictions.isItemAuthorized(armorStack, roleStr)) {
+                    graphics.drawString(this.font, "NO CLASS", armorX + 32, sy + 14, 0xFFFF5555, true);
+                } else {
+                    graphics.drawString(this.font, "EQUIPADO", armorX + 32, sy + 14, 0xFF55FF55, true);
+                }
+            } else {
+                graphics.drawString(this.font, "VACÍO", armorX + 32, sy + 14, 0x44FFFFFF, false);
+            }
+        }
+
+        // SEGUNDA MANO
+        int offhandY = armorY + 4 * 32 + 10;
+        boolean offHovered = mouseX >= armorX && mouseX <= armorX + 26 && mouseY >= offhandY && mouseY <= offhandY + 26;
+        drawSlotFrame(graphics, armorX, offhandY, offHovered, 26);
+        ItemStack offhandStack = this.menu.getSlot(4).getItem();
+        graphics.drawString(this.font, "SEGUNDA MANO", armorX + 32, offhandY + 2, 0x88FFFFFF, false);
+        if (!offhandStack.isEmpty()) {
+            if (!EquipmentRestrictions.isItemAuthorized(offhandStack, roleStr)) {
+                graphics.drawString(this.font, "NO CLASS", armorX + 32, offhandY + 14, 0xFFFF5555, true);
+            } else {
+                graphics.drawString(this.font, "EQUIPADO", armorX + 32, offhandY + 14, 0xFF55FF55, true);
+            }
+        } else {
+            graphics.drawString(this.font, "VACÍO", armorX + 32, offhandY + 14, 0x44FFFFFF, false);
+        }
+
+        // CENTRO: PERSONAJE 3D EL DOBLE DE GRANDE (~180-200 SCALE) CON POSE DE COMBATE ESTÁTICA Y SIN ROTACIÓN POR MOUSE
+        int entityX = w / 2;
+        int entityY = h - 110;
+        if (player != null) {
+            int modelScale = Math.min(220, h / 3);
+            // Pose estática fija hacia la cámara sin tracking de ratón
+            InventoryScreen.renderEntityInInventoryFollowsMouse(graphics, entityX, entityY, modelScale, 0.0f, 0.0f, player);
+        }
+
+        // DERECHA: ATRIBUTOS Y STATS DEL PERSONAJE
+        int statsX = w - 210;
+        int statsY = 50;
+        graphics.drawString(this.font, "ESTADÍSTICAS RPG", statsX, statsY - 14, 0xFFFFD700, true);
+
         int level = ClientPacketHandler.hudPlayerLevel;
         int currentXp = ClientPacketHandler.hudCurrentXp;
         int neededXp = ClientPacketHandler.hudNeededXp;
 
-        // 1. BARRA DE NAVEGACIÓN SUPERIOR (Pestañas MMORPG limpias y transparentes)
-        int tabWidth = 85;
-        int tabHeight = 18;
-        Tab[] tabs = Tab.values();
-        int totalTabsW = tabs.length * (tabWidth + 6);
-        int startX = (w - totalTabsW) / 2;
-        int tabY = 12;
+        graphics.drawString(this.font, "NOMBRE: §f" + name, statsX, statsY + 6, 0xFFFFFFFF, true);
+        graphics.drawString(this.font, "CLASE: §e" + roleStr, statsX, statsY + 18, 0xFFFFFFFF, true);
+        graphics.drawString(this.font, "NIVEL: §a" + level + " §7(" + currentXp + "/" + neededXp + " XP)", statsX, statsY + 30, 0xFFFFFFFF, true);
 
-        for (int i = 0; i < tabs.length; i++) {
-            Tab tab = tabs[i];
-            int tx = startX + i * (tabWidth + 6);
-            boolean isSelected = (tab == currentTab);
-            boolean isHovered = mouseX >= tx && mouseX <= tx + tabWidth && mouseY >= tabY && mouseY <= tabY + tabHeight;
+        if (player != null) {
+            double health = Math.round(player.getHealth() * 10.0) / 10.0;
+            double maxHealth = Math.round(player.getMaxHealth() * 10.0) / 10.0;
+            double armor = player.getArmorValue();
+            double damage = player.getAttributeValue(Attributes.ATTACK_DAMAGE);
+            double speed = Math.round(player.getAttributeValue(Attributes.MOVEMENT_SPEED) * 100.0) / 10.0;
 
-            int bgCol = isSelected ? 0x88182430 : (isHovered ? 0x55222222 : 0x33000000);
-            int borderCol = isSelected ? 0xFF88CCFF : (isHovered ? 0xAAFFFFFF : 0x44FFFFFF);
-
-            graphics.fill(tx, tabY, tx + tabWidth, tabY + tabHeight, bgCol);
-            graphics.fill(tx, tabY, tx + tabWidth, tabY + 1, borderCol);
-            graphics.fill(tx, tabY + tabHeight - 1, tx + tabWidth, tabY + tabHeight, borderCol);
-
-            if (isSelected) {
-                graphics.fill(tx, tabY + tabHeight - 2, tx + tabWidth, tabY + tabHeight, 0xFF88CCFF);
-            }
-
-            String tabName = tab.name();
-            if (tabName.equals("FABRICACION")) tabName = "FABRICACIÓN";
-            if (tabName.equals("INFORMACION")) tabName = "INFORMACIÓN";
-
-            int tw = this.font.width(tabName);
-            graphics.drawString(this.font, tabName, tx + (tabWidth - tw) / 2, tabY + 5, isSelected ? 0xFF88CCFF : 0xFFCCCCCC, false);
+            graphics.drawString(this.font, "SALUD: §c" + health + " / " + maxHealth, statsX, statsY + 46, 0xFFFFFFFF, true);
+            graphics.drawString(this.font, "ARMADURA: §9" + armor, statsX, statsY + 58, 0xFFFFFFFF, true);
+            graphics.drawString(this.font, "DAÑO BASE: §6" + damage, statsX, statsY + 70, 0xFFFFFFFF, true);
+            graphics.drawString(this.font, "VELOCIDAD: §b" + speed, statsX, statsY + 82, 0xFFFFFFFF, true);
         }
 
-        // 2. SECCIONES / CONTENIDO SEGÚN LA PESTAÑA ACTIVA
-        if (currentTab == Tab.PERSONAJE) {
-            // Panel izquierdo: Armadura y Segunda Mano
-            int armorX = w / 2 - 130;
-            int armorY = h / 2 - 80;
+        // PARTE INFERIOR: INVENTARIO REAL COMPLETO Y FUNCIONAL DEL JUGADOR
+        int invX = (w - (9 * 26)) / 2;
+        int invY = h - 95;
+        graphics.drawString(this.font, "INVENTARIO DEL JUGADOR", invX, invY - 14, 0xFFFFD700, true);
+        drawInventoryGrid(graphics, invX, invY, mouseX, mouseY);
+    }
 
-            drawTranslucentPanel(graphics, armorX - 6, armorY - 6, 32, 100, "EQUIPO");
-            for (int i = 0; i < 4; i++) {
-                drawSlotFrame(graphics, armorX, armorY + i * 22, 0x8888CCFF);
+    private void renderFabricacionTab(GuiGraphics graphics, int w, int h, int mouseX, int mouseY) {
+        // LADO IZQUIERDO: CRAFTEO 3x3 Y RECETA SELECCIONADA
+        int craftGridX = 30;
+        int craftGridY = 55;
+
+        graphics.drawString(this.font, "ESTACIÓN DE FABRICACIÓN", craftGridX, craftGridY - 14, 0xFFFFD700, true);
+
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 3; col++) {
+                int sx = craftGridX + col * 26;
+                int sy = craftGridY + row * 26;
+                boolean hov = mouseX >= sx && mouseX <= sx + 26 && mouseY >= sy && mouseY <= sy + 26;
+                drawSlotFrame(graphics, sx, sy, hov, 26);
+            }
+        }
+
+        graphics.drawString(this.font, "➔", craftGridX + 95, craftGridY + 30, 0xFFFFD700, true);
+
+        boolean resHov = mouseX >= craftGridX + 140 && mouseX <= craftGridX + 166 && mouseY >= craftGridY + 26 && mouseY <= craftGridY + 52;
+        drawSlotFrame(graphics, craftGridX + 140, craftGridY + 26, resHov, 26);
+
+        // DETALLE DE RECETA SELECCIONADA DESDE EL CATÁLOGO
+        if (selectedRecipe != null) {
+            ItemStack selRes = selectedRecipe.getResultItem(this.minecraft.level.registryAccess());
+            graphics.drawString(this.font, "SELECCIONADA: §a" + selRes.getHoverName().getString(), craftGridX, craftGridY + 90, 0xFFFFFFFF, true);
+
+            // Botón Fabricar con button.png
+            int btnW = 90;
+            int btnH = 20;
+            int btnX = craftGridX;
+            int btnY = craftGridY + 105;
+            boolean btnHov = mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH;
+
+            graphics.blit(BUTTON_TEX, btnX, btnY, 0, btnHov ? 10 : 0, btnW, btnH, btnW, btnH);
+            graphics.drawString(this.font, "FABRICAR", btnX + 18, btnY + 5, 0xFFFFD700, true);
+        } else {
+            graphics.drawString(this.font, "Selecciona una receta del catálogo", craftGridX, craftGridY + 90, 0x88FFFFFF, false);
+        }
+
+        // ABAJO IZQUIERDA: INVENTARIO DEL JUGADOR
+        int invX = 30;
+        int invY = h - 95;
+        graphics.drawString(this.font, "MATERIALES / INVENTARIO", invX, invY - 14, 0xFFFFD700, true);
+        drawInventoryGrid(graphics, invX, invY, mouseX, mouseY);
+
+        // LADO DERECHO: CATÁLOGO COMPLETO OCUPANDO TODA LA ALTURA DERECHA
+        int catalogX = (int) (w * 0.45);
+        int catalogWidth = w - catalogX - 20;
+
+        graphics.drawString(this.font, "CATÁLOGO DE FABRICACIÓN (" + filteredRecipes.size() + ")", catalogX + 10, 36, 0xFFFFD700, true);
+
+        // Categorías universales usando botones compactos
+        int catY = 75;
+        int catW = 58;
+        int catH = 16;
+        RecipeCategory[] categories = RecipeCategory.values();
+        for (int i = 0; i < categories.length; i++) {
+            RecipeCategory cat = categories[i];
+            int cx = catalogX + 10 + (i % 5) * (catW + 4);
+            int cy = catY + (i / 5) * (catH + 4);
+            boolean isSel = (cat == currentCategory);
+            boolean isHov = mouseX >= cx && mouseX <= cx + catW && mouseY >= cy && mouseY <= cy + catH;
+
+            graphics.blit(BUTTON_TEX, cx, cy, 0, isSel ? 20 : (isHov ? 10 : 0), catW, catH, catW, catH);
+            String catLabel = cat.name();
+            if (catLabel.length() > 8) catLabel = catLabel.substring(0, 7) + ".";
+            graphics.drawString(this.font, catLabel, cx + 4, cy + 4, isSel ? 0xFFFFD700 : 0xFFFFFFFF, false);
+        }
+
+        // Grilla de recetas del catálogo
+        int gridY = catY + 40;
+        int itemCols = Math.max(4, (catalogWidth - 20) / 32);
+        int itemRows = Math.max(3, (h - gridY - 50) / 32);
+        int pageSize = itemCols * itemRows;
+
+        int startIdx = recipePageIndex * pageSize;
+        for (int i = 0; i < pageSize && (startIdx + i) < filteredRecipes.size(); i++) {
+            CraftingRecipe rec = filteredRecipes.get(startIdx + i);
+            ItemStack res = rec.getResultItem(this.minecraft.level.registryAccess());
+
+            int col = i % itemCols;
+            int row = i / itemCols;
+            int ix = catalogX + 10 + col * 32;
+            int iy = gridY + row * 32;
+
+            boolean hov = mouseX >= ix && mouseX <= ix + 28 && mouseY >= iy && mouseY <= iy + 28;
+            drawSlotFrame(graphics, ix, iy, hov, 28);
+            graphics.renderItem(res, ix + 6, iy + 6);
+
+            if (favoriteRecipes.contains(rec.getId())) {
+                graphics.drawString(this.font, "★", ix + 2, iy + 2, 0xFFFFD700, false);
             }
 
-            int offhandX = w / 2 - 130;
-            int offhandY = h / 2 + 15;
-            drawSlotFrame(graphics, offhandX, offhandY, 0x8888CCFF);
-
-            // Modelo 3D del jugador en el centro
-            int entityX = w / 2 - 40;
-            int entityY = h / 2 + 5;
-            if (player != null) {
-                InventoryScreen.renderEntityInInventoryFollowsMouse(graphics, entityX, entityY, 48, (float)(entityX) - mouseX, (float)(entityY - 50) - mouseY, player);
+            if (hov) {
+                graphics.renderTooltip(this.font, res, mouseX, mouseY);
             }
+        }
 
-            // Panel derecho: Estadísticas RPG compactas
-            int statsX = w / 2 + 20;
-            int statsY = h / 2 - 80;
-            drawTranslucentPanel(graphics, statsX, statsY, 120, 80, "ESTADÍSTICAS");
+        // Paginación con button.png
+        int totalPages = Math.max(1, (int) Math.ceil((double) filteredRecipes.size() / (double) pageSize));
+        int navButtonsY = h - 35;
+        int pBtnW = 70;
+        int pBtnH = 20;
 
-            graphics.drawString(this.font, "Heroe: " + name, statsX + 6, statsY + 18, 0xFFFFFFFF, false);
-            graphics.drawString(this.font, "Rol: " + roleStr, statsX + 6, statsY + 30, 0xFF88FF88, false);
-            graphics.drawString(this.font, "Nivel: " + level, statsX + 6, statsY + 42, 0xFF88CCFF, false);
-            graphics.drawString(this.font, "XP: " + currentXp + " / " + neededXp, statsX + 6, statsY + 54, 0xFFFFFF88, false);
+        // Anterior
+        boolean prevHov = mouseX >= catalogX + 10 && mouseX <= catalogX + 10 + pBtnW && mouseY >= navButtonsY && mouseY <= navButtonsY + pBtnH;
+        graphics.blit(BUTTON_TEX, catalogX + 10, navButtonsY, 0, prevHov ? 10 : 0, pBtnW, pBtnH, pBtnW, pBtnH);
+        graphics.drawString(this.font, "ANTERIOR", catalogX + 18, navButtonsY + 5, 0xFFFFFFFF, true);
 
-            // Panel inferior: Inventario principal + Hotbar
-            int invX = w / 2 - 81;
-            int invY = h / 2 + 10;
-            drawInventoryGrid(graphics, invX, invY);
+        // Texto página
+        graphics.drawString(this.font, (recipePageIndex + 1) + " / " + totalPages, catalogX + (catalogWidth / 2) - 15, navButtonsY + 5, 0xFFFFD700, true);
 
-        } else if (currentTab == Tab.INVENTARIO) {
-            int invX = w / 2 - 81;
-            int invY = h / 2 - 40;
-            drawTranslucentPanel(graphics, invX - 10, invY - 20, 182, 90, "INVENTARIO PRINCIPAL");
-            drawInventoryGrid(graphics, invX, invY);
+        // Siguiente
+        int nextX = catalogX + catalogWidth - pBtnW - 10;
+        boolean nextHov = mouseX >= nextX && mouseX <= nextX + pBtnW && mouseY >= navButtonsY && mouseY <= navButtonsY + pBtnH;
+        graphics.blit(BUTTON_TEX, nextX, navButtonsY, 0, nextHov ? 10 : 0, pBtnW, pBtnH, pBtnW, pBtnH);
+        graphics.drawString(this.font, "SIGUIENTE", nextX + 12, navButtonsY + 5, 0xFFFFFFFF, true);
+    }
 
-        } else if (currentTab == Tab.FABRICACION) {
-            int craftGridX = w / 2 - 70;
-            int craftGridY = h / 2 - 85;
+    private void renderMochilaTab(GuiGraphics graphics, int w, int h, int mouseX, int mouseY) {
+        int tier = this.menu.getBackpackTier();
+        int backpackX = (w - (9 * 26)) / 2;
+        int backpackY = 100;
+        int maxUnlocked = tier * 15;
 
-            drawTranslucentPanel(graphics, craftGridX - 15, craftGridY - 20, 170, 80, "MESA DE FABRICACIÓN");
+        // ENCABEZADO Y PESO (CONSERVA EL DISEÑO QUE LE GUSTA AL USUARIO SIN LÍNEAS AZULES)
+        int headerY = 50;
+        graphics.drawString(this.font, "MOCHILA DEL AVENTURERO (TIER " + tier + ")", backpackX, headerY, 0xFFFFD700, true);
 
-            for (int row = 0; row < 3; row++) {
-                for (int col = 0; col < 3; col++) {
-                    drawSlotFrame(graphics, craftGridX + col * 20, craftGridY + row * 20, 0x44FFFFFF);
-                }
-            }
-            graphics.drawString(this.font, "➔", craftGridX + 75, craftGridY + 24, 0xFF88CCFF, true);
-            drawSlotFrame(graphics, craftGridX + 105, craftGridY + 20, 0xFF55FF55);
+        int iconW = 18;
+        int iconH = (int)(iconW / 0.986f);
+        graphics.blit(WEIGHT_ICON, backpackX, headerY + 18, 0, 0, iconW, iconH, 496, 503);
+        graphics.drawString(this.font, "CAPACIDAD DESBLOQUEADA: §a" + maxUnlocked + " / 45 SLOTS", backpackX + 24, headerY + 22, 0xFFFFFFFF, true);
 
-            int invX = w / 2 - 81;
-            int invY = h / 2 + 10;
-            drawInventoryGrid(graphics, invX, invY);
-
-        } else if (currentTab == Tab.MOCHILA) {
-            int tier = this.menu.getBackpackTier();
-            int backpackX = w / 2 - 81;
-            int backpackY = h / 2 - 95;
-            int maxUnlocked = tier * 15;
-
-            drawTranslucentPanel(graphics, backpackX - 10, backpackY - 20, 182, 120, "MOCHILA (TIER " + tier + ")");
-
-            for (int row = 0; row < 5; row++) {
-                for (int col = 0; col < 9; col++) {
-                    int slotIdx = col + row * 9;
-                    if (slotIdx < maxUnlocked) {
-                        drawSlotFrame(graphics, backpackX + col * 18, backpackY + row * 18, 0x44FFFFFF);
-                    } else {
-                        drawSlotFrame(graphics, backpackX + col * 18, backpackY + row * 18, 0xAA441111);
-                        graphics.drawString(this.font, "🔒", backpackX + col * 18 + 5, backpackY + row * 18 + 4, 0xFF662222, false);
-                    }
-                }
-            }
-
-            int hotbarY = h / 2 + 10;
+        // GRID DE MOCHILA (45 SLOTS)
+        for (int row = 0; row < 5; row++) {
             for (int col = 0; col < 9; col++) {
-                drawSlotFrame(graphics, backpackX + col * 18, hotbarY, 0x8888CCFF);
+                int slotIdx = col + row * 9;
+                int sx = backpackX + col * 26;
+                int sy = backpackY + row * 26;
+                boolean hov = mouseX >= sx && mouseX <= sx + 26 && mouseY >= sy && mouseY <= sy + 26;
+
+                if (slotIdx < maxUnlocked) {
+                    drawSlotFrame(graphics, sx, sy, hov, 26);
+                } else {
+                    drawSlotFrame(graphics, sx, sy, false, 26);
+                    graphics.fill(sx + 1, sy + 1, sx + 25, sy + 25, 0x88330000);
+                    graphics.drawString(this.font, "🔒", sx + 7, sy + 7, 0xFFFF5555, false);
+                }
             }
-
-        } else if (currentTab == Tab.INFORMACION) {
-            int infoX = w / 2 - 160;
-            int infoY = h / 2 - 70;
-
-            drawTranslucentPanel(graphics, infoX, infoY, 150, 100, "DATOS DEL JUGADOR");
-            graphics.drawString(this.font, "Nombre: " + name, infoX + 10, infoY + 22, 0xFFFFFFFF, false);
-            graphics.drawString(this.font, "Rol: " + roleStr, infoX + 10, infoY + 36, 0xFF88FF88, false);
-            graphics.drawString(this.font, "Nivel de Rol: " + level, infoX + 10, infoY + 50, 0xFF88CCFF, false);
-            graphics.drawString(this.font, "Experiencia: " + currentXp + " / " + neededXp, infoX + 10, infoY + 64, 0xFFFFFF88, false);
-
-            drawTranslucentPanel(graphics, infoX + 170, infoY, 150, 100, "DATOS DEL REINO");
-            graphics.drawString(this.font, "Vidas de Trono: " + ClientPacketHandler.hudThroneLives, infoX + 180, infoY + 22, 0xFFFFFFFF, false);
-            graphics.drawString(this.font, "Puntos Compartidos: " + ClientPacketHandler.hudSharedPoints, infoX + 180, infoY + 36, 0xFF88FF88, false);
-            graphics.drawString(this.font, "Misión: " + ClientPacketHandler.hudActiveMissionTitle, infoX + 180, infoY + 50, 0xFF88CCFF, false);
-            graphics.drawString(this.font, "Progreso: " + ClientPacketHandler.hudActiveMissionProgress, infoX + 180, infoY + 64, 0xFFFFFF88, false);
         }
+
+        // ABAJO: INVENTARIO PRINCIPAL
+        int invY = backpackY + 5 * 26 + 25;
+        graphics.drawString(this.font, "INVENTARIO DEL JUGADOR", backpackX, invY - 14, 0xFFFFD700, true);
+        drawInventoryGrid(graphics, backpackX, invY, mouseX, mouseY);
     }
 
-    private void drawTranslucentPanel(GuiGraphics graphics, int px, int py, int pw, int ph, String title) {
-        // Panel translúcido suave (0x55000000 / 0x66000000) permitiendo ver el mundo detrás
-        graphics.fill(px, py, px + pw, py + ph, 0x66000000);
-        graphics.fill(px, py, px + pw, py + 1, 0x44FFFFFF);
-        graphics.fill(px, py, px + 1, py + ph, 0x44FFFFFF);
-        graphics.fill(px + pw - 1, py, px + pw, py + ph, 0x22FFFFFF);
-        graphics.fill(px, py + ph - 1, px + pw, py + ph, 0x22FFFFFF);
-
-        if (title != null && !title.isEmpty()) {
-            graphics.drawString(this.font, title, px + 6, py + 5, 0xFF88CCFF, false);
-            graphics.fill(px + 4, py + 15, px + pw - 4, py + 16, 0x22FFFFFF);
-        }
-    }
-
-    private void drawInventoryGrid(GuiGraphics graphics, int invX, int invY) {
+    private void drawInventoryGrid(GuiGraphics graphics, int invX, int invY, int mouseX, int mouseY) {
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                drawSlotFrame(graphics, invX + col * 18, invY + row * 18, 0x44FFFFFF);
+                int sx = invX + col * 26;
+                int sy = invY + row * 26;
+                boolean hov = mouseX >= sx && mouseX <= sx + 26 && mouseY >= sy && mouseY <= sy + 26;
+                drawSlotFrame(graphics, sx, sy, hov, 26);
             }
         }
+        int hotbarY = invY + 80;
         for (int col = 0; col < 9; col++) {
-            drawSlotFrame(graphics, invX + col * 18, invY + 60, 0x8888CCFF);
+            int sx = invX + col * 26;
+            boolean hov = mouseX >= sx && mouseX <= sx + 26 && mouseY >= hotbarY && mouseY <= hotbarY + 26;
+            drawSlotFrame(graphics, sx, hotbarY, hov, 26);
         }
     }
 
-    private void drawSlotFrame(GuiGraphics graphics, int x, int y, int borderColor) {
-        // Marco de slot transparente (SIN relleno negro sólido)
-        graphics.fill(x, y, x + 18, y + 1, borderColor);
-        graphics.fill(x, y, x + 1, y + 18, borderColor);
-        graphics.fill(x + 17, y, x + 18, y + 18, 0x22FFFFFF);
-        graphics.fill(x, y + 17, x + 18, y + 18, 0x22FFFFFF);
+    private void drawSlotFrame(GuiGraphics graphics, int x, int y, boolean hovered, int size) {
+        ResourceLocation tex = hovered ? SLOTS_HOVER_TEX : SLOTS_TEX;
+        graphics.blit(tex, x, y, 0, 0, size, size, size, size);
     }
 }

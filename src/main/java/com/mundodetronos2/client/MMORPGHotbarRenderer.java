@@ -34,16 +34,11 @@ public class MMORPGHotbarRenderer {
                 int slotY = startY;
                 boolean isSelected = (i == selectedIndex);
 
-                if (isSelected) {
-                    // Resplandor elegante alrededor del slot seleccionado
-                    graphics.fill(slotX - 2, slotY - 2, slotX + slotSize + 2, slotY + slotSize + 2, 0x884488FF);
-                    graphics.fill(slotX - 1, slotY - 1, slotX + slotSize + 1, slotY + slotSize + 1, 0xFF88CCFF);
-                    graphics.fill(slotX, slotY, slotX + slotSize, slotY + slotSize, 0xCC18202A);
-                } else {
-                    // Slot oscuro translúcido con borde discreto
-                    graphics.fill(slotX - 1, slotY - 1, slotX + slotSize + 1, slotY + slotSize + 1, 0x44FFFFFF);
-                    graphics.fill(slotX, slotY, slotX + slotSize, slotY + slotSize, 0xAA0D1014);
-                }
+                net.minecraft.resources.ResourceLocation slotTex = isSelected ?
+                    new net.minecraft.resources.ResourceLocation("mundodetronos2", "textures/gui/slots_hover.png") :
+                    new net.minecraft.resources.ResourceLocation("mundodetronos2", "textures/gui/slots.png");
+
+                graphics.blit(slotTex, slotX, slotY, 0, 0, slotSize, slotSize, slotSize, slotSize);
 
                 // Renderizado del ItemStack
                 ItemStack stack = player.getInventory().getItem(i);
@@ -64,8 +59,8 @@ public class MMORPGHotbarRenderer {
             int offX = HudLayoutManager.getRenderX(ComponentId.OFFHAND_SLOT, screenWidth, screenHeight);
             int offY = HudLayoutManager.getRenderY(ComponentId.OFFHAND_SLOT, screenWidth, screenHeight);
 
-            graphics.fill(offX - 1, offY - 1, offX + slotSize + 1, offY + slotSize + 1, 0x44FFFFFF);
-            graphics.fill(offX, offY, offX + slotSize, offY + slotSize, 0xAA0D1014);
+            net.minecraft.resources.ResourceLocation slotTex = new net.minecraft.resources.ResourceLocation("mundodetronos2", "textures/gui/slots.png");
+            graphics.blit(slotTex, offX, offY, 0, 0, slotSize, slotSize, slotSize, slotSize);
 
             ItemStack offhandStack = player.getOffhandItem();
             if (!offhandStack.isEmpty()) {

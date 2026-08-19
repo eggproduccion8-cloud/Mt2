@@ -8,11 +8,15 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.EnumMap;
 import java.util.Map;
 
 public class HudEditorScreen extends Screen {
+
+    public static final ResourceLocation LOGO_T2 = new ResourceLocation("mundodetronos2", "textures/gui/t2.png");
+    public static final ResourceLocation LOGO_EGG = new ResourceLocation("mundodetronos2", "textures/gui/egg.png");
 
     private final Map<ComponentId, ComponentConfig> tempConfig = new EnumMap<>(ComponentId.class);
     private ComponentId selectedComponent = null;
@@ -37,14 +41,17 @@ public class HudEditorScreen extends Screen {
         int startX = this.width - btnW - 12;
         int startY = 12;
 
-        // Botón GUARDAR (Arriba a la derecha en columna vertical)
+        // Botón GUARDAR (Guarda permanentemente las posiciones de los componentes)
         this.addRenderableWidget(Button.builder(Component.literal("§aGUARDAR"), button -> {
             for (Map.Entry<ComponentId, ComponentConfig> entry : tempConfig.entrySet()) {
                 ComponentConfig live = HudLayoutManager.getConfig(entry.getKey());
+                live.anchor = entry.getValue().anchor;
                 live.offsetX = entry.getValue().offsetX;
                 live.offsetY = entry.getValue().offsetY;
                 live.scale = entry.getValue().scale;
                 live.visible = entry.getValue().visible;
+                live.width = entry.getValue().width;
+                live.height = entry.getValue().height;
             }
             HudLayoutManager.save();
             this.onClose();
@@ -81,10 +88,29 @@ public class HudEditorScreen extends Screen {
         // Fondo translúcido suave
         graphics.fill(0, 0, this.width, this.height, 0xAA000000);
 
-        // Título del Editor
-        graphics.drawCenteredString(this.font, "§e§lEDITOR DE HUD MMORPG §7(Arrastra los componentes con el ratón)", this.width / 2, 12, 0xFFFFFFFF);
+        // DIBUJAR GRILLA DE ALINEACIÓN (20x20 pixels)
+        int gridSpacing = 20;
+        int gridColor = 0x15FFFFFF;
+        for (int x = 0; x < this.width; x += gridSpacing) {
+            graphics.fill(x, 0, x + 1, this.height, gridColor);
+        }
+        for (int y = 0; y < this.height; y += gridSpacing) {
+            graphics.fill(0, y, this.width, y + 1, gridColor);
+        }
 
-        // Renderizar contornos y etiquetas de cada componente editable
+        // LOGO OFICIAL t2.png AMBIENTADO CON ASPECT RATIO REAL (1672:940 -> 1.778)
+        int logoW = 140;
+        int logoH = (int) (logoW / 1.7787f);
+        graphics.blit(LOGO_T2, this.width / 2 - logoW / 2, 4, 0, 0, logoW, logoH, 1672, 940);
+
+        // LOGO EGG.png EN ESQUINA INFERIOR IZQUIERDA
+        graphics.blit(LOGO_EGG, 10, this.height - 32, 0, 0, 24, 24, 1254, 1254);
+        graphics.drawString(this.font, "EGPRODUCCION", 38, this.height - 24, 0xAAFFFFFF, true);
+
+        // Título del Editor
+        graphics.drawCenteredString(this.font, "Edición de HUD Mundo de Tronos", this.width / 2, logoH + 8, 0xFFFFD700);
+
+        // Renderizar contornos de cada componente editable
         for (ComponentId id : ComponentId.values()) {
             ComponentConfig config = tempConfig.get(id);
             if (config == null) continue;
@@ -100,21 +126,19 @@ public class HudEditorScreen extends Screen {
             int borderColor = isSelected ? 0xFFFFD700 : (isHovered ? 0xFFFFFFFF : 0x88AAAAAA);
             int fillColor = isSelected ? 0x66FFD700 : 0x44000000;
 
-            // Renderizar caja de delimitación
             graphics.fill(x, y, x + w, y + h, fillColor);
             graphics.fill(x - 1, y - 1, x + w + 1, y, borderColor);
             graphics.fill(x - 1, y + h, x + w + 1, y + h + 1, borderColor);
             graphics.fill(x - 1, y, x, y + h, borderColor);
             graphics.fill(x + w, y, x + w + 1, y + h, borderColor);
 
-            // Nombre del componente
             graphics.drawString(this.font, id.getDisplayName(), x + 3, y + 3, borderColor, false);
         }
 
-        // Informar del componente seleccionado
+        // Información del componente seleccionado
         if (selectedComponent != null) {
             ComponentConfig config = tempConfig.get(selectedComponent);
-            String info = "Seleccionado: " + selectedComponent.getDisplayName() + " (Offset X: " + config.offsetX + ", Offset Y: " + config.offsetY + ")";
+            String info = "Seleccionado: " + selectedComponent.getDisplayName() + " (X: " + config.offsetX + ", Y: " + config.offsetY + ")";
             graphics.drawString(this.font, info, 10, this.height - 45, 0xFFFFD700, false);
         }
 
@@ -123,7 +147,7 @@ public class HudEditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0) { // Click izquierdo para seleccionar/arrastrar
+        if (button == 0) {
             for (ComponentId id : ComponentId.values()) {
                 ComponentConfig config = tempConfig.get(id);
                 if (config == null) continue;
