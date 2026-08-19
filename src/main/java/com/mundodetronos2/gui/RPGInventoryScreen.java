@@ -138,7 +138,7 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
                 int panelY = this.height / 2 - 80;
                 // Next page button
                 if (mouseX >= panelX + 85 && mouseX <= panelX + 110 && mouseY >= panelY + 145 && mouseY <= panelY + 160) {
-                    if ((recipePageIndex + 1) * 3 < filteredRecipes.size()) {
+                    if ((recipePageIndex + 1) * 2 < filteredRecipes.size()) {
                         recipePageIndex++;
                     }
                     return true;
@@ -407,7 +407,7 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
             }
 
             // Paging text & buttons
-            int totalPages = Math.max(1, (int) Math.ceil((double) filteredRecipes.size() / 3.0));
+            int totalPages = Math.max(1, (int) Math.ceil((double) filteredRecipes.size() / 2.0));
             graphics.drawString(this.font, (recipePageIndex + 1) + "/" + totalPages, recipeX + 45, recipeY + 148, 0xFF88CCFF, false);
             graphics.drawString(this.font, "◀", recipeX + 8, recipeY + 148, 0xFFFFD700, false);
             graphics.drawString(this.font, "▶", recipeX + 92, recipeY + 148, 0xFFFFD700, false);
@@ -470,7 +470,7 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         }
         for (int col = 0; col < 9; col++) {
             int sx = invX + col * 18;
-            int sy = invY + 60;
+            int sy = invY + 65;
             boolean hov = mouseX >= sx && mouseX <= sx + 18 && mouseY >= sy && mouseY <= sy + 18;
             drawSlotFrame(graphics, sx, sy, hov);
         }

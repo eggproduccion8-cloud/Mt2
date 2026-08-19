@@ -296,6 +296,9 @@ public class MainGuiScreen extends Screen {
         graphics.fill(x + 5, y + 5, x + 6, y + menuHeight - 5, innerBorderColor);
         graphics.fill(x + menuWidth - 6, y + 5, x + menuWidth - 5, y + menuHeight - 5, innerBorderColor);
 
+        // Draw T2 Logo header
+        graphics.blit(LOGO_T2, centerX - 40, y - 28, 0, 0, 80, 24, 80, 24);
+
         if (currentTab == Tab.MAIN) {
             String title = "MUNDO DE TRONOS 2";
             String subtitle = "Prototipo Base v1.0.0";
