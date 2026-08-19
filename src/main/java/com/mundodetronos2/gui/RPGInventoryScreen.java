@@ -348,11 +348,15 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         }
 
         // 5. INVENTARIO PRINCIPAL REAL DEL JUGADOR 27 SLOTS (60..86)
+        com.mundodetronos2.client.HudLayoutManager.ComponentConfig invConfig = com.mundodetronos2.client.HudLayoutManager.getConfig(com.mundodetronos2.client.HudLayoutManager.ComponentId.RPG_INVENTORY);
+        int customInvX = com.mundodetronos2.client.HudLayoutManager.getRenderX(invConfig, w, h);
+        int customInvY = com.mundodetronos2.client.HudLayoutManager.getRenderY(invConfig, w, h);
+
         int invX = (w - (9 * 26)) / 2;
         int invY = h - 95;
         if (isPersonaje) {
-            invX = w - 244;
-            invY = 135;
+            invX = customInvX;
+            invY = customInvY;
         } else if (isCrafting) {
             invX = 30;
             invY = h - 95;
@@ -487,17 +491,17 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
             InventoryScreen.renderEntityInInventoryFollowsMouse(graphics, entityX, entityY, modelScale, 0.0f, 0.0f, player);
         }
 
-        // DERECHA: ATRIBUTOS Y STATS DEL PERSONAJE
+        // DERECHA: ATRIBUTOS Y STATS DEL PERSONAJE / CARNET DE JUGADOR
         int statsX = w - 244;
         int statsY = 42;
-        graphics.drawString(this.font, "ESTADÍSTICAS", statsX, statsY, 0xFFFFD700, true);
+        graphics.drawString(this.font, "CARNET DE JUGADOR", statsX, statsY, 0xFFFFD700, true);
 
         int level = ClientPacketHandler.hudPlayerLevel;
         int currentXp = ClientPacketHandler.hudCurrentXp;
         int neededXp = ClientPacketHandler.hudNeededXp;
 
         graphics.drawString(this.font, "NOMBRE: §f" + name, statsX, statsY + 12, 0xFFFFFFFF, true);
-        graphics.drawString(this.font, "CLASE: §e" + roleStr + "  §7|  §fNIVEL: §a" + level, statsX, statsY + 22, 0xFFFFFFFF, true);
+        graphics.drawString(this.font, "ROL: §e" + roleStr + "  §7|  §fNIVEL: §a" + level, statsX, statsY + 22, 0xFFFFFFFF, true);
 
         if (player != null) {
             double health = Math.round(player.getHealth() * 10.0) / 10.0;
@@ -511,9 +515,15 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
             graphics.drawString(this.font, "XP: §a" + currentXp + " / " + neededXp, statsX, statsY + 52, 0xFFFFFFFF, true);
         }
 
+        // MOSTRAR ÍCONO DE CARTA / CARNET DE ROL
+        ItemStack carnetItem = new ItemStack(com.mundodetronos2.init.ItemInit.ROLE_CARD.get());
+        graphics.renderItem(carnetItem, statsX + 180, statsY);
+
         // LADO DERECHO (ENMEDIO): INVENTARIO REAL COMPLETO Y FUNCIONAL DEL JUGADOR
-        int invX = w - 244;
-        int invY = 135;
+        com.mundodetronos2.client.HudLayoutManager.ComponentConfig invConfig = com.mundodetronos2.client.HudLayoutManager.getConfig(com.mundodetronos2.client.HudLayoutManager.ComponentId.RPG_INVENTORY);
+        int invX = com.mundodetronos2.client.HudLayoutManager.getRenderX(invConfig, w, h);
+        int invY = com.mundodetronos2.client.HudLayoutManager.getRenderY(invConfig, w, h);
+
         graphics.drawString(this.font, "INVENTARIO DEL JUGADOR", invX, invY - 14, 0xFFFFD700, true);
         drawInventoryGrid(graphics, invX, invY, mouseX, mouseY);
     }

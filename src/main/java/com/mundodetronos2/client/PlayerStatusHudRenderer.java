@@ -91,39 +91,28 @@ public class PlayerStatusHudRenderer {
                 lastBarY = absY;
             }
 
-            // BARRA DE HAMBRE
-            int foodY = lastBarY + 10;
-            int foodLevel = player.getFoodData().getFoodLevel();
-            float foodRatio = Math.max(0.0f, Math.min(1.0f, foodLevel / 20.0f));
-
-            graphics.fill(barX - 1, foodY - 1, barX + barWidth + 1, foodY + barHeight + 1, 0x88000000);
-            graphics.fill(barX, foodY, barX + barWidth, foodY + barHeight, 0xAA221405);
-            int foodFill = (int) (barWidth * foodRatio);
-            if (foodFill > 0) {
-                int foodColor = foodLevel > 6 ? 0xFFE08020 : 0xFFCC3311;
-                graphics.fill(barX, foodY, barX + foodFill, foodY + barHeight, foodColor);
-                graphics.fill(barX, foodY, barX + foodFill, foodY + 1, 0xFFFFAA44);
+            // LÍNEAS DE INFORMACIÓN DE REINO / JUGADOR
+            int lineY = lastBarY + 10;
+            String role = ClientEvents.getClientPlayerRole();
+            if (role == null || role.isEmpty() || role.equalsIgnoreCase("none")) {
+                role = "ASPIRANTE";
+            } else {
+                role = role.toUpperCase();
             }
 
-            graphics.blit(FOOD_ICON, barX - 10, foodY - 2, 0, 0, 8, 8, 8, 8);
-            graphics.drawString(font, foodLevel + "/20", barX + barWidth + 6, foodY - 1, 0xFFFFAA00, true);
+            int totalSecs = ClientPacketHandler.hudRemainingSeconds;
+            int hrs = totalSecs / 3600;
+            int mins = (totalSecs % 3600) / 60;
+            int secs = totalSecs % 60;
+            String timeStr = String.format("%d:%02d:%02d", hrs, mins, secs);
 
-            // BARRA DE RESPIRACIÓN
-            int currentAir = player.getAirSupply();
-            int maxAir = player.getMaxAirSupply();
-            if (currentAir < maxAir) {
-                int airY = foodY + 10;
-                float airRatio = Math.max(0.0f, Math.min(1.0f, (float) currentAir / (float) maxAir));
-                int airFill = (int) (barWidth * airRatio);
-
-                graphics.fill(barX - 1, airY - 1, barX + barWidth + 1, airY + barHeight + 1, 0x88000000);
-                graphics.fill(barX, airY, barX + barWidth, airY + barHeight, 0xAA051522);
-                if (airFill > 0) {
-                    graphics.fill(barX, airY, barX + airFill, airY + barHeight, 0xFF33CCFF);
-                    graphics.fill(barX, airY, barX + airFill, airY + 1, 0xFF88EEFF);
-                }
-                graphics.drawString(font, "Aire: " + Math.max(0, currentAir) + "/" + maxAir, barX + barWidth + 6, airY - 1, 0xFF55FFFF, true);
-            }
+            graphics.drawString(font, "❤ Pts Equipo: §a" + ClientPacketHandler.hudSharedPoints, barX - 10, lineY, 0xFFFFFFFF, true);
+            lineY += 10;
+            graphics.drawString(font, "♛ Trono: §c" + ClientPacketHandler.hudThroneLives, barX - 10, lineY, 0xFFFFFFFF, true);
+            lineY += 10;
+            graphics.drawString(font, "⌛ Tiempo: §b" + timeStr, barX - 10, lineY, 0xFFFFFFFF, true);
+            lineY += 10;
+            graphics.drawString(font, "⚔ Rol: §e" + role, barX - 10, lineY, 0xFFFFFFFF, true);
 
             graphics.pose().popPose();
         }
