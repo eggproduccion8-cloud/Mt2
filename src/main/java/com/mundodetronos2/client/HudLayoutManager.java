@@ -32,7 +32,8 @@ public class HudLayoutManager {
         ARMOR_PANEL("Panel de Armadura"),
         HOTBAR("Hotbar MMORPG"),
         OFFHAND_SLOT("Segunda Mano"),
-        XP_BAR("Barra de Experiencia");
+        XP_BAR("Barra de Experiencia"),
+        RPG_INVENTORY("Inventario RPG (Tecla I)");
 
         private final String displayName;
 
@@ -110,6 +111,8 @@ public class HudLayoutManager {
                 return new ComponentConfig(Anchor.BOTTOM_CENTER, -125, -28, 1.0f, true, 22, 22);
             case XP_BAR:
                 return new ComponentConfig(Anchor.BOTTOM_CENTER, 0, -54, 1.0f, true, 222, 10);
+            case RPG_INVENTORY:
+                return new ComponentConfig(Anchor.CENTER, -120, -100, 1.0f, true, 240, 200);
             default:
                 return new ComponentConfig(Anchor.TOP_LEFT, 0, 0, 1.0f, true, 100, 20);
         }

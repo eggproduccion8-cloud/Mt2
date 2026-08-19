@@ -135,11 +135,12 @@ public class HudEditorScreen extends Screen {
             graphics.drawString(this.font, id.getDisplayName(), x + 3, y + 3, borderColor, false);
         }
 
-        // Información del componente seleccionado
+        // Información del componente seleccionado y controles de Escala
         if (selectedComponent != null) {
             ComponentConfig config = tempConfig.get(selectedComponent);
-            String info = "Seleccionado: " + selectedComponent.getDisplayName() + " (X: " + config.offsetX + ", Y: " + config.offsetY + ")";
+            String info = "Seleccionado: " + selectedComponent.getDisplayName() + " (X: " + config.offsetX + ", Y: " + config.offsetY + ", Escala: " + String.format("%.2f", config.scale) + ")";
             graphics.drawString(this.font, info, 10, this.height - 45, 0xFFFFD700, false);
+            graphics.drawString(this.font, "[+ / - o Rueda del ratón para ajustar escala]", 10, this.height - 32, 0x88FFFFFF, false);
         }
 
         super.render(graphics, mouseX, mouseY, partialTick);
@@ -185,6 +186,39 @@ public class HudEditorScreen extends Screen {
             }
         }
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (selectedComponent != null) {
+            ComponentConfig config = tempConfig.get(selectedComponent);
+            if (config != null) {
+                if (delta > 0) {
+                    config.scale = Math.min(2.5f, config.scale + 0.05f);
+                } else if (delta < 0) {
+                    config.scale = Math.max(0.4f, config.scale - 0.05f);
+                }
+                return true;
+            }
+        }
+        return super.mouseScrolled(mouseX, mouseY, delta);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (selectedComponent != null) {
+            ComponentConfig config = tempConfig.get(selectedComponent);
+            if (config != null) {
+                if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_EQUAL || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ADD) {
+                    config.scale = Math.min(2.5f, config.scale + 0.05f);
+                    return true;
+                } else if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_MINUS || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_SUBTRACT) {
+                    config.scale = Math.max(0.4f, config.scale - 0.05f);
+                    return true;
+                }
+            }
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override

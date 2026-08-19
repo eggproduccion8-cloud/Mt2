@@ -279,8 +279,18 @@ public class ModHudOverlay {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
 
-        int x = 12;
-        int y = 48;
+        HudLayoutManager.ComponentConfig cardConfig = HudLayoutManager.getConfig(HudLayoutManager.ComponentId.KINGDOM_CARD);
+        if (!cardConfig.visible) return;
+
+        int x = HudLayoutManager.getRenderX(HudLayoutManager.ComponentId.KINGDOM_CARD, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
+        int y = HudLayoutManager.getRenderY(HudLayoutManager.ComponentId.KINGDOM_CARD, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
+
+        String role = ClientEvents.getClientPlayerRole();
+        if (role == null || role.isEmpty() || role.equalsIgnoreCase("none")) {
+            role = "ASPIRANTE";
+        } else {
+            role = role.toUpperCase();
+        }
 
         int totalSecs = ClientPacketHandler.hudRemainingSeconds;
         int hrs = totalSecs / 3600;
@@ -288,12 +298,10 @@ public class ModHudOverlay {
         int secs = totalSecs % 60;
         String timeStr = String.format("%d:%02d:%02d", hrs, mins, secs);
 
-        String kingdomLine = "❤ " + ClientPacketHandler.hudSharedPoints +
-                             "   ♛ " + ClientPacketHandler.hudThroneLives +
-                             "   ⏱ " + timeStr +
-                             "   ⚔ " + ClientEvents.getClientPlayerRole().toUpperCase();
-
-        graphics.drawString(mc.font, kingdomLine, x, y, 0xFFE0E0E0, true);
+        graphics.drawString(mc.font, "ROL: §e" + role, x, y, 0xFFFFFFFF, true);
+        graphics.drawString(mc.font, "TRONO: §c" + ClientPacketHandler.hudThroneLives, x, y + 10, 0xFFFFFFFF, true);
+        graphics.drawString(mc.font, "VIDAS EQUIPO: §a" + ClientPacketHandler.hudSharedPoints, x, y + 20, 0xFFFFFFFF, true);
+        graphics.drawString(mc.font, "TIEMPO: §b" + timeStr, x, y + 30, 0xFFFFFFFF, true);
     }
 
     private static void drawEyeBlinkOverlay(GuiGraphics graphics, int width, int height) {
