@@ -5,12 +5,17 @@ import com.mundodetronos2.client.HudLayoutManager.ComponentId;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.tags.FluidTags;
+import net.minecraft.client.gui.components.PlayerFaceRenderer;
+import net.minecraft.client.resources.DefaultPlayerSkin;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
 public class PlayerStatusHudRenderer {
+
+    public static final ResourceLocation HEART_ICON = new ResourceLocation("mundodetronos2", "textures/hud/heart.png");
+    public static final ResourceLocation FOOD_ICON = new ResourceLocation("mundodetronos2", "textures/hud/food.png");
 
     public static void renderPlayerStatus(GuiGraphics graphics, int screenWidth, int screenHeight) {
         Minecraft mc = Minecraft.getInstance();
@@ -19,108 +24,69 @@ public class PlayerStatusHudRenderer {
 
         Font font = mc.font;
 
-        // 1. BARRA DE VIDA (HP)
-        ComponentConfig hpConfig = HudLayoutManager.getConfig(ComponentId.HEALTH_BAR);
-        if (hpConfig.visible) {
-            int startX = HudLayoutManager.getRenderX(ComponentId.HEALTH_BAR, screenWidth, screenHeight);
-            int startY = HudLayoutManager.getRenderY(ComponentId.HEALTH_BAR, screenWidth, screenHeight);
-            int barWidth = hpConfig.width;
-            int barHeight = hpConfig.height;
+        // 1. UNIFIED PLAYER CARD (Head + Name + HP Bar with heart.png + Hunger Bar with food.png)
+        ComponentConfig cardConfig = HudLayoutManager.getConfig(ComponentId.PLAYER_CARD);
+        if (cardConfig.visible) {
+            int startX = HudLayoutManager.getRenderX(ComponentId.PLAYER_CARD, screenWidth, screenHeight);
+            int startY = HudLayoutManager.getRenderY(ComponentId.PLAYER_CARD, screenWidth, screenHeight);
+
+            // Translucent dark panel box
+            graphics.fill(startX - 2, startY - 2, startX + 145, startY + 54, 0x880A0D10);
+            graphics.fill(startX, startY, startX + 143, startY + 52, 0xAA12151A);
+
+            // Face head
+            int headSize = 32;
+            ResourceLocation skinTexture = DefaultPlayerSkin.getDefaultSkin(player.getUUID());
+            try {
+                if (mc.getConnection() != null) {
+                    net.minecraft.client.multiplayer.PlayerInfo info = mc.getConnection().getPlayerInfo(player.getUUID());
+                    if (info != null) skinTexture = info.getSkinLocation();
+                }
+            } catch (Exception ignored) {}
+            PlayerFaceRenderer.draw(graphics, skinTexture, startX + 4, startY + 4, headSize);
+
+            // Name
+            String name = player.getGameProfile().getName();
+            graphics.drawString(font, name, startX + headSize + 10, startY + 4, 0xFFFFFFFF, true);
+
+            // HP Bar
+            int barX = startX + headSize + 10;
+            int barY = startY + 16;
+            int barWidth = 90;
+            int barHeight = 10;
 
             float currentHp = player.getHealth();
             float maxHp = player.getMaxHealth();
             float hpRatio = Math.max(0.0f, Math.min(1.0f, currentHp / Math.max(1.0f, maxHp)));
 
-            // Panel oscuro translúcido minimalista RPG
-            graphics.fill(startX - 2, startY - 2, startX + barWidth + 2, startY + barHeight + 2, 0x880A0D10);
-            graphics.fill(startX, startY, startX + barWidth, startY + barHeight, 0xAA180808);
-
+            graphics.fill(barX, barY, barX + barWidth, barY + barHeight, 0xAA180808);
             int hpFill = (int) (barWidth * hpRatio);
             if (hpFill > 0) {
-                graphics.fill(startX, startY, startX + hpFill, startY + barHeight, 0xFFCC1111);
-                graphics.fill(startX, startY, startX + hpFill, startY + 2, 0xFFFF5555);
+                graphics.fill(barX, barY, barX + hpFill, barY + barHeight, 0xFFCC1111);
+                graphics.fill(barX, barY, barX + hpFill, barY + 2, 0xFFFF5555);
             }
+            // Heart Icon PNG
+            graphics.blit(HEART_ICON, barX - 12, barY - 1, 0, 0, 10, 10, 10, 10);
+            graphics.drawString(font, (int) currentHp + "/" + (int) maxHp, barX + 4, barY + 1, 0xFFFFFFFF, true);
 
-            // Ícono de corazón + Número actual (Sin textos largos como HP 20 / 20)
-            String hpNum = String.valueOf((int) currentHp);
-            graphics.drawString(font, "♥ " + hpNum, startX + 4, startY + (barHeight - 8) / 2, 0xFFFFFFFF, true);
-        }
-
-        // 2. BARRA DE ABSORCIÓN
-        ComponentConfig absConfig = HudLayoutManager.getConfig(ComponentId.ABSORPTION_BAR);
-        float absorption = player.getAbsorptionAmount();
-        if (absConfig.visible && absorption > 0.0f) {
-            int startX = HudLayoutManager.getRenderX(ComponentId.ABSORPTION_BAR, screenWidth, screenHeight);
-            int startY = HudLayoutManager.getRenderY(ComponentId.ABSORPTION_BAR, screenWidth, screenHeight);
-            int barWidth = absConfig.width;
-            int barHeight = absConfig.height;
-
-            float absRatio = Math.min(1.0f, absorption / Math.max(1.0f, player.getMaxHealth()));
-
-            graphics.fill(startX - 2, startY - 2, startX + barWidth + 2, startY + barHeight + 2, 0x880A0D10);
-            graphics.fill(startX, startY, startX + barWidth, startY + barHeight, 0xAA221800);
-
-            int absFill = (int) (barWidth * absRatio);
-            if (absFill > 0) {
-                graphics.fill(startX, startY, startX + absFill, startY + barHeight, 0xFFFFBB00);
-                graphics.fill(startX, startY, startX + absFill, startY + 2, 0xFFFFEE66);
-            }
-
-            graphics.drawString(font, "✦ +" + (int) absorption, startX + 4, startY + (barHeight - 8) / 2, 0xFFFFFFFF, true);
-        }
-
-        // 3. BARRA DE HAMBRE
-        ComponentConfig foodConfig = HudLayoutManager.getConfig(ComponentId.HUNGER_BAR);
-        if (foodConfig.visible) {
-            int startX = HudLayoutManager.getRenderX(ComponentId.HUNGER_BAR, screenWidth, screenHeight);
-            int startY = HudLayoutManager.getRenderY(ComponentId.HUNGER_BAR, screenWidth, screenHeight);
-            int barWidth = foodConfig.width;
-            int barHeight = foodConfig.height;
-
+            // Hunger Bar
+            int foodY = startY + 30;
             int foodLevel = player.getFoodData().getFoodLevel();
             float foodRatio = Math.max(0.0f, Math.min(1.0f, foodLevel / 20.0f));
 
-            graphics.fill(startX - 2, startY - 2, startX + barWidth + 2, startY + barHeight + 2, 0x880A0D10);
-            graphics.fill(startX, startY, startX + barWidth, startY + barHeight, 0xAA1C1005);
-
+            graphics.fill(barX, foodY, barX + barWidth, foodY + barHeight, 0xAA1C1005);
             int foodFill = (int) (barWidth * foodRatio);
             if (foodFill > 0) {
                 int foodColor = foodLevel > 6 ? 0xFFD36E1B : 0xFFBB3311;
-                graphics.fill(startX, startY, startX + foodFill, startY + barHeight, foodColor);
-                graphics.fill(startX, startY, startX + foodFill, startY + 2, 0xFFFFA044);
+                graphics.fill(barX, foodY, barX + foodFill, foodY + barHeight, foodColor);
+                graphics.fill(barX, foodY, barX + foodFill, foodY + 2, 0xFFFFA044);
             }
-
-            // Ícono de energía/alimento + Número (Sin HAMBRE 20 / 20)
-            graphics.drawString(font, "🍗 " + foodLevel, startX + 4, startY + (barHeight - 8) / 2, 0xFFFFFFFF, true);
+            // Food Icon PNG
+            graphics.blit(FOOD_ICON, barX - 12, foodY - 1, 0, 0, 10, 10, 10, 10);
+            graphics.drawString(font, foodLevel + "/20", barX + 4, foodY + 1, 0xFFFFFFFF, true);
         }
 
-        // 4. BARRA DE AIRE / NADAR (Solo bajo el agua o cuando disminuye)
-        ComponentConfig airConfig = HudLayoutManager.getConfig(ComponentId.AIR_BAR);
-        int airSupply = player.getAirSupply();
-        int maxAir = player.getMaxAirSupply();
-        boolean isUnderWater = player.isEyeInFluid(FluidTags.WATER) || airSupply < maxAir;
-
-        if (airConfig.visible && isUnderWater) {
-            int startX = HudLayoutManager.getRenderX(ComponentId.AIR_BAR, screenWidth, screenHeight);
-            int startY = HudLayoutManager.getRenderY(ComponentId.AIR_BAR, screenWidth, screenHeight);
-            int barWidth = airConfig.width;
-            int barHeight = airConfig.height;
-
-            float airRatio = Math.max(0.0f, Math.min(1.0f, (float) airSupply / (float) maxAir));
-
-            graphics.fill(startX - 2, startY - 2, startX + barWidth + 2, startY + barHeight + 2, 0x880A0D10);
-            graphics.fill(startX, startY, startX + barWidth, startY + barHeight, 0xAA061C28);
-
-            int airFill = (int) (barWidth * airRatio);
-            if (airFill > 0) {
-                graphics.fill(startX, startY, startX + airFill, startY + barHeight, 0xFF22AAFF);
-                graphics.fill(startX, startY, startX + airFill, startY + 2, 0xFF88DDFF);
-            }
-
-            graphics.drawString(font, "🫧 " + (int) (airRatio * 100) + "%", startX + 4, startY + (barHeight - 8) / 2, 0xFFFFFFFF, true);
-        }
-
-        // 5. PIEZAS DE ARMADURA EQUIPADAS
+        // 2. PIEZAS DE ARMADURA EQUIPADAS
         ComponentConfig armorConfig = HudLayoutManager.getConfig(ComponentId.ARMOR_PANEL);
         if (armorConfig.visible) {
             EquipmentSlot[] slots = new EquipmentSlot[]{

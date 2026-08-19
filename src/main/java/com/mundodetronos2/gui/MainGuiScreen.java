@@ -11,7 +11,11 @@ import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.minecraft.resources.ResourceLocation;
+
 public class MainGuiScreen extends Screen {
+
+    public static final ResourceLocation LOGO_T2 = new ResourceLocation("mundodetronos2", "textures/gui/t2.png");
     private final NetworkManager.S2COpenMainGuiPacket initialData;
     private final List<NetworkManager.S2CRealmListPacket.RealmInfo> cachedRealms = new ArrayList<>();
 

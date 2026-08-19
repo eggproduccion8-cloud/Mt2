@@ -108,7 +108,7 @@ public class ClientEvents {
                 NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SOpenMainGuiPacket());
             } else if (event.getKey() == KeyInit.TOGGLE_HUD_KEY.getKey().getValue()) {
                 showHud = !showHud;
-                addNotification("HUD VISUAL", showHud ? "ACTIVADO" : "OCULTO", "", false);
+                mc.player.displayClientMessage(Component.literal(showHud ? "§a[+] Coordenadas Visibles" : "§c[-] Coordenadas Ocultas"), true);
             } else if (event.getKey() == KeyInit.EDIT_HUD_KEY.getKey().getValue()) {
                 mc.setScreen(new com.mundodetronos2.gui.HudEditorScreen());
             } else if (event.getKey() == KeyInit.OPEN_RPG_INVENTORY_KEY.getKey().getValue()) {
@@ -268,24 +268,59 @@ public class ClientEvents {
         }
     }
 
+    public static class ChatMessage {
+        public String sender;
+        public String text;
+        public long timestamp;
+
+        public ChatMessage(String sender, String text) {
+            this.sender = sender;
+            this.text = text;
+            this.timestamp = System.currentTimeMillis();
+        }
+    }
+
+    public static final java.util.List<ChatMessage> chatMessages = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    public static void addChatMessage(String sender, String text) {
+        chatMessages.add(new ChatMessage(sender, text));
+        if (chatMessages.size() > 50) {
+            chatMessages.remove(0);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onClientChatReceived(net.minecraftforge.client.event.ClientChatReceivedEvent event) {
+        // Intercept normal player chat to display in clean mod chat
+        String raw = event.getMessage().getString();
+        if (!raw.isEmpty()) {
+            if (raw.contains("<") && raw.contains(">")) {
+                int start = raw.indexOf("<");
+                int end = raw.indexOf(">");
+                String sender = raw.substring(start + 1, end);
+                String msg = raw.substring(end + 1).trim();
+                addChatMessage(sender, msg);
+            } else {
+                addChatMessage("Sistema", raw);
+            }
+        }
+    }
+
     @SubscribeEvent
     public static void onRenderGuiOverlayPre(RenderGuiOverlayEvent.Pre event) {
-        if (!showHud) return;
-
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null || mc.options.hideGui) return;
 
-        // Cancelar overlays vanilla durante gameplay o cuando el inventario RPG está abierto
-        if (mc.screen == null || mc.screen instanceof net.minecraft.client.gui.screens.ChatScreen || mc.screen instanceof com.mundodetronos2.gui.RPGInventoryScreen) {
-            ResourceLocation id = event.getOverlay().id();
-            if (id.equals(VanillaGuiOverlay.HOTBAR.id())
-                || id.equals(VanillaGuiOverlay.PLAYER_HEALTH.id())
-                || id.equals(VanillaGuiOverlay.FOOD_LEVEL.id())
-                || id.equals(VanillaGuiOverlay.AIR_LEVEL.id())
-                || id.equals(VanillaGuiOverlay.ARMOR_LEVEL.id())
-                || id.equals(VanillaGuiOverlay.EXPERIENCE_BAR.id())) {
-                event.setCanceled(true);
-            }
+        // Cancelar overlays vanilla durante gameplay
+        ResourceLocation id = event.getOverlay().id();
+        if (id.equals(VanillaGuiOverlay.CHAT_PANEL.id())
+            || id.equals(VanillaGuiOverlay.HOTBAR.id())
+            || id.equals(VanillaGuiOverlay.PLAYER_HEALTH.id())
+            || id.equals(VanillaGuiOverlay.FOOD_LEVEL.id())
+            || id.equals(VanillaGuiOverlay.AIR_LEVEL.id())
+            || id.equals(VanillaGuiOverlay.ARMOR_LEVEL.id())
+            || id.equals(VanillaGuiOverlay.EXPERIENCE_BAR.id())) {
+            event.setCanceled(true);
         }
     }
 

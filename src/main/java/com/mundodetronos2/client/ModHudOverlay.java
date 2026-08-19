@@ -17,11 +17,7 @@ public class ModHudOverlay {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null || mc.options.hideGui) return;
 
-        // Renderizar solo si no hay pantalla abierta o si es el chat / inventario RPG
-        if (mc.screen != null && !(mc.screen instanceof net.minecraft.client.gui.screens.ChatScreen || mc.screen instanceof com.mundodetronos2.gui.RPGInventoryScreen)) {
-            return;
-        }
-
+        // Mantener HUD visible en todo momento, incluso cuando hay menús o inventarios abiertos
         // 1. Barra de Trono en MIRA/Target
         long now = System.currentTimeMillis();
         long delta = now - ClientPacketHandler.targetThroneLastHitTime;
@@ -37,13 +33,14 @@ public class ModHudOverlay {
             drawEyeBlinkOverlay(graphics, width, height);
         }
 
-        // 3. HUD permanente de Reino (Jugador, Rol, Trono, Vidas, Tiempo, Brújula)
-        drawPermanentKingdomHud(graphics);
+        // 3. HUD permanente de Reino (Brújula y Coordenadas)
         drawCompassAndCoordinates(graphics, width);
 
-        // 4. Estatus MMORPG y Hotbar MMORPG
-        if (ClientEvents.showHud) {
-            PlayerStatusHudRenderer.renderPlayerStatus(graphics, width, height);
+        // 4. Estatus MMORPG, Carta de Reino, Chat MMORPG y Hotbar MMORPG
+        PlayerStatusHudRenderer.renderPlayerStatus(graphics, width, height);
+        drawPermanentKingdomHud(graphics);
+        drawCleanChatOverlay(graphics);
+        if (mc.screen == null) {
             MMORPGHotbarRenderer.renderHotbar(graphics, width, height);
         }
 
@@ -220,75 +217,66 @@ public class ModHudOverlay {
         }
 
         graphics.drawString(mc.font, "▲", centerX - mc.font.width("▲") / 2, y1 + 10, 0xFFFFD700, true);
-        String coordsStr = String.format("X: %d   Y: %d   Z: %d", mc.player.getBlockX(), mc.player.getBlockY(), mc.player.getBlockZ());
-        ClientEvents.drawFlatCenteredString(graphics, mc.font, coordsStr, centerX, y1 + 20, 0xFFE0E0E0);
+
+        // La tecla para ocultar HUD ahora solo desactiva las Coordenadas
+        if (ClientEvents.showHud) {
+            String coordsStr = String.format("X: %d   Y: %d   Z: %d", mc.player.getBlockX(), mc.player.getBlockY(), mc.player.getBlockZ());
+            ClientEvents.drawFlatCenteredString(graphics, mc.font, coordsStr, centerX, y1 + 20, 0xFFE0E0E0);
+        }
     }
 
-    private static void drawPermanentKingdomHud(GuiGraphics graphics) {
-        if (!ClientEvents.showHud) return;
+    private static void drawCleanChatOverlay(GuiGraphics graphics) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
 
-        HudLayoutManager.ComponentConfig cardConfig = HudLayoutManager.getConfig(HudLayoutManager.ComponentId.PLAYER_CARD);
+        HudLayoutManager.ComponentConfig config = HudLayoutManager.getConfig(HudLayoutManager.ComponentId.CHAT_BOX);
+        if (!config.visible) return;
+
+        int x = HudLayoutManager.getRenderX(HudLayoutManager.ComponentId.CHAT_BOX, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
+        int y = HudLayoutManager.getRenderY(HudLayoutManager.ComponentId.CHAT_BOX, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
+        int boxW = config.width;
+        int boxH = config.height;
+
+        graphics.fill(x - 2, y - 2, x + boxW + 2, y + boxH + 2, 0x55000000);
+        graphics.fill(x, y, x + boxW, y + boxH, 0x44101418);
+
+        int maxLines = 5;
+        java.util.List<ClientEvents.ChatMessage> messages = ClientEvents.chatMessages;
+        int start = Math.max(0, messages.size() - maxLines);
+        int lineY = y + 4;
+
+        for (int i = start; i < messages.size(); i++) {
+            ClientEvents.ChatMessage msg = messages.get(i);
+            String formatted = "§e" + msg.sender + ": §f" + msg.text;
+            if (formatted.length() > 32) formatted = formatted.substring(0, 30) + "...";
+            graphics.drawString(mc.font, formatted, x + 4, lineY, 0xFFFFFFFF, true);
+            lineY += 12;
+        }
+    }
+
+    private static void drawPermanentKingdomHud(GuiGraphics graphics) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return;
+
+        HudLayoutManager.ComponentConfig cardConfig = HudLayoutManager.getConfig(HudLayoutManager.ComponentId.KINGDOM_CARD);
         if (!cardConfig.visible) return;
 
-        int x = HudLayoutManager.getRenderX(HudLayoutManager.ComponentId.PLAYER_CARD, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
-        int y = HudLayoutManager.getRenderY(HudLayoutManager.ComponentId.PLAYER_CARD, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
-        int headSize = 32;
+        int x = HudLayoutManager.getRenderX(HudLayoutManager.ComponentId.KINGDOM_CARD, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
+        int y = HudLayoutManager.getRenderY(HudLayoutManager.ComponentId.KINGDOM_CARD, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
 
-        ResourceLocation skinTexture = DefaultPlayerSkin.getDefaultSkin(mc.player.getUUID());
-        try {
-            if (mc.getConnection() != null) {
-                net.minecraft.client.multiplayer.PlayerInfo info = mc.getConnection().getPlayerInfo(mc.player.getUUID());
-                if (info != null) {
-                    skinTexture = info.getSkinLocation();
-                }
-            }
-        } catch (Exception ignored) {}
-
-        String role = ClientEvents.getClientPlayerRole();
-        int roleColor = 0xFFFFD700;
-        String symbol = "ASPIRANTE";
-
-        if (role.equalsIgnoreCase("berserker")) {
-            roleColor = 0xFFFF5555;
-            symbol = "BERSERKER";
-        } else if (role.equalsIgnoreCase("guerrero")) {
-            roleColor = 0xFFAAAAAA;
-            symbol = "GUERRERO";
-        } else if (role.equalsIgnoreCase("mago")) {
-            roleColor = 0xFFBB55FF;
-            symbol = "MAGO";
-        } else if (role.equalsIgnoreCase("arquero")) {
-            roleColor = 0xFF55FF55;
-            symbol = "ARQUERO";
-        } else if (role.equalsIgnoreCase("paladin")) {
-            roleColor = 0xFFFFFF55;
-            symbol = "PALADÍN";
-        } else if (role.equalsIgnoreCase("draconico")) {
-            roleColor = 0xFFFF9900;
-            symbol = "DRACÓNICO";
-        } else if (role.equalsIgnoreCase("clerigo")) {
-            roleColor = 0xFF55FFFF;
-            symbol = "CLÉRIGO";
-        }
-
-        PlayerFaceRenderer.draw(graphics, skinTexture, x, y + 2, headSize);
-
-        int textX = x + headSize + 8;
-        String name = mc.player.getGameProfile().getName();
-
-        graphics.drawString(mc.font, name, textX, y, 0xFFFFFFFF, true);
-        graphics.drawString(mc.font, "ROL: " + symbol, textX, y + 10, roleColor, true);
-        graphics.drawString(mc.font, "TRONO: " + ClientPacketHandler.hudThroneLives, textX, y + 20, 0xFFFFD700, true);
-        graphics.drawString(mc.font, "TEAM VIDAS: " + ClientPacketHandler.hudSharedPoints, textX, y + 30, 0xFF55FF55, true);
+        // Panel separado de Estado de Reino (Tiempo, Vidas de Trono y Vidas de Equipo)
+        graphics.fill(x - 2, y - 2, x + 137, y + 42, 0x880A0D10);
+        graphics.fill(x, y, x + 135, y + 40, 0xAA12151A);
 
         int totalSecs = ClientPacketHandler.hudRemainingSeconds;
         int hrs = totalSecs / 3600;
         int mins = (totalSecs % 3600) / 60;
         int secs = totalSecs % 60;
         String timeStr = String.format("%d:%02d:%02d", hrs, mins, secs);
-        graphics.drawString(mc.font, "TIEMPO: " + timeStr, textX, y + 40, 0xFFFFFF55, true);
+
+        graphics.drawString(mc.font, "⏱ TIEMPO: " + timeStr, x + 6, y + 4, 0xFFFFFF55, true);
+        graphics.drawString(mc.font, "⚔ TRONO: " + ClientPacketHandler.hudThroneLives, x + 6, y + 16, 0xFFFFD700, true);
+        graphics.drawString(mc.font, "❤ VIDAS: " + ClientPacketHandler.hudSharedPoints, x + 6, y + 28, 0xFF55FF55, true);
     }
 
     private static void drawEyeBlinkOverlay(GuiGraphics graphics, int width, int height) {

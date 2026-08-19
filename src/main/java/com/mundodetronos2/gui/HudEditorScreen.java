@@ -8,11 +8,15 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.EnumMap;
 import java.util.Map;
 
 public class HudEditorScreen extends Screen {
+
+    public static final ResourceLocation LOGO_T2 = new ResourceLocation("mundodetronos2", "textures/gui/t2.png");
+    public static final ResourceLocation LOGO_EGG = new ResourceLocation("mundodetronos2", "textures/gui/egg.png");
 
     private final Map<ComponentId, ComponentConfig> tempConfig = new EnumMap<>(ComponentId.class);
     private ComponentId selectedComponent = null;
@@ -81,8 +85,25 @@ public class HudEditorScreen extends Screen {
         // Fondo translúcido suave
         graphics.fill(0, 0, this.width, this.height, 0xAA000000);
 
-        // Título del Editor
-        graphics.drawCenteredString(this.font, "§e§lEDITOR DE HUD MMORPG §7(Arrastra los componentes con el ratón)", this.width / 2, 12, 0xFFFFFFFF);
+        // DIBUJAR CUADROS DE LÍNEAS / GRILLA DE ALINEACIÓN (20x20 pixels)
+        int gridSpacing = 20;
+        int gridColor = 0x15FFFFFF;
+        for (int x = 0; x < this.width; x += gridSpacing) {
+            graphics.fill(x, 0, x + 1, this.height, gridColor);
+        }
+        for (int y = 0; y < this.height; y += gridSpacing) {
+            graphics.fill(0, y, this.width, y + 1, gridColor);
+        }
+
+        // LOGO OFICIAL t2.png
+        graphics.blit(LOGO_T2, this.width / 2 - 40, 4, 0, 0, 80, 24, 80, 24);
+
+        // LOGO EGG.png
+        graphics.blit(LOGO_EGG, 10, this.height - 35, 0, 0, 30, 30, 30, 30);
+        graphics.drawString(this.font, "Production Credits", 44, this.height - 22, 0xAAFFFFFF, true);
+
+        // Título del Editor solicitado
+        graphics.drawCenteredString(this.font, "Edición de HUD Mundo de Tronos", this.width / 2, 32, 0xFFFFD700);
 
         // Renderizar contornos y etiquetas de cada componente editable
         for (ComponentId id : ComponentId.values()) {
