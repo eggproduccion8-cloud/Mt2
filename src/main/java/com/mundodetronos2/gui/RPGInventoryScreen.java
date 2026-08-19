@@ -3,6 +3,7 @@ package com.mundodetronos2.gui;
 import com.mundodetronos2.client.ClientEvents;
 import com.mundodetronos2.client.ClientPacketHandler;
 import com.mundodetronos2.role.EquipmentRestrictions;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -17,7 +18,9 @@ import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeType;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu> {
 
@@ -34,11 +37,28 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         MOCHILA
     }
 
-    private Tab currentTab = Tab.PERSONAJE;
+    public enum RecipeCategory {
+        TODOS,
+        MATERIALES,
+        BLOQUES,
+        HERRAMIENTAS,
+        ARMAS,
+        ARMADURA,
+        COMIDA,
+        UTILIDAD,
+        FAVORITOS,
+        RECIENTES
+    }
 
-    // JEI-like Recipe Viewer fields
+    private Tab currentTab = Tab.PERSONAJE;
+    private RecipeCategory currentCategory = RecipeCategory.TODOS;
+
+    // Search and Catalog fields
     private EditBox searchBox;
     private List<CraftingRecipe> filteredRecipes = new ArrayList<>();
+    private static final Set<ResourceLocation> favoriteRecipes = new HashSet<>();
+    private static final List<CraftingRecipe> recentRecipes = new ArrayList<>();
+    private CraftingRecipe selectedRecipe = null;
     private int recipePageIndex = 0;
     private String lastSearchQuery = "";
 
@@ -54,9 +74,10 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         this.imageWidth = this.width;
         this.imageHeight = this.height;
 
-        int searchX = this.width - 230;
-        int searchY = 55;
-        this.searchBox = new EditBox(this.font, searchX, searchY, 180, 18, Component.literal("Buscar receta..."));
+        int catalogX = (int) (this.width * 0.45);
+        int catalogWidth = this.width - catalogX - 20;
+
+        this.searchBox = new EditBox(this.font, catalogX + 10, 52, catalogWidth - 20, 18, Component.literal("Buscar receta..."));
         this.searchBox.setHighlightPos(0);
         this.searchBox.setTextColor(0xFFFFFFFF);
         this.searchBox.setHint(Component.literal("Buscar receta..."));
@@ -72,15 +93,62 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         String query = searchBox != null ? searchBox.getValue().toLowerCase().trim() : "";
 
         filteredRecipes.clear();
-        for (CraftingRecipe recipe : allRecipes) {
-            ItemStack result = recipe.getResultItem(this.minecraft.level.registryAccess());
-            if (result.isEmpty()) continue;
-            String itemName = result.getHoverName().getString().toLowerCase();
-            if (query.isEmpty() || itemName.contains(query)) {
-                filteredRecipes.add(recipe);
+
+        if (currentCategory == RecipeCategory.FAVORITOS) {
+            for (CraftingRecipe r : allRecipes) {
+                if (favoriteRecipes.contains(r.getId())) {
+                    if (matchesQuery(r, query)) filteredRecipes.add(r);
+                }
+            }
+        } else if (currentCategory == RecipeCategory.RECIENTES) {
+            for (CraftingRecipe r : recentRecipes) {
+                if (matchesQuery(r, query)) filteredRecipes.add(r);
+            }
+        } else {
+            for (CraftingRecipe recipe : allRecipes) {
+                ItemStack result = recipe.getResultItem(this.minecraft.level.registryAccess());
+                if (result.isEmpty()) continue;
+
+                if (currentCategory != RecipeCategory.TODOS && !matchesCategory(result, currentCategory)) {
+                    continue;
+                }
+
+                if (matchesQuery(recipe, query)) {
+                    filteredRecipes.add(recipe);
+                }
             }
         }
         recipePageIndex = 0;
+    }
+
+    private boolean matchesQuery(CraftingRecipe recipe, String query) {
+        if (query.isEmpty()) return true;
+        ItemStack result = recipe.getResultItem(this.minecraft.level.registryAccess());
+        return result.getHoverName().getString().toLowerCase().contains(query);
+    }
+
+    private boolean matchesCategory(ItemStack stack, RecipeCategory category) {
+        String name = stack.getHoverName().getString().toLowerCase();
+        String itemPath = stack.getItem().toString().toLowerCase();
+
+        switch (category) {
+            case ARMAS:
+                return itemPath.contains("sword") || itemPath.contains("bow") || itemPath.contains("crossbow") || itemPath.contains("trident") || name.contains("espada") || name.contains("arco");
+            case ARMADURA:
+                return itemPath.contains("helmet") || itemPath.contains("chestplate") || itemPath.contains("leggings") || itemPath.contains("boots") || name.contains("casco") || name.contains("pechera");
+            case HERRAMIENTAS:
+                return itemPath.contains("pickaxe") || itemPath.contains("axe") || itemPath.contains("shovel") || itemPath.contains("hoe") || itemPath.contains("shears");
+            case COMIDA:
+                return stack.getItem().isEdible() || name.contains("manzana") || name.contains("pan") || name.contains("carne");
+            case BLOQUES:
+                return itemPath.contains("block") || itemPath.contains("planks") || itemPath.contains("stone") || itemPath.contains("brick");
+            case MATERIALES:
+                return itemPath.contains("ingot") || itemPath.contains("gem") || itemPath.contains("stick") || itemPath.contains("nugget") || itemPath.contains("leather");
+            case UTILIDAD:
+                return itemPath.contains("bucket") || itemPath.contains("torch") || itemPath.contains("compass") || itemPath.contains("clock") || itemPath.contains("map");
+            default:
+                return true;
+        }
     }
 
     private void setTab(Tab tab) {
@@ -118,41 +186,119 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        int w = this.width;
+        int h = this.height;
+
         if (button == 0) {
-            int navY = 16;
+            // Navigation tabs
+            int navY = 12;
             int tabWidth = 120;
-            int tabHeight = 24;
+            int tabHeight = 22;
             Tab[] tabs = Tab.values();
-            int startX = (this.width - (tabs.length * (tabWidth + 20))) / 2;
+            int startX = (w - (tabs.length * (tabWidth + 15))) / 2;
 
             for (int i = 0; i < tabs.length; i++) {
-                int tx = startX + i * (tabWidth + 20);
+                int tx = startX + i * (tabWidth + 15);
                 if (mouseX >= tx && mouseX <= tx + tabWidth && mouseY >= navY && mouseY <= navY + tabHeight) {
                     setTab(tabs[i]);
                     return true;
                 }
             }
 
-            // Recipe paging buttons in FABRICACION tab
+            // Fabricar button & Recipe paging buttons in FABRICACION tab
             if (currentTab == Tab.FABRICACION) {
-                int recipeX = this.width - 240;
-                int recipeY = 50;
-                int panelHeight = this.height - 80;
-                int navButtonsY = recipeY + panelHeight - 25;
+                int craftGridX = 30;
+                int craftGridY = 55;
+                int btnX = craftGridX;
+                int btnY = craftGridY + 105;
+                int btnW = 90;
+                int btnH = 20;
 
-                // Next page button
-                if (mouseX >= recipeX + 160 && mouseX <= recipeX + 210 && mouseY >= navButtonsY - 5 && mouseY <= navButtonsY + 15) {
-                    if ((recipePageIndex + 1) * 3 < filteredRecipes.size()) {
-                        recipePageIndex++;
-                    }
+                // Click on FABRICAR button
+                if (selectedRecipe != null && mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH) {
+                    // Quick transfer ingredients / auto-craft
                     return true;
                 }
-                // Prev page button
-                if (mouseX >= recipeX + 10 && mouseX <= recipeX + 60 && mouseY >= navButtonsY - 5 && mouseY <= navButtonsY + 15) {
-                    if (recipePageIndex > 0) {
-                        recipePageIndex--;
+                int catalogX = (int) (w * 0.45);
+                int catalogWidth = w - catalogX - 20;
+
+                // Category filter buttons
+                int catY = 75;
+                int catW = 60;
+                int catH = 16;
+                RecipeCategory[] categories = RecipeCategory.values();
+                for (int i = 0; i < categories.length; i++) {
+                    int cx = catalogX + 10 + (i % 5) * (catW + 4);
+                    int cy = catY + (i / 5) * (catH + 4);
+                    if (mouseX >= cx && mouseX <= cx + catW && mouseY >= cy && mouseY <= cy + catH) {
+                        this.currentCategory = categories[i];
+                        updateRecipeList();
+                        return true;
                     }
+                }
+
+                // Recipe items grid click
+                int gridY = catY + 40;
+                int itemCols = Math.max(4, (catalogWidth - 20) / 32);
+                int itemRows = Math.max(3, (h - gridY - 50) / 32);
+                int pageSize = itemCols * itemRows;
+
+                int startIdx = recipePageIndex * pageSize;
+                for (int i = 0; i < pageSize && (startIdx + i) < filteredRecipes.size(); i++) {
+                    int col = i % itemCols;
+                    int row = i / itemCols;
+                    int ix = catalogX + 10 + col * 32;
+                    int iy = gridY + row * 32;
+
+                    if (mouseX >= ix && mouseX <= ix + 28 && mouseY >= iy && mouseY <= iy + 28) {
+                        CraftingRecipe rec = filteredRecipes.get(startIdx + i);
+                        this.selectedRecipe = rec;
+                        if (!recentRecipes.contains(rec)) {
+                            recentRecipes.add(0, rec);
+                            if (recentRecipes.size() > 20) recentRecipes.remove(recentRecipes.size() - 1);
+                        }
+                        return true;
+                    }
+                }
+
+                // Paging buttons
+                int navButtonsY = h - 35;
+                if (mouseX >= catalogX + 10 && mouseX <= catalogX + 80 && mouseY >= navButtonsY && mouseY <= navButtonsY + 20) {
+                    if (recipePageIndex > 0) recipePageIndex--;
                     return true;
+                }
+                int totalPages = Math.max(1, (int) Math.ceil((double) filteredRecipes.size() / (double) pageSize));
+                if (mouseX >= catalogX + catalogWidth - 80 && mouseX <= catalogX + catalogWidth - 10 && mouseY >= navButtonsY && mouseY <= navButtonsY + 20) {
+                    if (recipePageIndex < totalPages - 1) recipePageIndex++;
+                    return true;
+                }
+            }
+        } else if (button == 1) { // Right Click to toggle Favorite
+            if (currentTab == Tab.FABRICACION) {
+                int catalogX = (int) (w * 0.45);
+                int catalogWidth = w - catalogX - 20;
+                int gridY = 75 + 40;
+                int itemCols = Math.max(4, (catalogWidth - 20) / 32);
+                int itemRows = Math.max(3, (h - gridY - 50) / 32);
+                int pageSize = itemCols * itemRows;
+
+                int startIdx = recipePageIndex * pageSize;
+                for (int i = 0; i < pageSize && (startIdx + i) < filteredRecipes.size(); i++) {
+                    int col = i % itemCols;
+                    int row = i / itemCols;
+                    int ix = catalogX + 10 + col * 32;
+                    int iy = gridY + row * 32;
+
+                    if (mouseX >= ix && mouseX <= ix + 28 && mouseY >= iy && mouseY <= iy + 28) {
+                        CraftingRecipe rec = filteredRecipes.get(startIdx + i);
+                        if (favoriteRecipes.contains(rec.getId())) {
+                            favoriteRecipes.remove(rec.getId());
+                        } else {
+                            favoriteRecipes.add(rec.getId());
+                        }
+                        updateRecipeList();
+                        return true;
+                    }
                 }
             }
         }
@@ -171,46 +317,48 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
             this.searchBox.setVisible(isCrafting);
         }
 
-        // 1. ARMADURA (0..3: Casco, Pechera, Pantalones, Botas) -> Pestaña PERSONAJE (Lado izquierdo)
-        int armorX = 40;
-        int armorY = h / 2 - 80;
+        // 1. ARMADURA (0..3) -> Pestaña PERSONAJE (Lado izquierdo)
+        int armorX = 30;
+        int armorY = 50;
         for (int i = 0; i < 4; i++) {
-            this.menu.setSlotState(i, armorX + 5, armorY + i * 36 + 5, isPersonaje);
+            this.menu.setSlotState(i, armorX + 5, armorY + i * 32 + 5, isPersonaje);
         }
 
-        // 2. SEGUNDA MANO (4) -> Pestaña PERSONAJE (Lado izquierdo debajo de la armadura)
-        int offhandX = 40;
-        int offhandY = armorY + 4 * 36 + 10;
-        this.menu.setSlotState(4, offhandX + 5, offhandY + 5, isPersonaje);
+        // 2. SEGUNDA MANO (4) -> Pestaña PERSONAJE (Lado izquierdo)
+        int offhandY = armorY + 4 * 32 + 10;
+        this.menu.setSlotState(4, armorX + 5, offhandY + 5, isPersonaje);
 
-        // 3. CRAFTEO 3x3 (5 RESULTADO, 6..14 GRILLA) -> Pestaña FABRICACIÓN (Centro Izquierdo)
-        int craftGridX = 60;
-        int craftGridY = h / 2 - 110;
+        // 3. CRAFTEO 3x3 (5 RESULTADO, 6..14 GRILLA) -> Pestaña FABRICACIÓN (Lado Izquierdo)
+        int craftGridX = 30;
+        int craftGridY = 55;
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 3; col++) {
                 this.menu.setSlotState(6 + col + row * 3, craftGridX + col * 26 + 5, craftGridY + row * 26 + 5, isCrafting);
             }
         }
-        this.menu.setSlotState(5, craftGridX + 160 + 5, craftGridY + 26 + 5, isCrafting);
+        this.menu.setSlotState(5, craftGridX + 140 + 5, craftGridY + 26 + 5, isCrafting);
 
-        // 4. MOCHILA (15..59) -> Pestaña MOCHILA (Utiliza gran parte del centro)
+        // 4. MOCHILA (15..59) -> Pestaña MOCHILA
         int backpackX = (w - (9 * 26)) / 2;
-        int backpackY = 110;
+        int backpackY = 100;
         for (int row = 0; row < 5; row++) {
             for (int col = 0; col < 9; col++) {
                 this.menu.setSlotState(15 + col + row * 9, backpackX + col * 26 + 5, backpackY + row * 26 + 5, isBackpack);
             }
         }
 
-        // 5. INVENTARIO PRINCIPAL 27 SLOTS (60..86)
-        int invX = w - 270;
-        int invY = h / 2 + 10;
-        if (isCrafting) {
-            invX = 60;
-            invY = h / 2 + 25;
+        // 5. INVENTARIO PRINCIPAL REAL DEL JUGADOR 27 SLOTS (60..86)
+        int invX = (w - (9 * 26)) / 2;
+        int invY = h - 90;
+        if (isPersonaje) {
+            invX = (w - (9 * 26)) / 2;
+            invY = h - 95;
+        } else if (isCrafting) {
+            invX = 30;
+            invY = h - 95;
         } else if (isBackpack) {
             invX = (w - (9 * 26)) / 2;
-            invY = backpackY + 5 * 26 + 35;
+            invY = backpackY + 5 * 26 + 25;
         }
 
         boolean invActive = isPersonaje || isCrafting || isBackpack;
@@ -220,9 +368,10 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
             }
         }
 
-        // 6. HOTBAR (87..95) -> Oculta completamente en la GUI I (pertenece solo al HUD)
+        // 6. HOTBAR (87..95) -> Mantenida funcionalmente en el inventario
+        int hotbarY = invY + 80;
         for (int col = 0; col < 9; col++) {
-            this.menu.setSlotState(87 + col, -1000, -1000, false);
+            this.menu.setSlotState(87 + col, invX + col * 26 + 5, hotbarY + 5, invActive);
         }
     }
 
@@ -242,53 +391,45 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         int w = this.width;
         int h = this.height;
 
-        // Fondo atmosférico translúcido integrado con el mundo de Minecraft
+        // Fondo transparente limpio sin paneles azules o líneas divisorias
         graphics.fill(0, 0, w, h, 0x880A0D12);
-
-        // Líneas decorativas MMORPG superiores e inferiores
-        graphics.fill(0, 0, w, 2, 0xFF4488FF);
-        graphics.fill(0, 42, w, 43, 0x664488FF);
-        graphics.fill(0, h - 2, w, h, 0xFF4488FF);
 
         Player player = this.minecraft.player;
         String name = player != null ? player.getGameProfile().getName() : "JUGADOR";
         String roleStr = ClientEvents.getClientPlayerRole().toUpperCase();
         if (roleStr.equals("NONE") || roleStr.isEmpty()) roleStr = "ASPIRANTE";
 
-        // LOGO OFICIAL t2.png (Proporción exacta 1672x940 -> 1.778)
-        int logoW = 70;
+        // LOGO OFICIAL t2.png EN TRIPLE TAMAÑO (Proporción 1672x940 -> 1.778)
+        int logoW = 180;
         int logoH = (int) (logoW / 1.7787f);
-        graphics.blit(LOGO_T2, 20, 8, 0, 0, logoW, logoH, logoW, logoH);
+        graphics.blit(LOGO_T2, 20, 4, 0, 0, logoW, logoH, logoW, logoH);
 
         // LOGO EGG.png EN ESQUINA INFERIOR IZQUIERDA (Proporción 1:1)
-        graphics.blit(LOGO_EGG, 12, h - 32, 0, 0, 24, 24, 24, 24);
-        graphics.drawString(this.font, "EGPRODUCCION", 42, h - 24, 0xAAFFFFFF, true);
+        graphics.blit(LOGO_EGG, 12, h - 30, 0, 0, 22, 22, 22, 22);
+        graphics.drawString(this.font, "EGPRODUCCION", 38, h - 22, 0xAAFFFFFF, true);
 
-        // 1. NAVEGACIÓN MMORPG SUPERIOR
-        int navY = 16;
+        // 1. NAVEGACIÓN SUPERIOR CON BUTTON.PNG
+        int navY = 12;
         int tabWidth = 120;
-        int tabHeight = 24;
+        int tabHeight = 22;
         Tab[] tabs = Tab.values();
-        int startX = (w - (tabs.length * (tabWidth + 20))) / 2;
+        int startX = (w - (tabs.length * (tabWidth + 15))) / 2;
 
         for (int i = 0; i < tabs.length; i++) {
             Tab tab = tabs[i];
-            int tx = startX + i * (tabWidth + 20);
+            int tx = startX + i * (tabWidth + 15);
             boolean isSelected = (tab == currentTab);
             boolean isHovered = mouseX >= tx && mouseX <= tx + tabWidth && mouseY >= navY && mouseY <= navY + tabHeight;
 
-            if (isSelected) {
-                graphics.fill(tx, navY + tabHeight - 2, tx + tabWidth, navY + tabHeight, 0xFFFFD700);
-                graphics.fill(tx, navY, tx + tabWidth, navY + tabHeight, 0x33FFD700);
-            } else if (isHovered) {
-                graphics.fill(tx, navY, tx + tabWidth, navY + tabHeight, 0x22FFFFFF);
-            }
+            RenderSystem.setShaderColor(1.0f, isSelected ? 1.0f : (isHovered ? 0.9f : 0.6f), isSelected ? 1.0f : (isHovered ? 0.9f : 0.6f), 1.0f);
+            graphics.blit(BUTTON_TEX, tx, navY, 0, isSelected ? 20 : (isHovered ? 10 : 0), tabWidth, tabHeight, tabWidth, tabHeight);
+            RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 
             String tabName = tab.name();
             if (tabName.equals("FABRICACION")) tabName = "FABRICACIÓN";
 
             int tw = this.font.width(tabName);
-            graphics.drawString(this.font, tabName, tx + (tabWidth - tw) / 2, navY + 6, isSelected ? 0xFFFFD700 : (isHovered ? 0xFFFFFFFF : 0xAAAAAAAA), true);
+            graphics.drawString(this.font, tabName, tx + (tabWidth - tw) / 2, navY + 6, isSelected ? 0xFFFFD700 : 0xFFFFFFFF, true);
         }
 
         // 2. RENDERING ESPECÍFICO SEGÚN PESTAÑA
@@ -302,15 +443,15 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
     }
 
     private void renderPersonajeTab(GuiGraphics graphics, int w, int h, int mouseX, int mouseY, Player player, String name, String roleStr) {
-        // IZQUIERDA: EQUIPAMIENTO
-        int armorX = 40;
-        int armorY = h / 2 - 80;
+        // LADO IZQUIERDO: EQUIPAMIENTO
+        int armorX = 30;
+        int armorY = 50;
 
-        drawSectionHeader(graphics, armorX, armorY - 22, 180, "EQUIPAMIENTO");
+        graphics.drawString(this.font, "EQUIPAMIENTO", armorX, armorY - 14, 0xFFFFD700, true);
 
         String[] armorNames = {"CASCO", "PECHERA", "PANTALONES", "BOTAS"};
         for (int i = 0; i < 4; i++) {
-            int sy = armorY + i * 36;
+            int sy = armorY + i * 32;
             boolean hovered = mouseX >= armorX && mouseX <= armorX + 26 && mouseY >= sy && mouseY <= sy + 26;
             drawSlotFrame(graphics, armorX, sy, hovered, 26);
 
@@ -328,7 +469,7 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         }
 
         // SEGUNDA MANO
-        int offhandY = armorY + 4 * 36 + 10;
+        int offhandY = armorY + 4 * 32 + 10;
         boolean offHovered = mouseX >= armorX && mouseX <= armorX + 26 && mouseY >= offhandY && mouseY <= offhandY + 26;
         drawSlotFrame(graphics, armorX, offhandY, offHovered, 26);
         ItemStack offhandStack = this.menu.getSlot(4).getItem();
@@ -343,26 +484,27 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
             graphics.drawString(this.font, "VACÍO", armorX + 32, offhandY + 14, 0x44FFFFFF, false);
         }
 
-        // CENTRO: PERSONAJE 3D PROTAGONISTA EN GRANDE
-        int entityX = w / 2 - 40;
-        int entityY = h - 60;
+        // CENTRO: PERSONAJE 3D EL DOBLE DE GRANDE (~180-200 SCALE) CON POSE DE COMBATE ESTÁTICA Y SIN ROTACIÓN POR MOUSE
+        int entityX = w / 2;
+        int entityY = h - 110;
         if (player != null) {
-            int modelScale = Math.min(100, h / 7);
-            InventoryScreen.renderEntityInInventoryFollowsMouse(graphics, entityX, entityY, modelScale, (float)(entityX) - mouseX, (float)(entityY - 110) - mouseY, player);
+            int modelScale = Math.min(220, h / 3);
+            // Pose estática fija hacia la cámara sin tracking de ratón
+            InventoryScreen.renderEntityInInventoryFollowsMouse(graphics, entityX, entityY, modelScale, 0.0f, 0.0f, player);
         }
 
         // DERECHA: ATRIBUTOS Y STATS DEL PERSONAJE
-        int statsX = w - 270;
-        int statsY = 60;
-        drawSectionHeader(graphics, statsX, statsY - 15, 234, "ESTADÍSTICAS RPG");
+        int statsX = w - 210;
+        int statsY = 50;
+        graphics.drawString(this.font, "ESTADÍSTICAS RPG", statsX, statsY - 14, 0xFFFFD700, true);
 
         int level = ClientPacketHandler.hudPlayerLevel;
         int currentXp = ClientPacketHandler.hudCurrentXp;
         int neededXp = ClientPacketHandler.hudNeededXp;
 
-        graphics.drawString(this.font, "NOMBRE: §f" + name, statsX, statsY + 10, 0xFF88CCFF, true);
-        graphics.drawString(this.font, "CLASE: §e" + roleStr, statsX, statsY + 22, 0xFF88CCFF, true);
-        graphics.drawString(this.font, "NIVEL: §a" + level + " §7(" + currentXp + "/" + neededXp + " XP)", statsX, statsY + 34, 0xFF88CCFF, true);
+        graphics.drawString(this.font, "NOMBRE: §f" + name, statsX, statsY + 6, 0xFFFFFFFF, true);
+        graphics.drawString(this.font, "CLASE: §e" + roleStr, statsX, statsY + 18, 0xFFFFFFFF, true);
+        graphics.drawString(this.font, "NIVEL: §a" + level + " §7(" + currentXp + "/" + neededXp + " XP)", statsX, statsY + 30, 0xFFFFFFFF, true);
 
         if (player != null) {
             double health = Math.round(player.getHealth() * 10.0) / 10.0;
@@ -371,25 +513,25 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
             double damage = player.getAttributeValue(Attributes.ATTACK_DAMAGE);
             double speed = Math.round(player.getAttributeValue(Attributes.MOVEMENT_SPEED) * 100.0) / 10.0;
 
-            graphics.drawString(this.font, "SALUD: §c" + health + " / " + maxHealth, statsX, statsY + 50, 0xFFFFFFFF, true);
-            graphics.drawString(this.font, "ARMADURA: §9" + armor, statsX, statsY + 62, 0xFFFFFFFF, true);
-            graphics.drawString(this.font, "DAÑO BASE: §6" + damage, statsX, statsY + 74, 0xFFFFFFFF, true);
-            graphics.drawString(this.font, "VELOCIDAD: §b" + speed, statsX, statsY + 86, 0xFFFFFFFF, true);
+            graphics.drawString(this.font, "SALUD: §c" + health + " / " + maxHealth, statsX, statsY + 46, 0xFFFFFFFF, true);
+            graphics.drawString(this.font, "ARMADURA: §9" + armor, statsX, statsY + 58, 0xFFFFFFFF, true);
+            graphics.drawString(this.font, "DAÑO BASE: §6" + damage, statsX, statsY + 70, 0xFFFFFFFF, true);
+            graphics.drawString(this.font, "VELOCIDAD: §b" + speed, statsX, statsY + 82, 0xFFFFFFFF, true);
         }
 
-        // DERECHA ABAJO: INVENTARIO PRINCIPAL
-        int invX = w - 270;
-        int invY = h / 2 + 10;
-        drawSectionHeader(graphics, invX, invY - 15, 234, "INVENTARIO DEL JUGADOR");
+        // PARTE INFERIOR: INVENTARIO REAL COMPLETO Y FUNCIONAL DEL JUGADOR
+        int invX = (w - (9 * 26)) / 2;
+        int invY = h - 95;
+        graphics.drawString(this.font, "INVENTARIO DEL JUGADOR", invX, invY - 14, 0xFFFFD700, true);
         drawInventoryGrid(graphics, invX, invY, mouseX, mouseY);
     }
 
     private void renderFabricacionTab(GuiGraphics graphics, int w, int h, int mouseX, int mouseY) {
-        // LADO IZQUIERDO: GRILLA DE CRAFTEO 3x3
-        int craftGridX = 60;
-        int craftGridY = h / 2 - 110;
+        // LADO IZQUIERDO: CRAFTEO 3x3 Y RECETA SELECCIONADA
+        int craftGridX = 30;
+        int craftGridY = 55;
 
-        drawSectionHeader(graphics, craftGridX, craftGridY - 20, 234, "MESA DE FABRICACIÓN");
+        graphics.drawString(this.font, "ESTACIÓN DE FABRICACIÓN", craftGridX, craftGridY - 14, 0xFFFFD700, true);
 
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 3; col++) {
@@ -400,99 +542,123 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
             }
         }
 
-        graphics.drawString(this.font, "➔", craftGridX + 110, craftGridY + 30, 0xFFFFD700, true);
+        graphics.drawString(this.font, "➔", craftGridX + 95, craftGridY + 30, 0xFFFFD700, true);
 
-        boolean resHov = mouseX >= craftGridX + 160 && mouseX <= craftGridX + 186 && mouseY >= craftGridY + 26 && mouseY <= craftGridY + 52;
-        drawSlotFrame(graphics, craftGridX + 160, craftGridY + 26, resHov, 26);
+        boolean resHov = mouseX >= craftGridX + 140 && mouseX <= craftGridX + 166 && mouseY >= craftGridY + 26 && mouseY <= craftGridY + 52;
+        drawSlotFrame(graphics, craftGridX + 140, craftGridY + 26, resHov, 26);
 
-        ItemStack resultStack = this.menu.getSlot(5).getItem();
-        if (!resultStack.isEmpty()) {
-            graphics.drawString(this.font, resultStack.getHoverName().getString(), craftGridX + 60, craftGridY + 90, 0xFF55FF55, true);
+        // DETALLE DE RECETA SELECCIONADA DESDE EL CATÁLOGO
+        if (selectedRecipe != null) {
+            ItemStack selRes = selectedRecipe.getResultItem(this.minecraft.level.registryAccess());
+            graphics.drawString(this.font, "SELECCIONADA: §a" + selRes.getHoverName().getString(), craftGridX, craftGridY + 90, 0xFFFFFFFF, true);
+
+            // Botón Fabricar con button.png
+            int btnW = 90;
+            int btnH = 20;
+            int btnX = craftGridX;
+            int btnY = craftGridY + 105;
+            boolean btnHov = mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH;
+
+            graphics.blit(BUTTON_TEX, btnX, btnY, 0, btnHov ? 10 : 0, btnW, btnH, btnW, btnH);
+            graphics.drawString(this.font, "FABRICAR", btnX + 18, btnY + 5, 0xFFFFD700, true);
         } else {
-            graphics.drawString(this.font, "Coloca materiales para crear", craftGridX, craftGridY + 90, 0x66FFFFFF, false);
+            graphics.drawString(this.font, "Selecciona una receta del catálogo", craftGridX, craftGridY + 90, 0x88FFFFFF, false);
         }
 
         // ABAJO IZQUIERDA: INVENTARIO DEL JUGADOR
-        int invX = 60;
-        int invY = h / 2 + 25;
-        drawSectionHeader(graphics, invX, invY - 15, 234, "MATERIALES / INVENTARIO");
+        int invX = 30;
+        int invY = h - 95;
+        graphics.drawString(this.font, "MATERIALES / INVENTARIO", invX, invY - 14, 0xFFFFD700, true);
         drawInventoryGrid(graphics, invX, invY, mouseX, mouseY);
 
-        // LADO DERECHO: GUÍA DE RECETAS RPG INTEGRADA
-        int recipeX = w - 240;
-        int recipeY = 50;
-        int panelWidth = 220;
-        int panelHeight = h - 80;
+        // LADO DERECHO: CATÁLOGO COMPLETO OCUPANDO TODA LA ALTURA DERECHA
+        int catalogX = (int) (w * 0.45);
+        int catalogWidth = w - catalogX - 20;
 
-        drawSectionHeader(graphics, recipeX, recipeY - 15, panelWidth, "RECETAS COMPATIBLES");
+        graphics.drawString(this.font, "CATÁLOGO DE FABRICACIÓN (" + filteredRecipes.size() + ")", catalogX + 10, 36, 0xFFFFD700, true);
 
-        int startIdx = recipePageIndex * 3;
-        int cardY = recipeY + 30;
+        // Categorías universales usando botones compactos
+        int catY = 75;
+        int catW = 58;
+        int catH = 16;
+        RecipeCategory[] categories = RecipeCategory.values();
+        for (int i = 0; i < categories.length; i++) {
+            RecipeCategory cat = categories[i];
+            int cx = catalogX + 10 + (i % 5) * (catW + 4);
+            int cy = catY + (i / 5) * (catH + 4);
+            boolean isSel = (cat == currentCategory);
+            boolean isHov = mouseX >= cx && mouseX <= cx + catW && mouseY >= cy && mouseY <= cy + catH;
 
-        for (int i = startIdx; i < Math.min(startIdx + 3, filteredRecipes.size()); i++) {
-            CraftingRecipe rec = filteredRecipes.get(i);
-            ItemStack res = rec.getResultItem(this.minecraft.level.registryAccess());
-
-            graphics.fill(recipeX, cardY, recipeX + panelWidth, cardY + 50, 0x44000000);
-            graphics.fill(recipeX, cardY, recipeX + panelWidth, cardY + 1, 0x22FFFFFF);
-
-            // Vista previa grilla 3x3 de ingredientes
-            var ingredients = rec.getIngredients();
-            for (int ingIdx = 0; ingIdx < ingredients.size() && ingIdx < 9; ingIdx++) {
-                int ingRow = ingIdx / 3;
-                int ingCol = ingIdx % 3;
-                var items = ingredients.get(ingIdx).getItems();
-                if (items.length > 0) {
-                    ItemStack ingStack = items[0];
-                    int ix = recipeX + 6 + ingCol * 12;
-                    int iy = cardY + 6 + ingRow * 12;
-                    graphics.pose().pushPose();
-                    graphics.pose().translate(ix, iy, 0);
-                    graphics.pose().scale(0.6f, 0.6f, 1.0f);
-                    graphics.renderItem(ingStack, 0, 0);
-                    graphics.pose().popPose();
-                }
-            }
-
-            graphics.drawString(this.font, "➔", recipeX + 50, cardY + 18, 0xFFFFD700, false);
-            graphics.renderItem(res, recipeX + 70, cardY + 14);
-
-            String itemName = res.getHoverName().getString();
-            if (itemName.length() > 16) itemName = itemName.substring(0, 14) + "..";
-            graphics.drawString(this.font, itemName, recipeX + 95, cardY + 18, 0xFFFFFFFF, false);
-
-            cardY += 56;
+            graphics.blit(BUTTON_TEX, cx, cy, 0, isSel ? 20 : (isHov ? 10 : 0), catW, catH, catW, catH);
+            String catLabel = cat.name();
+            if (catLabel.length() > 8) catLabel = catLabel.substring(0, 7) + ".";
+            graphics.drawString(this.font, catLabel, cx + 4, cy + 4, isSel ? 0xFFFFD700 : 0xFFFFFFFF, false);
         }
 
-        // Paginación
-        int totalPages = Math.max(1, (int) Math.ceil((double) filteredRecipes.size() / 3.0));
-        int navButtonsY = recipeY + panelHeight - 25;
+        // Grilla de recetas del catálogo
+        int gridY = catY + 40;
+        int itemCols = Math.max(4, (catalogWidth - 20) / 32);
+        int itemRows = Math.max(3, (h - gridY - 50) / 32);
+        int pageSize = itemCols * itemRows;
 
-        graphics.fill(recipeX + 10, navButtonsY - 2, recipeX + 60, navButtonsY + 14, 0x44FFFFFF);
-        graphics.drawString(this.font, "◀ ANTERIOR", recipeX + 14, navButtonsY + 2, 0xFFFFD700, false);
+        int startIdx = recipePageIndex * pageSize;
+        for (int i = 0; i < pageSize && (startIdx + i) < filteredRecipes.size(); i++) {
+            CraftingRecipe rec = filteredRecipes.get(startIdx + i);
+            ItemStack res = rec.getResultItem(this.minecraft.level.registryAccess());
 
-        graphics.drawString(this.font, (recipePageIndex + 1) + " / " + totalPages, recipeX + 95, navButtonsY + 2, 0xFF88CCFF, false);
+            int col = i % itemCols;
+            int row = i / itemCols;
+            int ix = catalogX + 10 + col * 32;
+            int iy = gridY + row * 32;
 
-        graphics.fill(recipeX + 160, navButtonsY - 2, recipeX + 210, navButtonsY + 14, 0x44FFFFFF);
-        graphics.drawString(this.font, "SIGUIENTE ▶", recipeX + 164, navButtonsY + 2, 0xFFFFD700, false);
+            boolean hov = mouseX >= ix && mouseX <= ix + 28 && mouseY >= iy && mouseY <= iy + 28;
+            drawSlotFrame(graphics, ix, iy, hov, 28);
+            graphics.renderItem(res, ix + 6, iy + 6);
+
+            if (favoriteRecipes.contains(rec.getId())) {
+                graphics.drawString(this.font, "★", ix + 2, iy + 2, 0xFFFFD700, false);
+            }
+
+            if (hov) {
+                graphics.renderTooltip(this.font, res, mouseX, mouseY);
+            }
+        }
+
+        // Paginación con button.png
+        int totalPages = Math.max(1, (int) Math.ceil((double) filteredRecipes.size() / (double) pageSize));
+        int navButtonsY = h - 35;
+        int pBtnW = 70;
+        int pBtnH = 20;
+
+        // Anterior
+        boolean prevHov = mouseX >= catalogX + 10 && mouseX <= catalogX + 10 + pBtnW && mouseY >= navButtonsY && mouseY <= navButtonsY + pBtnH;
+        graphics.blit(BUTTON_TEX, catalogX + 10, navButtonsY, 0, prevHov ? 10 : 0, pBtnW, pBtnH, pBtnW, pBtnH);
+        graphics.drawString(this.font, "ANTERIOR", catalogX + 18, navButtonsY + 5, 0xFFFFFFFF, true);
+
+        // Texto página
+        graphics.drawString(this.font, (recipePageIndex + 1) + " / " + totalPages, catalogX + (catalogWidth / 2) - 15, navButtonsY + 5, 0xFFFFD700, true);
+
+        // Siguiente
+        int nextX = catalogX + catalogWidth - pBtnW - 10;
+        boolean nextHov = mouseX >= nextX && mouseX <= nextX + pBtnW && mouseY >= navButtonsY && mouseY <= navButtonsY + pBtnH;
+        graphics.blit(BUTTON_TEX, nextX, navButtonsY, 0, nextHov ? 10 : 0, pBtnW, pBtnH, pBtnW, pBtnH);
+        graphics.drawString(this.font, "SIGUIENTE", nextX + 12, navButtonsY + 5, 0xFFFFFFFF, true);
     }
 
     private void renderMochilaTab(GuiGraphics graphics, int w, int h, int mouseX, int mouseY) {
         int tier = this.menu.getBackpackTier();
         int backpackX = (w - (9 * 26)) / 2;
-        int backpackY = 110;
+        int backpackY = 100;
         int maxUnlocked = tier * 15;
 
-        // ENCABEZADO DE MOCHILA Y PESO
-        int headerY = 55;
-        drawSectionHeader(graphics, backpackX, headerY, 234, "MOCHILA DEL AVENTURERO (TIER " + tier + ")");
+        // ENCABEZADO Y PESO (CONSERVA EL DISEÑO QUE LE GUSTA AL USUARIO SIN LÍNEAS AZULES)
+        int headerY = 50;
+        graphics.drawString(this.font, "MOCHILA DEL AVENTURERO (TIER " + tier + ")", backpackX, headerY, 0xFFFFD700, true);
 
-        // DIBUJAR ICONO DE PESO CON PROPORCIÓN EXACTA (496x503 -> 0.986)
-        int iconW = 20;
+        int iconW = 18;
         int iconH = (int)(iconW / 0.986f);
-        graphics.blit(WEIGHT_ICON, backpackX, headerY + 20, 0, 0, iconW, iconH, iconW, iconH);
-
-        graphics.drawString(this.font, "CAPACIDAD DESBLOQUEADA: §a" + maxUnlocked + " / 45 SLOTS", backpackX + 28, headerY + 24, 0xFFFFFFFF, true);
+        graphics.blit(WEIGHT_ICON, backpackX, headerY + 18, 0, 0, iconW, iconH, iconW, iconH);
+        graphics.drawString(this.font, "CAPACIDAD DESBLOQUEADA: §a" + maxUnlocked + " / 45 SLOTS", backpackX + 24, headerY + 22, 0xFFFFFFFF, true);
 
         // GRID DE MOCHILA (45 SLOTS)
         for (int row = 0; row < 5; row++) {
@@ -513,14 +679,9 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         }
 
         // ABAJO: INVENTARIO PRINCIPAL
-        int invY = backpackY + 5 * 26 + 35;
-        drawSectionHeader(graphics, backpackX, invY - 15, 234, "INVENTARIO DEL JUGADOR");
+        int invY = backpackY + 5 * 26 + 25;
+        graphics.drawString(this.font, "INVENTARIO DEL JUGADOR", backpackX, invY - 14, 0xFFFFD700, true);
         drawInventoryGrid(graphics, backpackX, invY, mouseX, mouseY);
-    }
-
-    private void drawSectionHeader(GuiGraphics graphics, int x, int y, int width, String title) {
-        graphics.drawString(this.font, "§l" + title, x, y, 0xFFFFD700, true);
-        graphics.fill(x, y + 11, x + width, y + 12, 0x884488FF);
     }
 
     private void drawInventoryGrid(GuiGraphics graphics, int invX, int invY, int mouseX, int mouseY) {
@@ -531,6 +692,12 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
                 boolean hov = mouseX >= sx && mouseX <= sx + 26 && mouseY >= sy && mouseY <= sy + 26;
                 drawSlotFrame(graphics, sx, sy, hov, 26);
             }
+        }
+        int hotbarY = invY + 80;
+        for (int col = 0; col < 9; col++) {
+            int sx = invX + col * 26;
+            boolean hov = mouseX >= sx && mouseX <= sx + 26 && mouseY >= hotbarY && mouseY <= hotbarY + 26;
+            drawSlotFrame(graphics, sx, hotbarY, hov, 26);
         }
     }
 
