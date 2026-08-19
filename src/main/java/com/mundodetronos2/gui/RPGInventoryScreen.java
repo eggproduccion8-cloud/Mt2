@@ -402,10 +402,10 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         // LOGO OFICIAL t2.png EN TRIPLE TAMAÑO (Proporción 1672x940 -> 1.778)
         int logoW = 180;
         int logoH = (int) (logoW / 1.7787f);
-        graphics.blit(LOGO_T2, 20, 4, 0, 0, logoW, logoH, logoW, logoH);
+        graphics.blit(LOGO_T2, 20, 4, 0, 0, logoW, logoH, 1672, 940);
 
         // LOGO EGG.png EN ESQUINA INFERIOR IZQUIERDA (Proporción 1:1)
-        graphics.blit(LOGO_EGG, 12, h - 30, 0, 0, 22, 22, 22, 22);
+        graphics.blit(LOGO_EGG, 12, h - 30, 0, 0, 22, 22, 1254, 1254);
         graphics.drawString(this.font, "EGPRODUCCION", 38, h - 22, 0xAAFFFFFF, true);
 
         // 1. NAVEGACIÓN SUPERIOR CON BUTTON.PNG
@@ -657,7 +657,7 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
 
         int iconW = 18;
         int iconH = (int)(iconW / 0.986f);
-        graphics.blit(WEIGHT_ICON, backpackX, headerY + 18, 0, 0, iconW, iconH, iconW, iconH);
+        graphics.blit(WEIGHT_ICON, backpackX, headerY + 18, 0, 0, iconW, iconH, 496, 503);
         graphics.drawString(this.font, "CAPACIDAD DESBLOQUEADA: §a" + maxUnlocked + " / 45 SLOTS", backpackX + 24, headerY + 22, 0xFFFFFFFF, true);
 
         // GRID DE MOCHILA (45 SLOTS)

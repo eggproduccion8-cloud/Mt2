@@ -25,7 +25,7 @@ public class PlayerStatusHudRenderer {
         int startX = 12;
         int startY = 10;
 
-        // 1. RETRATO PEQUEÑO DEL JUGADOR (Enmarcado en medallón/rombo sin panel rectangular)
+        // 1. RETRATO PEQUEÑO DEL JUGADOR (Enmarcado en medallón/rombo)
         int headSize = 22;
         ResourceLocation skinTexture = DefaultPlayerSkin.getDefaultSkin(player.getUUID());
         try {
@@ -35,12 +35,11 @@ public class PlayerStatusHudRenderer {
             }
         } catch (Exception ignored) {}
 
-        // Marco geométrico RPG alrededor del retrato
         graphics.fill(startX - 2, startY - 2, startX + headSize + 2, startY + headSize + 2, 0xFF4488FF);
         graphics.fill(startX - 1, startY - 1, startX + headSize + 1, startY + headSize + 1, 0xFF0D121D);
         PlayerFaceRenderer.draw(graphics, skinTexture, startX, startY, headSize);
 
-        // NOMBRE Y NIVEL (Elegante y compacto)
+        // NOMBRE Y NIVEL
         int infoX = startX + headSize + 8;
         String nameStr = player.getGameProfile().getName();
         int level = ClientPacketHandler.hudPlayerLevel;
@@ -67,16 +66,26 @@ public class PlayerStatusHudRenderer {
         graphics.blit(HEART_ICON, barX - 10, barY - 2, 0, 0, 8, 8, 8, 8);
         graphics.drawString(font, (int) currentHp + "/" + (int) maxHp, barX + barWidth + 6, barY - 1, 0xFFFF5555, true);
 
-        // ABSORCIÓN DINÁMICA (Si existe absorción)
+        // 3. BARRA DE ABSORCIÓN DEDICADA (Si existe absorción > 0)
         float absorption = player.getAbsorptionAmount();
+        int lastBarY = barY;
         if (absorption > 0) {
+            int absY = barY + 10;
             float absRatio = Math.min(1.0f, absorption / maxHp);
             int absFill = (int) (barWidth * absRatio);
-            graphics.fill(barX, barY, barX + absFill, barY + 2, 0xFFFFFF55);
+
+            graphics.fill(barX - 1, absY - 1, barX + barWidth + 1, absY + barHeight + 1, 0x88000000);
+            graphics.fill(barX, absY, barX + barWidth, absY + barHeight, 0xAA222005);
+            if (absFill > 0) {
+                graphics.fill(barX, absY, barX + absFill, absY + barHeight, 0xFFFFD700);
+                graphics.fill(barX, absY, barX + absFill, absY + 1, 0xFFFFFF88);
+            }
+            graphics.drawString(font, "+" + (int) absorption + " Abs", barX + barWidth + 6, absY - 1, 0xFFFFD700, true);
+            lastBarY = absY;
         }
 
-        // 3. BARRA DE HAMBRE (Directamente debajo de la vida)
-        int foodY = barY + 10;
+        // 4. BARRA DE HAMBRE (Directamente debajo de la vida/absorción)
+        int foodY = lastBarY + 10;
         int foodLevel = player.getFoodData().getFoodLevel();
         float foodRatio = Math.max(0.0f, Math.min(1.0f, foodLevel / 20.0f));
 
@@ -92,7 +101,24 @@ public class PlayerStatusHudRenderer {
         graphics.blit(FOOD_ICON, barX - 10, foodY - 2, 0, 0, 8, 8, 8, 8);
         graphics.drawString(font, foodLevel + "/20", barX + barWidth + 6, foodY - 1, 0xFFFFAA00, true);
 
-        // 4. PIEZAS DE ARMADURA FLOTANTES
+        // 5. BARRA DE RESPIRACIÓN / OXÍGENO (Aparece cuando el jugador está bajo agua)
+        int currentAir = player.getAirSupply();
+        int maxAir = player.getMaxAirSupply();
+        if (currentAir < maxAir) {
+            int airY = foodY + 10;
+            float airRatio = Math.max(0.0f, Math.min(1.0f, (float) currentAir / (float) maxAir));
+            int airFill = (int) (barWidth * airRatio);
+
+            graphics.fill(barX - 1, airY - 1, barX + barWidth + 1, airY + barHeight + 1, 0x88000000);
+            graphics.fill(barX, airY, barX + barWidth, airY + barHeight, 0xAA051522);
+            if (airFill > 0) {
+                graphics.fill(barX, airY, barX + airFill, airY + barHeight, 0xFF33CCFF);
+                graphics.fill(barX, airY, barX + airFill, airY + 1, 0xFF88EEFF);
+            }
+            graphics.drawString(font, "Aire: " + Math.max(0, currentAir) + "/" + maxAir, barX + barWidth + 6, airY - 1, 0xFF55FFFF, true);
+        }
+
+        // 6. PIEZAS DE ARMADURA FLOTANTES
         EquipmentSlot[] slots = new EquipmentSlot[]{
             EquipmentSlot.HEAD,
             EquipmentSlot.CHEST,
