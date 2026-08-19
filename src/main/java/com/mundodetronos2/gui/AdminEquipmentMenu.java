@@ -17,7 +17,7 @@ public class AdminEquipmentMenu extends AbstractContainerMenu {
 
     // Client-side constructor
     public AdminEquipmentMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
-        this(containerId, playerInventory, new SimpleContainer(80), "guerrero");
+        this(containerId, playerInventory, new SimpleContainer(EquipmentManager.TOTAL_SLOTS), "guerrero");
     }
 
     // Server-side constructor
@@ -26,10 +26,10 @@ public class AdminEquipmentMenu extends AbstractContainerMenu {
         this.container = container;
         this.currentRole = role;
 
-        // 1. Add 80 slots (10 columns x 8 rows) for the role equipment
+        // 1. Add 200 slots (10 columns x 20 rows) for the role equipment
         int startX = 8;
         int startY = 18;
-        for (int row = 0; row < 8; row++) {
+        for (int row = 0; row < 20; row++) {
             for (int col = 0; col < 10; col++) {
                 int index = row * 10 + col;
                 this.addSlot(new Slot(container, index, startX + col * 18, startY + row * 18) {
@@ -37,8 +37,7 @@ public class AdminEquipmentMenu extends AbstractContainerMenu {
                     public boolean mayPlace(ItemStack stack) {
                         if (stack.isEmpty()) return true;
                         String itemId = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
-                        // Check for duplicates in other slots
-                        for (int i = 0; i < 80; i++) {
+                        for (int i = 0; i < EquipmentManager.TOTAL_SLOTS; i++) {
                             if (i != index) {
                                 ItemStack existing = container.getItem(i);
                                 if (!existing.isEmpty()) {
@@ -66,9 +65,9 @@ public class AdminEquipmentMenu extends AbstractContainerMenu {
             }
         }
 
-        // 2. Add player inventory (9 columns x 3 rows) - offset slightly for layout
-        int playerInvY = 170;
-        int inventoryStartX = 8 + 9; // 9px offset to center 9 slots (162px) under 10 slots (180px)
+        // 2. Add player inventory (9 columns x 3 rows)
+        int playerInvY = startY + (20 * 18) + 12;
+        int inventoryStartX = 8 + 9;
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 this.addSlot(new Slot(playerInventory, col + row * 9 + 9, inventoryStartX + col * 18, playerInvY + row * 18));
@@ -76,7 +75,7 @@ public class AdminEquipmentMenu extends AbstractContainerMenu {
         }
 
         // 3. Add player hotbar (9 slots)
-        int hotbarY = 228;
+        int hotbarY = playerInvY + 58;
         for (int col = 0; col < 9; col++) {
             this.addSlot(new Slot(playerInventory, col, inventoryStartX + col * 18, hotbarY));
         }
@@ -93,7 +92,7 @@ public class AdminEquipmentMenu extends AbstractContainerMenu {
     public void switchRoleOnServer(String newRole) {
         this.currentRole = newRole;
         java.util.List<EquipmentManager.AllowedItemSlot> roleItems = EquipmentManager.getRoleSlots(newRole);
-        for (int i = 0; i < 80; i++) {
+        for (int i = 0; i < EquipmentManager.TOTAL_SLOTS; i++) {
             ItemStack stack = ItemStack.EMPTY;
             if (i < roleItems.size()) {
                 stack = roleItems.get(i).toItemStack();
@@ -110,15 +109,13 @@ public class AdminEquipmentMenu extends AbstractContainerMenu {
         if (slot != null && slot.hasItem()) {
             ItemStack itemstack1 = slot.getItem();
             itemstack = itemstack1.copy();
-            if (index < 80) {
-                // Move from role slots to player inventory
-                if (!this.moveItemStackTo(itemstack1, 80, this.slots.size(), true)) {
+            if (index < EquipmentManager.TOTAL_SLOTS) {
+                if (!this.moveItemStackTo(itemstack1, EquipmentManager.TOTAL_SLOTS, this.slots.size(), true)) {
                     return ItemStack.EMPTY;
                 }
             } else {
-                // Move from player inventory to role slots
                 String itemId = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(itemstack1.getItem()).toString();
-                for (int i = 0; i < 80; i++) {
+                for (int i = 0; i < EquipmentManager.TOTAL_SLOTS; i++) {
                     ItemStack existing = container.getItem(i);
                     if (!existing.isEmpty()) {
                         String existingId = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(existing.getItem()).toString();
@@ -131,9 +128,8 @@ public class AdminEquipmentMenu extends AbstractContainerMenu {
                     }
                 }
 
-                // Put copy of count=1 in first empty role slot
                 boolean placed = false;
-                for (int i = 0; i < 80; i++) {
+                for (int i = 0; i < EquipmentManager.TOTAL_SLOTS; i++) {
                     Slot targetSlot = this.slots.get(i);
                     if (!targetSlot.hasItem()) {
                         ItemStack singleCopy = itemstack1.copy();

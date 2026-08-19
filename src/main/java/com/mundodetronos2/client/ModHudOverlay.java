@@ -226,6 +226,8 @@ public class ModHudOverlay {
     }
 
     private static void drawCleanChatOverlay(GuiGraphics graphics) {
+        if (!ClientEvents.enableCustomChat) return;
+
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
 

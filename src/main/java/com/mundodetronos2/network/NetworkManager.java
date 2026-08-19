@@ -230,6 +230,10 @@ public class NetworkManager {
         INSTANCE.registerMessage(packetId++, S2CToggleLimitesPacket.class,
                 S2CToggleLimitesPacket::encode, S2CToggleLimitesPacket::decode, S2CToggleLimitesPacket::handle);
 
+        // --- S2C TOGGLE CHAT PACKET ---
+        INSTANCE.registerMessage(packetId++, S2CToggleChatPacket.class,
+                S2CToggleChatPacket::encode, S2CToggleChatPacket::decode, S2CToggleChatPacket::handle);
+
         // --- C2S OPEN RPG INVENTORY PACKET ---
         INSTANCE.registerMessage(packetId++, C2SOpenRPGInventoryPacket.class,
                 C2SOpenRPGInventoryPacket::encode, C2SOpenRPGInventoryPacket::decode, C2SOpenRPGInventoryPacket::handle);
@@ -372,6 +376,23 @@ public class NetworkManager {
             ctx.get().enqueueWork(() -> {
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
                     com.mundodetronos2.client.ClientPacketHandler.handleShowMessage(msg.message, msg.isError);
+                });
+            });
+            ctx.get().setPacketHandled(true);
+        }
+    }
+
+    // --- S2C TOGGLE CHAT PACKET ---
+    public static class S2CToggleChatPacket {
+        public S2CToggleChatPacket() {}
+        public static void encode(S2CToggleChatPacket msg, FriendlyByteBuf buf) {}
+        public static S2CToggleChatPacket decode(FriendlyByteBuf buf) { return new S2CToggleChatPacket(); }
+        public static void handle(S2CToggleChatPacket msg, Supplier<NetworkEvent.Context> ctx) {
+            ctx.get().enqueueWork(() -> {
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+                    com.mundodetronos2.client.ClientEvents.enableCustomChat = !com.mundodetronos2.client.ClientEvents.enableCustomChat;
+                    boolean enabled = com.mundodetronos2.client.ClientEvents.enableCustomChat;
+                    com.mundodetronos2.client.ClientPacketHandler.handleShowMessage(enabled ? "Chat MMORPG Activado (Chat Vanilla Oculto)" : "Chat Vanilla Restaurado (Chat MMORPG Oculto)", !enabled);
                 });
             });
             ctx.get().setPacketHandled(true);

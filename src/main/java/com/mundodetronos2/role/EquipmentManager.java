@@ -65,6 +65,8 @@ public class EquipmentManager {
         return r;
     }
 
+    public static final int TOTAL_SLOTS = 200;
+
     public static synchronized void init() {
         roleSlots.clear();
         if (!FILE.exists()) {
@@ -74,13 +76,12 @@ public class EquipmentManager {
         }
 
         try (FileReader reader = new FileReader(FILE)) {
-            // Load map of list of AllowedItemSlot
             @SuppressWarnings("unchecked")
             Map<String, List<Map<String, String>>> loaded = GSON.fromJson(reader, Map.class);
             if (loaded != null) {
                 for (String rName : new String[]{"berserker", "guerrero", "mago", "arquero", "paladin", "draconico", "clerigo"}) {
-                    List<AllowedItemSlot> slots = new ArrayList<>(80);
-                    for (int i = 0; i < 80; i++) {
+                    List<AllowedItemSlot> slots = new ArrayList<>(TOTAL_SLOTS);
+                    for (int i = 0; i < TOTAL_SLOTS; i++) {
                         slots.add(new AllowedItemSlot());
                     }
                     roleSlots.put(rName, slots);
@@ -91,7 +92,7 @@ public class EquipmentManager {
                     List<AllowedItemSlot> targetSlots = roleSlots.get(normRole);
                     if (targetSlots != null) {
                         List<Map<String, String>> loadedSlots = entry.getValue();
-                        for (int i = 0; i < 80 && i < loadedSlots.size(); i++) {
+                        for (int i = 0; i < TOTAL_SLOTS && i < loadedSlots.size(); i++) {
                             Map<String, String> sMap = loadedSlots.get(i);
                             if (sMap != null) {
                                 AllowedItemSlot slot = targetSlots.get(i);
@@ -101,7 +102,7 @@ public class EquipmentManager {
                         }
                     }
                 }
-                LOGGER.info("Permisos de equipamiento (80 casillas) cargados con éxito.");
+                LOGGER.info("Permisos de equipamiento (" + TOTAL_SLOTS + " casillas) cargados con éxito.");
             } else {
                 setupDefaults();
                 save();
@@ -115,8 +116,8 @@ public class EquipmentManager {
 
     private static void setupDefaults() {
         for (String rName : new String[]{"berserker", "guerrero", "mago", "arquero", "paladin", "draconico", "clerigo"}) {
-            List<AllowedItemSlot> slots = new ArrayList<>(80);
-            for (int i = 0; i < 80; i++) {
+            List<AllowedItemSlot> slots = new ArrayList<>(TOTAL_SLOTS);
+            for (int i = 0; i < TOTAL_SLOTS; i++) {
                 slots.add(new AllowedItemSlot());
             }
             roleSlots.put(rName, slots);
@@ -153,7 +154,7 @@ public class EquipmentManager {
 
     private static void addDefaultItem(String role, int index, String id) {
         List<AllowedItemSlot> slots = roleSlots.get(role);
-        if (slots != null && index >= 0 && index < 80) {
+        if (slots != null && index >= 0 && index < TOTAL_SLOTS) {
             AllowedItemSlot slot = slots.get(index);
             slot.id = id;
             slot.nbt = "";
@@ -177,8 +178,8 @@ public class EquipmentManager {
         String norm = getNormalizedRole(role);
         List<AllowedItemSlot> slots = roleSlots.get(norm);
         if (slots == null) {
-            slots = new ArrayList<>(80);
-            for (int i = 0; i < 80; i++) {
+            slots = new ArrayList<>(TOTAL_SLOTS);
+            for (int i = 0; i < TOTAL_SLOTS; i++) {
                 slots.add(new AllowedItemSlot());
             }
             roleSlots.put(norm, slots);
@@ -189,7 +190,7 @@ public class EquipmentManager {
     public static synchronized void updateSlotOnServer(String role, int slotIndex, ItemStack stack) {
         String norm = getNormalizedRole(role);
         List<AllowedItemSlot> slots = getRoleSlots(norm);
-        if (slotIndex >= 0 && slotIndex < 80) {
+        if (slotIndex >= 0 && slotIndex < TOTAL_SLOTS) {
             slots.set(slotIndex, AllowedItemSlot.fromItemStack(stack));
             save();
         }

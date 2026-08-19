@@ -180,6 +180,10 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_H && (this.searchBox == null || !this.searchBox.isFocused())) {
+            this.minecraft.setScreen(new com.mundodetronos2.gui.HudEditorScreen());
+            return true;
+        }
         if (currentTab == Tab.FABRICACION && this.searchBox != null && this.searchBox.isFocused()) {
             if (this.searchBox.keyPressed(keyCode, scanCode, modifiers)) {
                 if (!lastSearchQuery.equals(this.searchBox.getValue())) {
@@ -486,7 +490,7 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         // DERECHA: ATRIBUTOS Y STATS DEL PERSONAJE
         int statsX = w - 244;
         int statsY = 42;
-        graphics.drawString(this.font, "ESTADÍSTICAS RPG", statsX, statsY, 0xFFFFD700, true);
+        graphics.drawString(this.font, "ESTADÍSTICAS", statsX, statsY, 0xFFFFD700, true);
 
         int level = ClientPacketHandler.hudPlayerLevel;
         int currentXp = ClientPacketHandler.hudCurrentXp;

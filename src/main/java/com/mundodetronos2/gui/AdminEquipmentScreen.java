@@ -10,8 +10,8 @@ public class AdminEquipmentScreen extends AbstractContainerScreen<AdminEquipment
 
     public AdminEquipmentScreen(AdminEquipmentMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
-        this.imageWidth = 196; // 180 (for 10 slots * 18) + 16 (padding)
-        this.imageHeight = 256;
+        this.imageWidth = 196;
+        this.imageHeight = 450;
         this.inventoryLabelY = this.imageHeight - 94;
     }
 
@@ -74,19 +74,19 @@ public class AdminEquipmentScreen extends AbstractContainerScreen<AdminEquipment
         graphics.fill(startX, startY, startX + this.imageWidth, startY + this.imageHeight, 0xFFF3E5C8); // Pergamino rústico
         graphics.fill(startX + 3, startY + 3, startX + this.imageWidth - 3, startY + this.imageHeight - 3, 0xFFEBDAB3);
 
-        // Draw 80 slot box borders (10 columns x 8 rows)
+        // Draw 200 slot box borders (10 columns x 20 rows)
         int slotStartY = startY + 18;
-        for (int row = 0; row < 8; row++) {
+        for (int row = 0; row < 20; row++) {
             for (int col = 0; col < 10; col++) {
                 int sx = startX + 8 + col * 18;
                 int sy = slotStartY + row * 18;
-                graphics.fill(sx, sy, sx + 18, sy + 18, 0xFF8F7051); // Dark border
-                graphics.fill(sx + 1, sy + 1, sx + 17, sy + 17, 0xFFE5D5B0); // Empty slot gray/parchment
+                graphics.fill(sx, sy, sx + 18, sy + 18, 0xFF8F7051);
+                graphics.fill(sx + 1, sy + 1, sx + 17, sy + 17, 0xFFE5D5B0);
             }
         }
 
         // Draw player inventory slot box borders (9 columns x 3 rows)
-        int invStartY = startY + 170;
+        int invStartY = slotStartY + (20 * 18) + 12;
         int invStartX = startX + 8 + 9;
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
@@ -98,7 +98,7 @@ public class AdminEquipmentScreen extends AbstractContainerScreen<AdminEquipment
         }
 
         // Draw player hotbar slot box borders (9 slots)
-        int hotbarStartY = startY + 228;
+        int hotbarStartY = invStartY + 58;
         for (int col = 0; col < 9; col++) {
             int sx = invStartX + col * 18;
             int sy = hotbarStartY;

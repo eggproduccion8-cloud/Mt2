@@ -263,7 +263,19 @@ public class TronosCommand {
                                 .executes(ctx -> removerReino(ctx.getSource(), StringArgumentType.getString(ctx, "reino")))))
                 .then(Commands.literal("limites")
                         .executes(ctx -> toggleLimits(ctx.getSource())))
+                .then(Commands.literal("chat")
+                        .executes(ctx -> toggleChat(ctx.getSource())))
         );
+    }
+
+    private static int toggleChat(CommandSourceStack src) {
+        if (src.getEntity() instanceof ServerPlayer player) {
+            NetworkManager.sendToPlayer(new NetworkManager.S2CToggleChatPacket(), player);
+            return 1;
+        } else {
+            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
+            return 0;
+        }
     }
 
     // ------------------ PLAYER COMMANDS IMPLEMENTATION ------------------
@@ -465,9 +477,9 @@ public class TronosCommand {
         }
 
         player.openMenu(new net.minecraft.world.SimpleMenuProvider((containerId, playerInventory, playerEntity) -> {
-            net.minecraft.world.SimpleContainer container = new net.minecraft.world.SimpleContainer(80);
+            net.minecraft.world.SimpleContainer container = new net.minecraft.world.SimpleContainer(com.mundodetronos2.role.EquipmentManager.TOTAL_SLOTS);
             java.util.List<com.mundodetronos2.role.EquipmentManager.AllowedItemSlot> roleItems = com.mundodetronos2.role.EquipmentManager.getRoleSlots("guerrero");
-            for (int i = 0; i < 80; i++) {
+            for (int i = 0; i < com.mundodetronos2.role.EquipmentManager.TOTAL_SLOTS; i++) {
                 net.minecraft.world.item.ItemStack stack = net.minecraft.world.item.ItemStack.EMPTY;
                 if (i < roleItems.size()) {
                     stack = roleItems.get(i).toItemStack();
@@ -477,7 +489,7 @@ public class TronosCommand {
             return new com.mundodetronos2.gui.AdminEquipmentMenu(containerId, playerInventory, container, "guerrero");
         }, Component.literal("Equipamiento de Roles")));
 
-        src.sendSuccess(() -> Component.literal("§aAbriendo panel administrativo de equipamiento..."), false);
+        src.sendSuccess(() -> Component.literal("§aAbriendo panel administrativo de equipamiento (200 casillas)..."), false);
         return 1;
     }
 
