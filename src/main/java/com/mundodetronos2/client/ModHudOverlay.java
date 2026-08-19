@@ -232,24 +232,45 @@ public class ModHudOverlay {
         HudLayoutManager.ComponentConfig config = HudLayoutManager.getConfig(HudLayoutManager.ComponentId.CHAT_BOX);
         if (!config.visible) return;
 
+        java.util.List<ClientEvents.ChatMessage> messages = ClientEvents.chatMessages;
+        if (messages.isEmpty()) return;
+
+        long now = System.currentTimeMillis();
+        ClientEvents.ChatMessage latest = messages.get(messages.size() - 1);
+        long age = now - latest.timestamp;
+
+        // Auto-fade chat: visible for 7s, fades over 2s. If screen is active (chat/inventory), stay visible.
+        boolean screenOpen = mc.screen != null;
+        if (!screenOpen && age > 9000L) return;
+
+        float alpha = 1.0f;
+        if (!screenOpen && age > 7000L) {
+            alpha = 1.0f - ((float) (age - 7000L) / 2000.0f);
+            alpha = Math.max(0.0f, Math.min(1.0f, alpha));
+        }
+
+        int bgAlpha = (int) (0x33 * alpha);
+        int textAlpha = (int) (255 * alpha);
+
         int x = HudLayoutManager.getRenderX(HudLayoutManager.ComponentId.CHAT_BOX, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
         int y = HudLayoutManager.getRenderY(HudLayoutManager.ComponentId.CHAT_BOX, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
         int boxW = config.width;
         int boxH = config.height;
 
-        graphics.fill(x - 2, y - 2, x + boxW + 2, y + boxH + 2, 0x55000000);
-        graphics.fill(x, y, x + boxW, y + boxH, 0x44101418);
+        graphics.fill(x - 2, y - 2, x + boxW + 2, y + boxH + 2, (bgAlpha << 24));
+        graphics.fill(x, y, x + boxW, y + boxH, ((bgAlpha / 2) << 24) | 0x101418);
 
         int maxLines = 5;
-        java.util.List<ClientEvents.ChatMessage> messages = ClientEvents.chatMessages;
         int start = Math.max(0, messages.size() - maxLines);
         int lineY = y + 4;
+
+        int textColor = (textAlpha << 24) | 0xFFFFFF;
 
         for (int i = start; i < messages.size(); i++) {
             ClientEvents.ChatMessage msg = messages.get(i);
             String formatted = "§e" + msg.sender + ": §f" + msg.text;
             if (formatted.length() > 32) formatted = formatted.substring(0, 30) + "...";
-            graphics.drawString(mc.font, formatted, x + 4, lineY, 0xFFFFFFFF, true);
+            graphics.drawString(mc.font, formatted, x + 4, lineY, textColor, true);
             lineY += 12;
         }
     }

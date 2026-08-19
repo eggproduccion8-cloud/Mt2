@@ -23,6 +23,8 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
     public static final ResourceLocation LOGO_T2 = new ResourceLocation("mundodetronos2", "textures/gui/t2.png");
     public static final ResourceLocation LOGO_EGG = new ResourceLocation("mundodetronos2", "textures/gui/egg.png");
     public static final ResourceLocation BUTTON_TEX = new ResourceLocation("mundodetronos2", "textures/gui/button.png");
+    public static final ResourceLocation SLOTS_TEX = new ResourceLocation("mundodetronos2", "textures/gui/slots.png");
+    public static final ResourceLocation SLOTS_HOVER_TEX = new ResourceLocation("mundodetronos2", "textures/gui/slots_hover.png");
 
     public enum Tab {
         PERSONAJE,
@@ -297,12 +299,32 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
 
             drawTranslucentPanel(graphics, armorX - 6, armorY - 20, 48, 145, "EQUIPO");
             for (int i = 0; i < 4; i++) {
-                drawLargeSlotFrame(graphics, armorX, armorY + i * 26, 0xFF88CCFF);
+                int slotY = armorY + i * 26;
+                boolean hovered = mouseX >= armorX && mouseX <= armorX + 26 && mouseY >= slotY && mouseY <= slotY + 26;
+                drawLargeSlotFrame(graphics, armorX, slotY, hovered);
+
+                ItemStack armorStack = this.menu.getSlot(i).getItem();
+                if (!armorStack.isEmpty()) {
+                    if (!com.mundodetronos2.role.EquipmentRestrictions.isItemAuthorized(armorStack, roleStr)) {
+                        graphics.drawString(this.font, "NO CLASS", armorX + 28, slotY + 8, 0xFFFF5555, true);
+                    } else {
+                        graphics.drawString(this.font, "EQUIPADO", armorX + 28, slotY + 8, 0xFF55FF55, true);
+                    }
+                }
             }
 
             int offhandX = w / 2 - 180;
             int offhandY = h / 2 + 40;
-            drawLargeSlotFrame(graphics, offhandX, offhandY, 0xFFFFD700);
+            boolean offHovered = mouseX >= offhandX && mouseX <= offhandX + 26 && mouseY >= offhandY && mouseY <= offhandY + 26;
+            drawLargeSlotFrame(graphics, offhandX, offhandY, offHovered);
+            ItemStack offhandStack = this.menu.getSlot(4).getItem();
+            if (!offhandStack.isEmpty()) {
+                if (!com.mundodetronos2.role.EquipmentRestrictions.isItemAuthorized(offhandStack, roleStr)) {
+                    graphics.drawString(this.font, "NO CLASS", offhandX + 28, offhandY + 8, 0xFFFF5555, true);
+                } else {
+                    graphics.drawString(this.font, "EQUIPADO", offhandX + 28, offhandY + 8, 0xFF55FF55, true);
+                }
+            }
 
             // CENTRO: MODELO 3D EN GRANDE DE ESPALDAS / MIRANDO AL INVENTARIO (Sin rotar con la cámara)
             int entityX = w / 2 - 50;
@@ -316,7 +338,7 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
             int invX = w / 2 + 30;
             int invY = h / 2 - 60;
             drawTranslucentPanel(graphics, invX - 10, invY - 20, 182, 95, "INVENTARIO (" + name + ")");
-            drawInventoryGrid(graphics, invX, invY);
+            drawInventoryGrid(graphics, invX, invY, mouseX, mouseY);
 
         } else if (currentTab == Tab.FABRICACION) {
             int craftGridX = w / 2 - 140;
@@ -326,33 +348,60 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
 
             for (int row = 0; row < 3; row++) {
                 for (int col = 0; col < 3; col++) {
-                    drawSlotFrame(graphics, craftGridX + col * 20, craftGridY + row * 20, 0x88FFFFFF);
+                    int sx = craftGridX + col * 20;
+                    int sy = craftGridY + row * 20;
+                    boolean hov = mouseX >= sx && mouseX <= sx + 18 && mouseY >= sy && mouseY <= sy + 18;
+                    drawSlotFrame(graphics, sx, sy, hov);
                 }
             }
             graphics.drawString(this.font, "➔", craftGridX + 80, craftGridY + 24, 0xFF88CCFF, true);
-            drawSlotFrame(graphics, craftGridX + 115, craftGridY + 20, 0xFF55FF55);
+            boolean resHov = mouseX >= craftGridX + 115 && mouseX <= craftGridX + 133 && mouseY >= craftGridY + 20 && mouseY <= craftGridY + 38;
+            drawSlotFrame(graphics, craftGridX + 115, craftGridY + 20, resHov);
 
             int invX = w / 2 - 140;
             int invY = h / 2 + 5;
             drawTranslucentPanel(graphics, invX - 10, invY - 15, 182, 95, "INVENTARIO");
-            drawInventoryGrid(graphics, invX, invY);
+            drawInventoryGrid(graphics, invX, invY, mouseX, mouseY);
 
             // JEI-LIKE RECIPE VIEWER ON THE RIGHT SIDE
             int recipeX = w / 2 + 100;
             int recipeY = h / 2 - 80;
             drawTranslucentPanel(graphics, recipeX - 5, recipeY - 20, 125, 175, "GUÍA DE RECETAS");
 
-            // Draw filtered recipes
-            int startIdx = recipePageIndex * 3;
+            // Draw filtered recipes with ingredients crafting grid preview
+            int startIdx = recipePageIndex * 2;
             int currentR = 0;
-            for (int i = startIdx; i < Math.min(startIdx + 3, filteredRecipes.size()); i++) {
+            for (int i = startIdx; i < Math.min(startIdx + 2, filteredRecipes.size()); i++) {
                 CraftingRecipe rec = filteredRecipes.get(i);
                 ItemStack res = rec.getResultItem(this.minecraft.level.registryAccess());
-                int ry = recipeY + 25 + currentR * 38;
+                int ry = recipeY + 22 + currentR * 58;
 
-                graphics.fill(recipeX, ry, recipeX + 115, ry + 34, 0x44000000);
-                graphics.renderItem(res, recipeX + 4, ry + 8);
-                graphics.drawString(this.font, res.getHoverName().getString(), recipeX + 24, ry + 12, 0xFFFFFFFF, false);
+                graphics.fill(recipeX, ry, recipeX + 115, ry + 54, 0x44000000);
+
+                // Mini 3x3 ingredients preview
+                var ingredients = rec.getIngredients();
+                for (int ingIdx = 0; ingIdx < ingredients.size() && ingIdx < 9; ingIdx++) {
+                    int ingRow = ingIdx / 3;
+                    int ingCol = ingIdx % 3;
+                    var items = ingredients.get(ingIdx).getItems();
+                    if (items.length > 0) {
+                        ItemStack ingStack = items[0];
+                        int ix = recipeX + 4 + ingCol * 12;
+                        int iy = ry + 4 + ingRow * 12;
+                        graphics.pose().pushPose();
+                        graphics.pose().translate(ix, iy, 0);
+                        graphics.pose().scale(0.6f, 0.6f, 1.0f);
+                        graphics.renderItem(ingStack, 0, 0);
+                        graphics.pose().popPose();
+                    }
+                }
+
+                graphics.drawString(this.font, "➔", recipeX + 44, ry + 18, 0xFF88CCFF, false);
+                graphics.renderItem(res, recipeX + 58, ry + 14);
+
+                String itemName = res.getHoverName().getString();
+                if (itemName.length() > 14) itemName = itemName.substring(0, 12) + "..";
+                graphics.drawString(this.font, itemName, recipeX + 4, ry + 42, 0xFFFFFFFF, false);
 
                 currentR++;
             }
@@ -374,11 +423,14 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
             for (int row = 0; row < 5; row++) {
                 for (int col = 0; col < 9; col++) {
                     int slotIdx = col + row * 9;
+                    int sx = backpackX + col * 18;
+                    int sy = backpackY + row * 18;
+                    boolean hov = mouseX >= sx && mouseX <= sx + 18 && mouseY >= sy && mouseY <= sy + 18;
                     if (slotIdx < maxUnlocked) {
-                        drawSlotFrame(graphics, backpackX + col * 18, backpackY + row * 18, 0x88FFFFFF);
+                        drawSlotFrame(graphics, sx, sy, hov);
                     } else {
-                        drawSlotFrame(graphics, backpackX + col * 18, backpackY + row * 18, 0xAA441111);
-                        graphics.drawString(this.font, "🔒", backpackX + col * 18 + 5, backpackY + row * 18 + 4, 0xFF662222, false);
+                        drawSlotFrame(graphics, sx, sy, false);
+                        graphics.drawString(this.font, "🔒", sx + 5, sy + 4, 0xFF662222, false);
                     }
                 }
             }
@@ -386,7 +438,9 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
             int hotbarY = h / 2 + 20;
             drawTranslucentPanel(graphics, backpackX - 10, hotbarY - 15, 182, 35, "HOTBAR");
             for (int col = 0; col < 9; col++) {
-                drawSlotFrame(graphics, backpackX + col * 18, hotbarY, 0x8888CCFF);
+                int sx = backpackX + col * 18;
+                boolean hov = mouseX >= sx && mouseX <= sx + 18 && mouseY >= hotbarY && mouseY <= hotbarY + 18;
+                drawSlotFrame(graphics, sx, hotbarY, hov);
             }
         }
     }
@@ -405,29 +459,30 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         }
     }
 
-    private void drawInventoryGrid(GuiGraphics graphics, int invX, int invY) {
+    private void drawInventoryGrid(GuiGraphics graphics, int invX, int invY, int mouseX, int mouseY) {
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                drawSlotFrame(graphics, invX + col * 18, invY + row * 18, 0x66FFFFFF);
+                int sx = invX + col * 18;
+                int sy = invY + row * 18;
+                boolean hov = mouseX >= sx && mouseX <= sx + 18 && mouseY >= sy && mouseY <= sy + 18;
+                drawSlotFrame(graphics, sx, sy, hov);
             }
         }
         for (int col = 0; col < 9; col++) {
-            drawSlotFrame(graphics, invX + col * 18, invY + 60, 0xFF88CCFF);
+            int sx = invX + col * 18;
+            int sy = invY + 60;
+            boolean hov = mouseX >= sx && mouseX <= sx + 18 && mouseY >= sy && mouseY <= sy + 18;
+            drawSlotFrame(graphics, sx, sy, hov);
         }
     }
 
-    private void drawLargeSlotFrame(GuiGraphics graphics, int x, int y, int borderColor) {
-        graphics.fill(x, y, x + 26, y + 26, 0x44000000);
-        graphics.fill(x, y, x + 26, y + 1, borderColor);
-        graphics.fill(x, y, x + 1, y + 26, borderColor);
-        graphics.fill(x + 25, y, x + 26, y + 26, borderColor);
-        graphics.fill(x, y + 25, x + 26, y + 26, borderColor);
+    private void drawLargeSlotFrame(GuiGraphics graphics, int x, int y, boolean hovered) {
+        ResourceLocation tex = hovered ? SLOTS_HOVER_TEX : SLOTS_TEX;
+        graphics.blit(tex, x, y, 0, 0, 26, 26, 26, 26);
     }
 
-    private void drawSlotFrame(GuiGraphics graphics, int x, int y, int borderColor) {
-        graphics.fill(x, y, x + 18, y + 1, borderColor);
-        graphics.fill(x, y, x + 1, y + 18, borderColor);
-        graphics.fill(x + 17, y, x + 18, y + 18, 0x22FFFFFF);
-        graphics.fill(x, y + 17, x + 18, y + 18, 0x22FFFFFF);
+    private void drawSlotFrame(GuiGraphics graphics, int x, int y, boolean hovered) {
+        ResourceLocation tex = hovered ? SLOTS_HOVER_TEX : SLOTS_TEX;
+        graphics.blit(tex, x, y, 0, 0, 18, 18, 18, 18);
     }
 }
