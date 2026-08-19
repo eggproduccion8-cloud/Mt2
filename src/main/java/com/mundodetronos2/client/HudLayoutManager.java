@@ -26,13 +26,31 @@ public class HudLayoutManager {
     }
 
     public enum ComponentId {
-        PLAYER_CARD("Perfil de Jugador"),
-        KINGDOM_CARD("Estado del Reino"),
-        CHAT_BOX("Chat MMORPG"),
-        ARMOR_PANEL("Panel de Armadura"),
+        // Individual fine-grained HUD components
+        HEAD_AVATAR("Retrato del Jugador"),
+        PLAYER_NAME("Nombre del Jugador"),
+        HEALTH_BAR("Barra de Vida"),
+        HUNGER_BAR("Barra de Hambre"),
+        ABSORPTION_BAR("Barra de Absorción"),
+        WATER_BREATHING("Respiración de Agua"),
+        TEAM_LIVES("Vidas del Equipo ♥"),
+        THRONE_LIVES("Vidas del Trono ♛"),
+        GAME_TIME("Tiempo ◷"),
+        TEAM_NAME("Team ⚔"),
+        PLAYER_ROLE("Rol del Jugador ◆"),
+        COMPASS_COORDS("Brújula y Coordenadas"),
+        ACTIVE_MISSION("Misión Activa"),
         HOTBAR("Hotbar MMORPG"),
         OFFHAND_SLOT("Segunda Mano"),
-        XP_BAR("Barra de Experiencia");
+        XP_BAR("Barra de Experiencia"),
+        LOGO_EGG("Logo EGPRODUCCION"),
+
+        // Composite / Legacy components
+        PLAYER_CARD("Perfil de Jugador (Tarjeta)"),
+        KINGDOM_CARD("Estado del Reino (Tarjeta)"),
+        CHAT_BOX("Chat MMORPG"),
+        ARMOR_PANEL("Panel de Armadura"),
+        RPG_INVENTORY("Inventario RPG (Tecla I)");
 
         private final String displayName;
 
@@ -51,7 +69,7 @@ public class HudLayoutManager {
         public int offsetY;
         public float scale = 1.0f;
         public boolean visible = true;
-        public int width = 120;
+        public int width = 100;
         public int height = 20;
 
         public ComponentConfig() {}
@@ -96,20 +114,50 @@ public class HudLayoutManager {
 
     private static ComponentConfig getDefaultConfig(ComponentId id) {
         switch (id) {
+            case HEAD_AVATAR:
+                return new ComponentConfig(Anchor.TOP_LEFT, 10, 10, 1.0f, true, 32, 32);
+            case PLAYER_NAME:
+                return new ComponentConfig(Anchor.TOP_LEFT, 48, 10, 1.0f, true, 100, 12);
+            case HEALTH_BAR:
+                return new ComponentConfig(Anchor.TOP_LEFT, 48, 24, 1.0f, true, 120, 10);
+            case HUNGER_BAR:
+                return new ComponentConfig(Anchor.TOP_LEFT, 48, 36, 1.0f, true, 120, 8);
+            case ABSORPTION_BAR:
+                return new ComponentConfig(Anchor.TOP_LEFT, 48, 46, 1.0f, true, 120, 8);
+            case WATER_BREATHING:
+                return new ComponentConfig(Anchor.TOP_LEFT, 48, 56, 1.0f, true, 120, 8);
+            case TEAM_LIVES:
+                return new ComponentConfig(Anchor.TOP_LEFT, 10, 70, 1.0f, true, 60, 16);
+            case THRONE_LIVES:
+                return new ComponentConfig(Anchor.TOP_LEFT, 75, 70, 1.0f, true, 50, 16);
+            case GAME_TIME:
+                return new ComponentConfig(Anchor.TOP_LEFT, 130, 70, 1.0f, true, 70, 16);
+            case TEAM_NAME:
+                return new ComponentConfig(Anchor.TOP_LEFT, 205, 70, 1.0f, true, 80, 16);
+            case PLAYER_ROLE:
+                return new ComponentConfig(Anchor.TOP_LEFT, 290, 70, 1.0f, true, 90, 16);
+            case COMPASS_COORDS:
+                return new ComponentConfig(Anchor.TOP_CENTER, -60, 10, 1.0f, true, 120, 28);
+            case ACTIVE_MISSION:
+                return new ComponentConfig(Anchor.TOP_RIGHT, -160, 10, 1.0f, true, 150, 40);
+            case HOTBAR:
+                return new ComponentConfig(Anchor.BOTTOM_CENTER, -111, -28, 1.0f, true, 222, 22);
+            case OFFHAND_SLOT:
+                return new ComponentConfig(Anchor.BOTTOM_CENTER, -138, -28, 1.0f, true, 22, 22);
+            case XP_BAR:
+                return new ComponentConfig(Anchor.BOTTOM_CENTER, -111, -38, 1.0f, true, 222, 8);
+            case LOGO_EGG:
+                return new ComponentConfig(Anchor.BOTTOM_LEFT, 10, -35, 1.0f, true, 110, 28);
             case PLAYER_CARD:
-                return new ComponentConfig(Anchor.TOP_LEFT, 10, 10, 1.0f, true, 140, 52);
+                return new ComponentConfig(Anchor.TOP_LEFT, 10, 10, 1.0f, true, 175, 55);
             case KINGDOM_CARD:
                 return new ComponentConfig(Anchor.TOP_RIGHT, -145, 10, 1.0f, true, 135, 48);
             case CHAT_BOX:
                 return new ComponentConfig(Anchor.BOTTOM_LEFT, 10, -110, 1.0f, true, 200, 80);
             case ARMOR_PANEL:
                 return new ComponentConfig(Anchor.TOP_LEFT, 10, 66, 1.0f, true, 88, 20);
-            case HOTBAR:
-                return new ComponentConfig(Anchor.BOTTOM_CENTER, 0, -28, 1.0f, true, 222, 22);
-            case OFFHAND_SLOT:
-                return new ComponentConfig(Anchor.BOTTOM_CENTER, -125, -28, 1.0f, true, 22, 22);
-            case XP_BAR:
-                return new ComponentConfig(Anchor.BOTTOM_CENTER, 0, -54, 1.0f, true, 222, 10);
+            case RPG_INVENTORY:
+                return new ComponentConfig(Anchor.CENTER, -120, -100, 1.0f, true, 240, 200);
             default:
                 return new ComponentConfig(Anchor.TOP_LEFT, 0, 0, 1.0f, true, 100, 20);
         }

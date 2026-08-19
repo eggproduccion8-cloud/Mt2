@@ -49,6 +49,13 @@ public class KeyInit {
             CATEGORY
     );
 
+    public static final KeyMapping EDIT_INVENTORY_KEY = new KeyMapping(
+            "key.mundodetronos2.edit_inventory",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_Y, // Tecla Y por defecto para abrir el Editor de Inventario RPG
+            CATEGORY
+    );
+
     @SubscribeEvent
     public static void registerKeys(RegisterKeyMappingsEvent event) {
         event.register(OPEN_GUI_KEY);
@@ -56,6 +63,7 @@ public class KeyInit {
         event.register(TOGGLE_HUD_KEY);
         event.register(EDIT_HUD_KEY);
         event.register(OPEN_RPG_INVENTORY_KEY);
+        event.register(EDIT_INVENTORY_KEY);
     }
 
     @SubscribeEvent

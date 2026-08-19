@@ -58,6 +58,7 @@ public class ClientPacketHandler {
     public static int hudTutorialLevel = 1;
     public static String hudActiveMissionTitle = "";
     public static String hudActiveMissionProgress = "";
+    public static String hudTeamName = "NINGUNO";
     public static int clientThroneX = 0;
     public static int clientThroneY = 0;
     public static int clientThroneZ = 0;
@@ -157,7 +158,7 @@ public class ClientPacketHandler {
     }
 
     // --- MANEJO DE SINCRONIZACIÓN DE HUD ---
-    public static void handleHudSync(int lives, int points, int seconds, String role, int level, int currentXp, int neededXp, int tutorialLevel, String missionTitle, String missionProgress, int tx, int ty, int tz, String tDim) {
+    public static void handleHudSync(int lives, int points, int seconds, String role, int level, int currentXp, int neededXp, int tutorialLevel, String missionTitle, String missionProgress, String teamName, int tx, int ty, int tz, String tDim) {
         hudThroneLives = lives;
         hudSharedPoints = points;
         hudRemainingSeconds = seconds;
@@ -168,6 +169,7 @@ public class ClientPacketHandler {
         hudTutorialLevel = Math.max(1, tutorialLevel);
         hudActiveMissionTitle = missionTitle != null ? missionTitle : "";
         hudActiveMissionProgress = missionProgress != null ? missionProgress : "";
+        hudTeamName = teamName != null && !teamName.isEmpty() ? teamName : "NINGUNO";
         clientThroneX = tx;
         clientThroneY = ty;
         clientThroneZ = tz;

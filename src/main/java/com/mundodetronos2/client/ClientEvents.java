@@ -58,6 +58,7 @@ public class ClientEvents {
     // Límites visuales de la base
     public static boolean showBaseLimits = true;
     public static boolean showHud = true;
+    public static boolean enableCustomChat = true;
 
     // Alertas de muerte en tiempo real del HUD RPG
     public static UUID lastDeadPlayerId = null;
@@ -311,7 +312,7 @@ public class ClientEvents {
 
         // Cancelar overlays vanilla durante gameplay
         ResourceLocation id = event.getOverlay().id();
-        if (id.equals(VanillaGuiOverlay.CHAT_PANEL.id())
+        if ((id.equals(VanillaGuiOverlay.CHAT_PANEL.id()) && enableCustomChat)
             || id.equals(VanillaGuiOverlay.HOTBAR.id())
             || id.equals(VanillaGuiOverlay.PLAYER_HEALTH.id())
             || id.equals(VanillaGuiOverlay.FOOD_LEVEL.id())

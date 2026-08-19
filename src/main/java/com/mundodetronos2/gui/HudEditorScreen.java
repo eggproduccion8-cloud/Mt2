@@ -33,6 +33,13 @@ public class HudEditorScreen extends Screen {
         }
     }
 
+    private static boolean isEditableHudComponent(ComponentId id) {
+        return id != ComponentId.PLAYER_CARD
+            && id != ComponentId.KINGDOM_CARD
+            && id != ComponentId.RPG_INVENTORY
+            && id != ComponentId.CHAT_BOX;
+    }
+
     @Override
     protected void init() {
         super.init();
@@ -41,7 +48,7 @@ public class HudEditorScreen extends Screen {
         int startX = this.width - btnW - 12;
         int startY = 12;
 
-        // Botón GUARDAR (Guarda permanentemente las posiciones de los componentes)
+        // Botón GUARDAR
         this.addRenderableWidget(Button.builder(Component.literal("§aGUARDAR"), button -> {
             for (Map.Entry<ComponentId, ComponentConfig> entry : tempConfig.entrySet()) {
                 ComponentConfig live = HudLayoutManager.getConfig(entry.getKey());
@@ -88,7 +95,7 @@ public class HudEditorScreen extends Screen {
         // Fondo translúcido suave
         graphics.fill(0, 0, this.width, this.height, 0xAA000000);
 
-        // DIBUJAR GRILLA DE ALINEACIÓN (20x20 pixels)
+        // Grilla (20x20 pixels)
         int gridSpacing = 20;
         int gridColor = 0x15FFFFFF;
         for (int x = 0; x < this.width; x += gridSpacing) {
@@ -98,7 +105,7 @@ public class HudEditorScreen extends Screen {
             graphics.fill(0, y, this.width, y + 1, gridColor);
         }
 
-        // LOGO OFICIAL t2.png AMBIENTADO CON ASPECT RATIO REAL (1672:940 -> 1.778)
+        // LOGO OFICIAL t2.png
         int logoW = 140;
         int logoH = (int) (logoW / 1.7787f);
         graphics.blit(LOGO_T2, this.width / 2 - logoW / 2, 4, 0, 0, logoW, logoH, 1672, 940);
@@ -108,10 +115,12 @@ public class HudEditorScreen extends Screen {
         graphics.drawString(this.font, "EGPRODUCCION", 38, this.height - 24, 0xAAFFFFFF, true);
 
         // Título del Editor
-        graphics.drawCenteredString(this.font, "Edición de HUD Mundo de Tronos", this.width / 2, logoH + 8, 0xFFFFD700);
+        graphics.drawCenteredString(this.font, "Editor de HUD (Tecla H)", this.width / 2, logoH + 8, 0xFFFFD700);
 
-        // Renderizar contornos de cada componente editable
+        // Renderizar contornos de componentes editables únicamente
         for (ComponentId id : ComponentId.values()) {
+            if (!isEditableHudComponent(id)) continue;
+
             ComponentConfig config = tempConfig.get(id);
             if (config == null) continue;
 
@@ -135,11 +144,12 @@ public class HudEditorScreen extends Screen {
             graphics.drawString(this.font, id.getDisplayName(), x + 3, y + 3, borderColor, false);
         }
 
-        // Información del componente seleccionado
+        // Información del componente seleccionado y controles de Escala
         if (selectedComponent != null) {
             ComponentConfig config = tempConfig.get(selectedComponent);
-            String info = "Seleccionado: " + selectedComponent.getDisplayName() + " (X: " + config.offsetX + ", Y: " + config.offsetY + ")";
+            String info = "Seleccionado: " + selectedComponent.getDisplayName() + " (X: " + config.offsetX + ", Y: " + config.offsetY + ", Escala: " + String.format("%.2f", config.scale) + ")";
             graphics.drawString(this.font, info, 10, this.height - 45, 0xFFFFD700, false);
+            graphics.drawString(this.font, "[+ / - o Rueda del ratón para ajustar escala]", 10, this.height - 32, 0x88FFFFFF, false);
         }
 
         super.render(graphics, mouseX, mouseY, partialTick);
@@ -149,6 +159,8 @@ public class HudEditorScreen extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0) {
             for (ComponentId id : ComponentId.values()) {
+                if (!isEditableHudComponent(id)) continue;
+
                 ComponentConfig config = tempConfig.get(id);
                 if (config == null) continue;
 
@@ -185,6 +197,39 @@ public class HudEditorScreen extends Screen {
             }
         }
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (selectedComponent != null) {
+            ComponentConfig config = tempConfig.get(selectedComponent);
+            if (config != null) {
+                if (delta > 0) {
+                    config.scale = Math.min(2.5f, config.scale + 0.05f);
+                } else if (delta < 0) {
+                    config.scale = Math.max(0.4f, config.scale - 0.05f);
+                }
+                return true;
+            }
+        }
+        return super.mouseScrolled(mouseX, mouseY, delta);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (selectedComponent != null) {
+            ComponentConfig config = tempConfig.get(selectedComponent);
+            if (config != null) {
+                if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_EQUAL || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ADD) {
+                    config.scale = Math.min(2.5f, config.scale + 0.05f);
+                    return true;
+                } else if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_MINUS || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_SUBTRACT) {
+                    config.scale = Math.max(0.4f, config.scale - 0.05f);
+                    return true;
+                }
+            }
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
