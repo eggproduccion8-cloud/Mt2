@@ -27,6 +27,10 @@ public class HudLayoutManager {
 
     public enum ComponentId {
         PLAYER_CARD("Perfil de Jugador"),
+        HEALTH_BAR("Barra de Vida"),
+        ABSORPTION_BAR("Barra de Absorción"),
+        HUNGER_BAR("Barra de Hambre"),
+        AIR_BAR("Barra de Oxígeno"),
         KINGDOM_CARD("Estado del Reino"),
         CHAT_BOX("Chat MMORPG"),
         ARMOR_PANEL("Panel de Armadura"),
@@ -98,6 +102,14 @@ public class HudLayoutManager {
         switch (id) {
             case PLAYER_CARD:
                 return new ComponentConfig(Anchor.TOP_LEFT, 10, 10, 1.0f, true, 140, 52);
+            case HEALTH_BAR:
+                return new ComponentConfig(Anchor.TOP_LEFT, 42, 20, 1.0f, true, 100, 10);
+            case ABSORPTION_BAR:
+                return new ComponentConfig(Anchor.TOP_LEFT, 42, 30, 1.0f, true, 100, 10);
+            case HUNGER_BAR:
+                return new ComponentConfig(Anchor.TOP_LEFT, 42, 40, 1.0f, true, 100, 10);
+            case AIR_BAR:
+                return new ComponentConfig(Anchor.TOP_LEFT, 42, 50, 1.0f, true, 100, 10);
             case KINGDOM_CARD:
                 return new ComponentConfig(Anchor.TOP_RIGHT, -145, 10, 1.0f, true, 135, 48);
             case CHAT_BOX:

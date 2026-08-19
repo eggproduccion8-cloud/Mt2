@@ -291,7 +291,6 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void onClientChatReceived(net.minecraftforge.client.event.ClientChatReceivedEvent event) {
-        // Intercept player chat only (exclude system messages)
         String raw = event.getMessage().getString();
         if (!raw.isEmpty()) {
             if (raw.contains("<") && raw.contains(">")) {
@@ -300,6 +299,8 @@ public class ClientEvents {
                 String sender = raw.substring(start + 1, end);
                 String msg = raw.substring(end + 1).trim();
                 addChatMessage(sender, msg);
+            } else {
+                addChatMessage("SISTEMA", raw);
             }
         }
     }
