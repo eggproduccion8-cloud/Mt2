@@ -279,15 +279,8 @@ public class ModHudOverlay {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
 
-        HudLayoutManager.ComponentConfig cardConfig = HudLayoutManager.getConfig(HudLayoutManager.ComponentId.KINGDOM_CARD);
-        if (!cardConfig.visible) return;
-
-        int x = HudLayoutManager.getRenderX(HudLayoutManager.ComponentId.KINGDOM_CARD, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
-        int y = HudLayoutManager.getRenderY(HudLayoutManager.ComponentId.KINGDOM_CARD, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
-
-        // Panel separado de Estado de Reino (Tiempo, Vidas de Trono y Vidas de Equipo)
-        graphics.fill(x - 2, y - 2, x + 137, y + 42, 0x880A0D10);
-        graphics.fill(x, y, x + 135, y + 40, 0xAA12151A);
+        int x = 12;
+        int y = 48;
 
         int totalSecs = ClientPacketHandler.hudRemainingSeconds;
         int hrs = totalSecs / 3600;
@@ -295,9 +288,12 @@ public class ModHudOverlay {
         int secs = totalSecs % 60;
         String timeStr = String.format("%d:%02d:%02d", hrs, mins, secs);
 
-        graphics.drawString(mc.font, "⏱ TIEMPO: " + timeStr, x + 6, y + 4, 0xFFFFFF55, true);
-        graphics.drawString(mc.font, "⚔ TRONO: " + ClientPacketHandler.hudThroneLives, x + 6, y + 16, 0xFFFFD700, true);
-        graphics.drawString(mc.font, "❤ VIDAS: " + ClientPacketHandler.hudSharedPoints, x + 6, y + 28, 0xFF55FF55, true);
+        String kingdomLine = "❤ " + ClientPacketHandler.hudSharedPoints +
+                             "   ♛ " + ClientPacketHandler.hudThroneLives +
+                             "   ⏱ " + timeStr +
+                             "   ⚔ " + ClientEvents.getClientPlayerRole().toUpperCase();
+
+        graphics.drawString(mc.font, kingdomLine, x, y, 0xFFE0E0E0, true);
     }
 
     private static void drawEyeBlinkOverlay(GuiGraphics graphics, int width, int height) {
