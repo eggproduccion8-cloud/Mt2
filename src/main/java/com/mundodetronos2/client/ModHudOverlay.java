@@ -17,7 +17,6 @@ public class ModHudOverlay {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null || mc.options.hideGui) return;
 
-        // Mantener HUD visible en todo momento, incluso cuando hay menús o inventarios abiertos
         // 1. Barra de Trono en MIRA/Target
         long now = System.currentTimeMillis();
         long delta = now - ClientPacketHandler.targetThroneLastHitTime;
@@ -33,12 +32,11 @@ public class ModHudOverlay {
             drawEyeBlinkOverlay(graphics, width, height);
         }
 
-        // 3. HUD permanente de Reino (Brújula y Coordenadas)
+        // 3. Brújula y Coordenadas
         drawCompassAndCoordinates(graphics, width);
 
-        // 4. Estatus MMORPG, Carta de Reino, Chat MMORPG y Hotbar MMORPG
+        // 4. Estatus MMORPG, Chat MMORPG y Hotbar MMORPG (Única fuente visual del HUD)
         PlayerStatusHudRenderer.renderPlayerStatus(graphics, width, height);
-        drawPermanentKingdomHud(graphics);
         drawCleanChatOverlay(graphics);
         if (mc.screen == null) {
             MMORPGHotbarRenderer.renderHotbar(graphics, width, height);
@@ -218,7 +216,6 @@ public class ModHudOverlay {
 
         graphics.drawString(mc.font, "▲", centerX - mc.font.width("▲") / 2, y1 + 10, 0xFFFFD700, true);
 
-        // La tecla para ocultar HUD ahora solo desactiva las Coordenadas
         if (ClientEvents.showHud) {
             String coordsStr = String.format("X: %d   Y: %d   Z: %d", mc.player.getBlockX(), mc.player.getBlockY(), mc.player.getBlockZ());
             ClientEvents.drawFlatCenteredString(graphics, mc.font, coordsStr, centerX, y1 + 20, 0xFFE0E0E0);
@@ -241,7 +238,6 @@ public class ModHudOverlay {
         ClientEvents.ChatMessage latest = messages.get(messages.size() - 1);
         long age = now - latest.timestamp;
 
-        // Auto-fade chat: visible for 7s, fades over 2s. If screen is active (chat/inventory), stay visible.
         boolean screenOpen = mc.screen != null;
         if (!screenOpen && age > 9000L) return;
 
@@ -275,35 +271,6 @@ public class ModHudOverlay {
             graphics.drawString(mc.font, formatted, x + 4, lineY, textColor, true);
             lineY += 12;
         }
-    }
-
-    private static void drawPermanentKingdomHud(GuiGraphics graphics) {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null) return;
-
-        HudLayoutManager.ComponentConfig cardConfig = HudLayoutManager.getConfig(HudLayoutManager.ComponentId.KINGDOM_CARD);
-        if (!cardConfig.visible) return;
-
-        int x = HudLayoutManager.getRenderX(HudLayoutManager.ComponentId.KINGDOM_CARD, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
-        int y = HudLayoutManager.getRenderY(HudLayoutManager.ComponentId.KINGDOM_CARD, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
-
-        String role = ClientEvents.getClientPlayerRole();
-        if (role == null || role.isEmpty() || role.equalsIgnoreCase("none")) {
-            role = "ASPIRANTE";
-        } else {
-            role = role.toUpperCase();
-        }
-
-        int totalSecs = ClientPacketHandler.hudRemainingSeconds;
-        int hrs = totalSecs / 3600;
-        int mins = (totalSecs % 3600) / 60;
-        int secs = totalSecs % 60;
-        String timeStr = String.format("%d:%02d:%02d", hrs, mins, secs);
-
-        graphics.drawString(mc.font, "ROL: §e" + role, x, y, 0xFFFFFFFF, true);
-        graphics.drawString(mc.font, "TRONO: §c" + ClientPacketHandler.hudThroneLives, x, y + 10, 0xFFFFFFFF, true);
-        graphics.drawString(mc.font, "VIDAS EQUIPO: §a" + ClientPacketHandler.hudSharedPoints, x, y + 20, 0xFFFFFFFF, true);
-        graphics.drawString(mc.font, "TIEMPO: §b" + timeStr, x, y + 30, 0xFFFFFFFF, true);
     }
 
     private static void drawEyeBlinkOverlay(GuiGraphics graphics, int width, int height) {

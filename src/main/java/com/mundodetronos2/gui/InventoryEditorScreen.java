@@ -18,6 +18,7 @@ public class InventoryEditorScreen extends Screen {
     public static final ResourceLocation LOGO_T2 = new ResourceLocation("mundodetronos2", "textures/gui/t2.png");
     public static final ResourceLocation LOGO_EGG = new ResourceLocation("mundodetronos2", "textures/gui/egg.png");
 
+    private final RPGInventoryScreen.Tab targetTab;
     private final Map<InventoryComponentId, ComponentConfig> tempConfig = new EnumMap<>(InventoryComponentId.class);
     private InventoryComponentId selectedComponent = null;
 
@@ -30,9 +31,36 @@ public class InventoryEditorScreen extends Screen {
     private float initialScale = 1.0f;
 
     public InventoryEditorScreen() {
+        this(RPGInventoryScreen.Tab.PERSONAJE);
+    }
+
+    public InventoryEditorScreen(RPGInventoryScreen.Tab tab) {
         super(Component.literal("Editor de Inventario RPG"));
+        this.targetTab = tab != null ? tab : RPGInventoryScreen.Tab.PERSONAJE;
         for (InventoryComponentId id : InventoryComponentId.values()) {
             tempConfig.put(id, InventoryLayoutManager.getConfig(id).copy());
+        }
+    }
+
+    private boolean isComponentInCurrentTab(InventoryComponentId id) {
+        switch (targetTab) {
+            case PERSONAJE:
+                return id == InventoryComponentId.MODEL_3D
+                    || id == InventoryComponentId.EQUIPMENT_SLOTS
+                    || id == InventoryComponentId.PLAYER_STATS
+                    || id == InventoryComponentId.PLAYER_INVENTORY_GRID
+                    || id == InventoryComponentId.LOGO_T2;
+            case FABRICACION:
+                return id == InventoryComponentId.CRAFTING_STATION_3X3
+                    || id == InventoryComponentId.CRAFTING_CATALOG
+                    || id == InventoryComponentId.PLAYER_INVENTORY_GRID
+                    || id == InventoryComponentId.LOGO_T2;
+            case MOCHILA:
+                return id == InventoryComponentId.MOCHILA_CONTAINER
+                    || id == InventoryComponentId.PLAYER_INVENTORY_GRID
+                    || id == InventoryComponentId.LOGO_T2;
+            default:
+                return true;
         }
     }
 
@@ -117,10 +145,12 @@ public class InventoryEditorScreen extends Screen {
             graphics.fill(0, y, this.width, y + 1, gridColor);
         }
 
-        graphics.drawCenteredString(this.font, "EDITOR DE INVENTARIO RPG (Ajustar Posición / Escala)", this.width / 2, 8, 0xFFFFD700);
+        graphics.drawCenteredString(this.font, "EDITOR DE INVENTARIO RPG (" + targetTab.name() + ") - Tecla Y", this.width / 2, 8, 0xFFFFD700);
 
-        // Renderizar componentes editables de Inventario
+        // Renderizar componentes editables de la pestaña activa únicamente
         for (InventoryComponentId id : InventoryComponentId.values()) {
+            if (!isComponentInCurrentTab(id)) continue;
+
             ComponentConfig config = tempConfig.get(id);
             if (config == null) continue;
 
@@ -141,7 +171,6 @@ public class InventoryEditorScreen extends Screen {
             graphics.fill(x - 1, y, x, y + h, borderColor);
             graphics.fill(x + w, y, x + w + 1, y + h, borderColor);
 
-            // Corner Handle (Resizing)
             if (isSelected) {
                 graphics.fill(x + w - 6, y + h - 6, x + w + 2, y + h + 2, 0xFFFFD700);
             }
@@ -162,7 +191,6 @@ public class InventoryEditorScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0) {
-            // Verificar corner handle
             if (selectedComponent != null) {
                 ComponentConfig config = tempConfig.get(selectedComponent);
                 if (config != null) {
@@ -182,6 +210,8 @@ public class InventoryEditorScreen extends Screen {
             }
 
             for (InventoryComponentId id : InventoryComponentId.values()) {
+                if (!isComponentInCurrentTab(id)) continue;
+
                 ComponentConfig config = tempConfig.get(id);
                 if (config == null) continue;
 

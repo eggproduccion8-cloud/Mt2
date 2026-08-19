@@ -250,11 +250,13 @@ public class NetworkManager {
         int points = 0;
         int tx = 0, ty = 0, tz = 0;
         String tDim = "";
+        String teamName = "NINGUNO";
 
         RealmData realm = RealmManager.getPlayerRealm(player.getUUID());
         if (realm != null) {
             lives = realm.getCurrentLives();
             points = realm.getSharedPoints();
+            teamName = realm.getName();
             if (realm.getThroneId() != null) {
                 ThroneData throne = ThroneManager.getThroneById(realm.getThroneId());
                 if (throne != null) {
@@ -333,7 +335,7 @@ public class NetworkManager {
             }
         }
 
-        S2CHudSyncPacket pkt = new S2CHudSyncPacket(lives, points, remaining, roleStr, level, currentXp, neededXp, tutorialLevel, missionTitle, missionProgress, tx, ty, tz, tDim);
+        S2CHudSyncPacket pkt = new S2CHudSyncPacket(lives, points, remaining, roleStr, level, currentXp, neededXp, tutorialLevel, missionTitle, missionProgress, teamName, tx, ty, tz, tDim);
         sendToPlayer(pkt, player);
     }
 
@@ -1282,12 +1284,13 @@ public class NetworkManager {
         private final int tutorialLevel;
         private final String activeMissionTitle;
         private final String activeMissionProgress;
+        private final String teamName;
         private final int throneX;
         private final int throneY;
         private final int throneZ;
         private final String throneDim;
 
-        public S2CHudSyncPacket(int throneLives, int sharedPoints, int remainingSeconds, String playerRole, int playerRoleLevel, int currentXp, int neededXp, int tutorialLevel, String activeMissionTitle, String activeMissionProgress, int tx, int ty, int tz, String tDim) {
+        public S2CHudSyncPacket(int throneLives, int sharedPoints, int remainingSeconds, String playerRole, int playerRoleLevel, int currentXp, int neededXp, int tutorialLevel, String activeMissionTitle, String activeMissionProgress, String teamName, int tx, int ty, int tz, String tDim) {
             this.throneLives = throneLives;
             this.sharedPoints = sharedPoints;
             this.remainingSeconds = remainingSeconds;
@@ -1298,6 +1301,7 @@ public class NetworkManager {
             this.tutorialLevel = tutorialLevel;
             this.activeMissionTitle = activeMissionTitle != null ? activeMissionTitle : "";
             this.activeMissionProgress = activeMissionProgress != null ? activeMissionProgress : "";
+            this.teamName = teamName != null ? teamName : "NINGUNO";
             this.throneX = tx;
             this.throneY = ty;
             this.throneZ = tz;
@@ -1315,6 +1319,7 @@ public class NetworkManager {
             buf.writeInt(msg.tutorialLevel);
             buf.writeUtf(msg.activeMissionTitle);
             buf.writeUtf(msg.activeMissionProgress);
+            buf.writeUtf(msg.teamName);
             buf.writeInt(msg.throneX);
             buf.writeInt(msg.throneY);
             buf.writeInt(msg.throneZ);
@@ -1325,6 +1330,7 @@ public class NetworkManager {
             return new S2CHudSyncPacket(
                 buf.readInt(), buf.readInt(), buf.readInt(), buf.readUtf(), buf.readInt(),
                 buf.readInt(), buf.readInt(), buf.readInt(), buf.readUtf(), buf.readUtf(),
+                buf.readUtf(),
                 buf.readInt(), buf.readInt(), buf.readInt(), buf.readUtf()
             );
         }
@@ -1335,7 +1341,7 @@ public class NetworkManager {
                     com.mundodetronos2.client.ClientPacketHandler.handleHudSync(
                         msg.throneLives, msg.sharedPoints, msg.remainingSeconds, msg.playerRole, msg.playerRoleLevel,
                         msg.currentXp, msg.neededXp, msg.tutorialLevel, msg.activeMissionTitle, msg.activeMissionProgress,
-                        msg.throneX, msg.throneY, msg.throneZ, msg.throneDim
+                        msg.teamName, msg.throneX, msg.throneY, msg.throneZ, msg.throneDim
                     );
                 });
             });

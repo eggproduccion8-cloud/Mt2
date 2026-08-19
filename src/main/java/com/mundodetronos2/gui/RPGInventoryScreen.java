@@ -71,6 +71,10 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         super(menu, playerInventory, title);
     }
 
+    public Tab getCurrentTab() {
+        return currentTab;
+    }
+
     @Override
     protected void init() {
         super.init();
@@ -97,7 +101,6 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         List<CraftingRecipe> allRecipes = this.minecraft.level.getRecipeManager().getAllRecipesFor(RecipeType.CRAFTING);
         String query = searchBox != null ? searchBox.getValue().toLowerCase().trim() : "";
 
-        // Build list of unique mods present
         availableMods.clear();
         availableMods.add("TODOS");
         availableMods.add("minecraft");
@@ -189,7 +192,7 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
             return true;
         }
         if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_Y && (this.searchBox == null || !this.searchBox.isFocused())) {
-            this.minecraft.setScreen(new com.mundodetronos2.gui.InventoryEditorScreen());
+            this.minecraft.setScreen(new com.mundodetronos2.gui.InventoryEditorScreen(currentTab));
             return true;
         }
         if (currentTab == Tab.FABRICACION && this.searchBox != null && this.searchBox.isFocused()) {
@@ -224,31 +227,23 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         int h = this.height;
 
         if (button == 0) {
-            // Navigation tabs & Edit UI button
+            // Navigation tabs (3 pestañas únicamente: PERSONAJE, FABRICACIÓN, MOCHILA)
             int navY = 12;
-            int tabWidth = 110;
+            int tabWidth = 120;
             int tabHeight = 22;
             Tab[] tabs = Tab.values();
-            int startX = (w - ((tabs.length + 1) * (tabWidth + 12))) / 2;
+            int startX = (w - (tabs.length * (tabWidth + 15))) / 2;
 
             for (int i = 0; i < tabs.length; i++) {
-                int tx = startX + i * (tabWidth + 12);
+                int tx = startX + i * (tabWidth + 15);
                 if (mouseX >= tx && mouseX <= tx + tabWidth && mouseY >= navY && mouseY <= navY + tabHeight) {
                     setTab(tabs[i]);
                     return true;
                 }
             }
 
-            // BOTÓN DE EDITAR UI
-            int editX = startX + tabs.length * (tabWidth + 12);
-            if (mouseX >= editX && mouseX <= editX + tabWidth && mouseY >= navY && mouseY <= navY + tabHeight) {
-                this.minecraft.setScreen(new com.mundodetronos2.gui.InventoryEditorScreen());
-                return true;
-            }
-
-            // Fabricar button & Recipe paging buttons in FABRICACION tab
             if (currentTab == Tab.FABRICACION) {
-                int catalogX = (int) (w * 0.42);
+                int catalogX = InventoryLayoutManager.getRenderX(InventoryComponentId.CRAFTING_CATALOG, w, h);
                 int catalogWidth = w - catalogX - 15;
 
                 // Mod Filter Tabs
@@ -350,29 +345,29 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         int eqX = InventoryLayoutManager.getRenderX(InventoryComponentId.EQUIPMENT_SLOTS, w, h);
         int eqY = InventoryLayoutManager.getRenderY(InventoryComponentId.EQUIPMENT_SLOTS, w, h);
         for (int i = 0; i < 4; i++) {
-            this.menu.setSlotState(i, eqX + 5, eqY + i * 32 + 5, isPersonaje);
+            this.menu.setSlotState(i, eqX + 1, eqY + i * 32 + 1, isPersonaje);
         }
 
         // 2. SEGUNDA MANO (4) -> Pestaña PERSONAJE
         int offhandY = eqY + 4 * 32 + 10;
-        this.menu.setSlotState(4, eqX + 5, offhandY + 5, isPersonaje);
+        this.menu.setSlotState(4, eqX + 1, offhandY + 1, isPersonaje);
 
         // 3. CRAFTEO 3x3 (5 RESULTADO, 6..14 GRILLA) -> Pestaña FABRICACIÓN
         int craftGridX = InventoryLayoutManager.getRenderX(InventoryComponentId.CRAFTING_STATION_3X3, w, h);
         int craftGridY = InventoryLayoutManager.getRenderY(InventoryComponentId.CRAFTING_STATION_3X3, w, h);
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 3; col++) {
-                this.menu.setSlotState(6 + col + row * 3, craftGridX + col * 26 + 5, craftGridY + row * 26 + 5, isCrafting);
+                this.menu.setSlotState(6 + col + row * 3, craftGridX + col * 26 + 1, craftGridY + row * 26 + 1, isCrafting);
             }
         }
-        this.menu.setSlotState(5, craftGridX + 140 + 5, craftGridY + 26 + 5, isCrafting);
+        this.menu.setSlotState(5, craftGridX + 140 + 1, craftGridY + 26 + 1, isCrafting);
 
         // 4. MOCHILA (15..59) -> Pestaña MOCHILA
         int mochilaX = InventoryLayoutManager.getRenderX(InventoryComponentId.MOCHILA_CONTAINER, w, h);
         int mochilaY = InventoryLayoutManager.getRenderY(InventoryComponentId.MOCHILA_CONTAINER, w, h);
         for (int row = 0; row < 5; row++) {
             for (int col = 0; col < 9; col++) {
-                this.menu.setSlotState(15 + col + row * 9, mochilaX + col * 26 + 5, mochilaY + row * 26 + 5, isBackpack);
+                this.menu.setSlotState(15 + col + row * 9, mochilaX + col * 26 + 1, mochilaY + row * 26 + 1, isBackpack);
             }
         }
 
@@ -391,14 +386,14 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         boolean invActive = isPersonaje || isCrafting || isBackpack;
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                this.menu.setSlotState(60 + col + row * 9, invX + col * 26 + 5, invY + row * 26 + 5, invActive);
+                this.menu.setSlotState(60 + col + row * 9, invX + col * 26 + 1, invY + row * 26 + 1, invActive);
             }
         }
 
-        // 6. HOTBAR (87..95) -> Mantenida funcionalmente en el inventario
+        // 6. HOTBAR (87..95)
         int hotbarY = invY + 80;
         for (int col = 0; col < 9; col++) {
-            this.menu.setSlotState(87 + col, invX + col * 26 + 5, hotbarY + 5, invActive);
+            this.menu.setSlotState(87 + col, invX + col * 26 + 1, hotbarY + 1, invActive);
         }
     }
 
@@ -418,7 +413,7 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         int w = this.width;
         int h = this.height;
 
-        // Fondo transparente limpio sin paneles azules o líneas divisorias
+        // Fondo transparente limpio
         graphics.fill(0, 0, w, h, 0x880A0D12);
 
         Player player = this.minecraft.player;
@@ -426,7 +421,7 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         String roleStr = ClientEvents.getClientPlayerRole().toUpperCase();
         if (roleStr.equals("NONE") || roleStr.isEmpty()) roleStr = "ASPIRANTE";
 
-        // LOGO T2.png ~3X MÁS GRANDE MANTENIENDO ASPECT RATIO (1672:940 -> 1.7787)
+        // LOGO T2.png
         int logoX = InventoryLayoutManager.getRenderX(InventoryComponentId.LOGO_T2, w, h);
         int logoY = InventoryLayoutManager.getRenderY(InventoryComponentId.LOGO_T2, w, h);
         int logoW = 120;
@@ -439,14 +434,14 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
 
         // 1. NAVEGACIÓN SUPERIOR CON BUTTON.PNG
         int navY = 12;
-        int tabWidth = 110;
+        int tabWidth = 120;
         int tabHeight = 22;
         Tab[] tabs = Tab.values();
-        int startX = (w - ((tabs.length + 1) * (tabWidth + 12))) / 2;
+        int startX = (w - (tabs.length * (tabWidth + 15))) / 2;
 
         for (int i = 0; i < tabs.length; i++) {
             Tab tab = tabs[i];
-            int tx = startX + i * (tabWidth + 12);
+            int tx = startX + i * (tabWidth + 15);
             boolean isSelected = (tab == currentTab);
             boolean isHovered = mouseX >= tx && mouseX <= tx + tabWidth && mouseY >= navY && mouseY <= navY + tabHeight;
 
@@ -460,12 +455,6 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
             int tw = this.font.width(tabName);
             graphics.drawString(this.font, tabName, tx + (tabWidth - tw) / 2, navY + 6, isSelected ? 0xFFFFD700 : 0xFFFFFFFF, true);
         }
-
-        // BOTÓN EDITAR UI EN CABECERA
-        int editX = startX + tabs.length * (tabWidth + 12);
-        boolean editHov = mouseX >= editX && mouseX <= editX + tabWidth && mouseY >= navY && mouseY <= navY + tabHeight;
-        graphics.blit(BUTTON_TEX, editX, navY, 0, editHov ? 10 : 0, tabWidth, tabHeight, tabWidth, tabHeight);
-        graphics.drawString(this.font, "⚙ EDITAR UI", editX + 16, navY + 6, 0xFFFFD700, true);
 
         // 2. RENDERING ESPECÍFICO SEGÚN PESTAÑA
         if (currentTab == Tab.PERSONAJE) {
@@ -519,7 +508,7 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
             graphics.drawString(this.font, "VACÍO", armorX + 32, offhandY + 14, 0x44FFFFFF, false);
         }
 
-        // CENTRO: PERSONAJE 3D ~2X EL TAMAÑO ANTERIOR EN POSE ESTÁTICA FIXA (SIN ROTACIÓN CON EL MOUSE)
+        // CENTRO: PERSONAJE 3D (FIJO, NO GIRA CON EL MOUSE)
         int entityX = InventoryLayoutManager.getRenderX(InventoryComponentId.MODEL_3D, w, h);
         int entityY = InventoryLayoutManager.getRenderY(InventoryComponentId.MODEL_3D, w, h);
         if (player != null) {
@@ -551,11 +540,10 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
             graphics.drawString(this.font, "XP: §a" + currentXp + " / " + neededXp, statsX, statsY + 52, 0xFFFFFFFF, true);
         }
 
-        // MOSTRAR ÍCONO DE CARTA / CARNET DE ROL
         ItemStack carnetItem = new ItemStack(com.mundodetronos2.init.ItemInit.ROLE_CARD.get());
         graphics.renderItem(carnetItem, statsX + 180, statsY);
 
-        // LADO DERECHO (ENMEDIO): INVENTARIO REAL COMPLETO Y FUNCIONAL DEL JUGADOR
+        // LADO DERECHO: INVENTARIO REAL COMPLETO
         int invX = InventoryLayoutManager.getRenderX(InventoryComponentId.PLAYER_INVENTORY_GRID, w, h);
         int invY = InventoryLayoutManager.getRenderY(InventoryComponentId.PLAYER_INVENTORY_GRID, w, h);
 
@@ -591,16 +579,14 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         graphics.blit(BUTTON_TEX, fabBtnX, fabBtnY, 0, fabHov ? 10 : 0, 65, 18, 65, 18);
         graphics.drawString(this.font, "FABRICAR", fabBtnX + 8, fabBtnY + 4, 0xFFFFFFFF, true);
 
-        // RENDER DE RECETA SELECCIONADA (FANTASMAS DE INGREDIENTES Y RESULTADO)
+        // RENDER DE RECETA SELECCIONADA
         if (selectedRecipe != null) {
             ItemStack selRes = selectedRecipe.getResultItem(this.minecraft.level.registryAccess());
             graphics.drawString(this.font, "RECETA: §a" + selRes.getHoverName().getString(), craftGridX, craftGridY + 86, 0xFFFFFFFF, true);
 
-            // Renderizar el resultado en el slot de salida fantasma
             graphics.renderItem(selRes, craftGridX + 145, craftGridY + 31);
             graphics.renderItemDecorations(this.font, selRes, craftGridX + 145, craftGridY + 31);
 
-            // Renderizar los ingredientes en la grilla 3x3
             net.minecraft.core.NonNullList<net.minecraft.world.item.crafting.Ingredient> ingredients = selectedRecipe.getIngredients();
             if (selectedRecipe instanceof net.minecraft.world.item.crafting.ShapedRecipe shaped) {
                 int sWidth = shaped.getWidth();
@@ -622,7 +608,7 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
                         }
                     }
                 }
-            } else { // Shapeless / Generic
+            } else {
                 for (int i = 0; i < ingredients.size() && i < 9; i++) {
                     net.minecraft.world.item.crafting.Ingredient ing = ingredients.get(i);
                     ItemStack[] matching = ing.getItems();
@@ -655,7 +641,7 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
 
         graphics.drawString(this.font, "CATÁLOGO DE RECETAS (" + filteredRecipes.size() + ")", catalogX + 10, 18, 0xFFFFD700, true);
 
-        // Pestañas de Mods (Filtro)
+        // Pestañas de Mods
         int modY = 52;
         int modW = 58;
         int modH = 14;
@@ -674,7 +660,7 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
             graphics.drawString(this.font, modLabel, mx + 3, my + 3, isSel ? 0xFFFFD700 : 0xFFFFFFFF, false);
         }
 
-        // Categorías universales dentro del mod
+        // Categorías universales
         int catY = modY + (visibleMods > 5 ? 32 : 18);
         int catW = 58;
         int catH = 14;
@@ -723,15 +709,12 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         int pBtnW = 70;
         int pBtnH = 18;
 
-        // Anterior
         boolean prevHov = mouseX >= catalogX + 10 && mouseX <= catalogX + 10 + pBtnW && mouseY >= navButtonsY && mouseY <= navButtonsY + pBtnH;
         graphics.blit(BUTTON_TEX, catalogX + 10, navButtonsY, 0, prevHov ? 10 : 0, pBtnW, pBtnH, pBtnW, pBtnH);
         graphics.drawString(this.font, "ANTERIOR", catalogX + 15, navButtonsY + 4, 0xFFFFFFFF, true);
 
-        // Texto página
         graphics.drawString(this.font, (recipePageIndex + 1) + " / " + totalPages, catalogX + (catalogWidth / 2) - 15, navButtonsY + 4, 0xFFFFD700, true);
 
-        // Siguiente
         int nextX = catalogX + catalogWidth - pBtnW - 10;
         boolean nextHov = mouseX >= nextX && mouseX <= nextX + pBtnW && mouseY >= navButtonsY && mouseY <= navButtonsY + pBtnH;
         graphics.blit(BUTTON_TEX, nextX, navButtonsY, 0, nextHov ? 10 : 0, pBtnW, pBtnH, pBtnW, pBtnH);
@@ -744,7 +727,6 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         int backpackY = InventoryLayoutManager.getRenderY(InventoryComponentId.MOCHILA_CONTAINER, w, h);
         int maxUnlocked = tier * 15;
 
-        // ENCABEZADO Y PESO (CONSERVA SU DISEÑO FAVORITO)
         int headerY = backpackY - 45;
         graphics.drawString(this.font, "MOCHILA DEL AVENTURERO (TIER " + tier + ")", backpackX, headerY, 0xFFFFD700, true);
 
@@ -753,7 +735,6 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         graphics.blit(WEIGHT_ICON, backpackX, headerY + 18, 0, 0, iconW, iconH, 496, 503);
         graphics.drawString(this.font, "CAPACIDAD DESBLOQUEADA: §a" + maxUnlocked + " / 45 SLOTS", backpackX + 24, headerY + 22, 0xFFFFFFFF, true);
 
-        // GRID DE MOCHILA (45 SLOTS)
         for (int row = 0; row < 5; row++) {
             for (int col = 0; col < 9; col++) {
                 int slotIdx = col + row * 9;
@@ -771,7 +752,6 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
             }
         }
 
-        // ABAJO: INVENTARIO PRINCIPAL
         int invY = backpackY + 5 * 26 + 25;
         graphics.drawString(this.font, "INVENTARIO DEL JUGADOR", backpackX, invY - 14, 0xFFFFD700, true);
         drawInventoryGrid(graphics, backpackX, invY, mouseX, mouseY);
