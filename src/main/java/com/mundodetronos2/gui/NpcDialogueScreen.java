@@ -94,40 +94,25 @@ public class NpcDialogueScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        // Dark translucent background overlay
-        graphics.fill(0, 0, this.width, this.height, 0x77000000);
+        // Subtle dark gradient background overlay (world in third person remains visible)
+        graphics.fill(0, 0, this.width, this.height, 0x44000000);
 
-        // --- CAJA DE DIÁLOGO RPG RESPONSIVE ---
-        graphics.fill(boxX - 3, boxY - 3, boxX + boxW + 3, boxY + boxH + 3, 0xEE362819); // Marco madera
-        graphics.fill(boxX, boxY, boxX + boxW, boxY + boxH, 0xEEF3E5C8); // Pergamino
-        graphics.fill(boxX + 2, boxY + 2, boxX + boxW - 2, boxY + boxH - 2, 0xEEEBDAB3);
+        // Clean transparent MMORPG dialogue panel
+        graphics.fill(boxX - 2, boxY - 2, boxX + boxW + 2, boxY + boxH + 2, 0xAA111111);
+        graphics.fill(boxX, boxY, boxX + boxW, boxY + boxH, 0xDD222222);
 
-        // Frame dorado fino
-        graphics.fill(boxX + 4, boxY + 4, boxX + boxW - 4, boxY + 5, 0xFFD4AF37);
-        graphics.fill(boxX + 4, boxY + boxH - 5, boxX + boxW - 4, boxY + boxH - 4, 0xFFD4AF37);
-        graphics.fill(boxX + 4, boxY + 4, boxX + 5, boxY + boxH - 4, 0xFFD4AF37);
-        graphics.fill(boxX + boxW - 5, boxY + 4, boxX + boxW - 4, boxY + boxH - 4, 0xFFD4AF37);
+        // Gold title accent line
+        graphics.fill(boxX + 6, boxY + 20, boxX + boxW - 6, boxY + 21, 0xFFD4AF37);
 
-        // Head Portrait
-        int faceX = boxX + 12;
-        int faceY = boxY + 12;
-        int faceSize = 36;
-        graphics.fill(faceX - 2, faceY - 2, faceX + faceSize + 2, faceY + faceSize + 2, 0xFF362819);
-        graphics.fill(faceX - 1, faceY - 1, faceX + faceSize + 1, faceY + faceSize + 1, 0xFFD4AF37);
+        // Title NPC Name
+        String npcTitle = "💬 " + npcName.toUpperCase();
+        graphics.drawString(this.font, npcTitle, boxX + 12, boxY + 8, 0xFFFFD700, false);
 
-        if (skinTexture != null) {
-            PlayerFaceRenderer.draw(graphics, skinTexture, faceX, faceY, faceSize);
-        }
-
-        // Title NPC
-        String npcTitle = npcName.toUpperCase();
-        graphics.drawString(this.font, "§6§l" + npcTitle, faceX + faceSize + 12, boxY + 12, 0, false);
-
-        // Render Wrapped Lines without text overflow
-        int textX = faceX + faceSize + 12;
-        int textY = boxY + 26;
+        // Render Wrapped Dialogue Lines
+        int textX = boxX + 12;
+        int textY = boxY + 28;
         for (FormattedCharSequence line : wrappedLines) {
-            graphics.drawString(this.font, line, textX, textY, 0, false);
+            graphics.drawString(this.font, line, textX, textY, 0xFFFFFFFF, false);
             textY += 11;
         }
 

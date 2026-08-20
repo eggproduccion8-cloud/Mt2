@@ -71,28 +71,27 @@ public class ModHudOverlay {
         }
 
         int x = 12;
-        int y = 70; // Left side below player portrait
-        int boxW = 150;
-        int boxH = 48;
+        int y = 70; // Left side below player status
+        int boxW = 140;
+        int boxH = 42;
 
-        // Background MMORPG Card
-        graphics.fill(x - 3, y - 3, x + boxW + 3, y + boxH + 3, 0xAA221810);
-        graphics.fill(x - 1, y - 1, x + boxW + 1, y + boxH + 1, 0xFFD4AF37);
-        graphics.fill(x, y, x + boxW, y + boxH, 0xEE2D2218);
+        // Clean subtle transparent MMORPG overlay without dark brown card fills
+        graphics.fill(x - 2, y - 2, x + boxW + 2, y + boxH + 2, 0xAA111111);
+        graphics.fill(x, y, x + boxW, y + boxH, 0xCC1A1A1A);
 
-        // Header Title
-        graphics.drawString(mc.font, "📜 MISIÓN ACTIVA", x + 6, y + 5, 0xFFFFD700, false);
+        // Gold Title Accent
+        graphics.drawString(mc.font, "📜 MISIÓN ACTIVA", x + 6, y + 4, 0xFFFFD700, false);
 
         // Mission Name
         String name = ClientPacketHandler.hudActiveMissionTitle;
-        if (name.length() > 22) name = name.substring(0, 20) + "...";
-        graphics.drawString(mc.font, name, x + 6, y + 18, 0xFFFFFFFF, false);
+        if (name.length() > 20) name = name.substring(0, 18) + "...";
+        graphics.drawString(mc.font, name, x + 6, y + 16, 0xFFFFFFFF, false);
 
         // Progress Objective
         if (ClientPacketHandler.hudActiveMissionProgress != null && !ClientPacketHandler.hudActiveMissionProgress.isEmpty()) {
             String prog = "Objetivo: " + ClientPacketHandler.hudActiveMissionProgress;
-            if (prog.length() > 22) prog = prog.substring(0, 20) + "...";
-            graphics.drawString(mc.font, prog, x + 6, y + 31, 0xFF55FF55, false);
+            if (prog.length() > 20) prog = prog.substring(0, 18) + "...";
+            graphics.drawString(mc.font, prog, x + 6, y + 27, 0xFF88FF88, false);
         }
     }
 
