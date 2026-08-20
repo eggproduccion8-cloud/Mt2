@@ -1,8 +1,20 @@
 {
   "variants": {
-    "crate_level=1": { "model": "mundodetronos2:block/empty" },
-    "crate_level=2": { "model": "mundodetronos2:block/empty" },
-    "crate_level=3": { "model": "mundodetronos2:block/empty" },
-    "crate_level=4": { "model": "mundodetronos2:block/empty" }
+    "crate_level=1,facing=north": { "model": "mundodetronos2:block/empty" },
+    "crate_level=1,facing=south": { "model": "mundodetronos2:block/empty" },
+    "crate_level=1,facing=east": { "model": "mundodetronos2:block/empty" },
+    "crate_level=1,facing=west": { "model": "mundodetronos2:block/empty" },
+    "crate_level=2,facing=north": { "model": "mundodetronos2:block/empty" },
+    "crate_level=2,facing=south": { "model": "mundodetronos2:block/empty" },
+    "crate_level=2,facing=east": { "model": "mundodetronos2:block/empty" },
+    "crate_level=2,facing=west": { "model": "mundodetronos2:block/empty" },
+    "crate_level=3,facing=north": { "model": "mundodetronos2:block/empty" },
+    "crate_level=3,facing=south": { "model": "mundodetronos2:block/empty" },
+    "crate_level=3,facing=east": { "model": "mundodetronos2:block/empty" },
+    "crate_level=3,facing=west": { "model": "mundodetronos2:block/empty" },
+    "crate_level=4,facing=north": { "model": "mundodetronos2:block/empty" },
+    "crate_level=4,facing=south": { "model": "mundodetronos2:block/empty" },
+    "crate_level=4,facing=east": { "model": "mundodetronos2:block/empty" },
+    "crate_level=4,facing=west": { "model": "mundodetronos2:block/empty" }
   }
 }

@@ -15,8 +15,15 @@ import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import com.mundodetronos2.init.ItemInit;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
+import net.minecraft.world.level.storage.loot.LootParams;
+import java.util.List;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
@@ -28,16 +35,22 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class CrateBlock extends BaseEntityBlock {
     public static final IntegerProperty LEVEL = IntegerProperty.create("crate_level", 1, 4);
+    public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
     private static final VoxelShape SHAPE = Block.box(1.0D, 0.0D, 1.0D, 15.0D, 14.0D, 15.0D);
 
     public CrateBlock(BlockBehaviour.Properties properties) {
         super(properties);
-        this.registerDefaultState(this.stateDefinition.any().setValue(LEVEL, 1));
+        this.registerDefaultState(this.stateDefinition.any().setValue(LEVEL, 1).setValue(FACING, net.minecraft.core.Direction.NORTH));
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState> builder) {
-        builder.add(LEVEL);
+        builder.add(LEVEL, FACING);
+    }
+
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        return this.defaultBlockState().setValue(LEVEL, 1).setValue(FACING, context.getHorizontalDirection().getOpposite());
     }
 
     @Override
@@ -70,6 +83,18 @@ public class CrateBlock extends BaseEntityBlock {
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
+    }
+
+    @Override
+    public List<ItemStack> getDrops(BlockState state, LootParams.Builder builder) {
+        int level = state.getValue(LEVEL);
+        ItemStack dropStack = switch (level) {
+            case 2 -> new ItemStack(ItemInit.CRATE_LEVEL2.get());
+            case 3 -> new ItemStack(ItemInit.CRATE_LEVEL3.get());
+            case 4 -> new ItemStack(ItemInit.CRATE_LEVEL4.get());
+            default -> new ItemStack(ItemInit.CRATE_LEVEL1.get());
+        };
+        return List.of(dropStack);
     }
 
     @Override

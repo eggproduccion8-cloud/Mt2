@@ -263,6 +263,9 @@ public class TronosCommand {
                                         .executes(ctx -> unirEquipoCmd(ctx.getSource(), StringArgumentType.getString(ctx, "color")))))
                         .then(Commands.literal("salir")
                                 .executes(ctx -> salirEquipoCmd(ctx.getSource())))
+                        .then(Commands.literal("lider")
+                                .then(Commands.argument("jugador", EntityArgument.player())
+                                        .executes(ctx -> designarLiderCmd(ctx.getSource(), EntityArgument.getPlayer(ctx, "jugador")))))
                         .then(Commands.literal("trono")
                                 .requires(src -> src.hasPermission(2))
                                 .then(Commands.argument("color", StringArgumentType.string())
@@ -1576,18 +1579,18 @@ public class TronosCommand {
         }
 
         AABB searchArea = player.getBoundingBox().inflate(16.0D);
-        List<GoddessNPCEntity> existing = player.level().getEntitiesOfClass(GoddessNPCEntity.class, searchArea,
-                npc -> "manuel".equalsIgnoreCase(npc.getNpcType()) || (npc.getCustomName() != null && npc.getCustomName().getString().toLowerCase().contains("manuel")));
+        List<com.mundodetronos2.entity.CustomNPCEntity> existing = player.level().getEntitiesOfClass(com.mundodetronos2.entity.CustomNPCEntity.class, searchArea,
+                npc -> (npc.getCustomName() != null && npc.getCustomName().getString().toLowerCase().contains("manuel")));
 
         if (!existing.isEmpty()) {
             src.sendFailure(Component.literal("§c[Mundo de Tronos] Ya existe un Manuel cercano."));
             return 0;
         }
 
-        GoddessNPCEntity manuel = EntityInit.GODDESS_NPC.get().create(player.level());
+        com.mundodetronos2.entity.CustomNPCEntity manuel = EntityInit.CUSTOM_NPC.get().create(player.level());
         if (manuel != null) {
-            manuel.setNpcType("manuel");
-            manuel.setSkinName("blacksmith");
+            manuel.setNpcModel("blacksmith");
+            manuel.setNpcTexture("blacksmith");
             manuel.moveTo(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot());
             manuel.setCustomName(Component.literal("§6Manuel (Herrero)"));
             manuel.setCustomNameVisible(true);
@@ -1627,6 +1630,45 @@ public class TronosCommand {
             return 1;
         }
         return 0;
+    }
+
+    private static int designarLiderCmd(CommandSourceStack src, ServerPlayer target) {
+        ServerPlayer sender = src.getEntity() instanceof ServerPlayer sp ? sp : null;
+        RealmData realm = RealmManager.getPlayerRealm(target.getUUID());
+
+        if (realm == null) {
+            src.sendFailure(Component.literal("§c[Mundo de Tronos] " + target.getGameProfile().getName() + " no pertenece a ningún equipo."));
+            return 0;
+        }
+
+        boolean isOp = src.hasPermission(2);
+        boolean isOwner = sender != null && realm.getOwnerId() != null && realm.getOwnerId().equals(sender.getUUID());
+
+        if (!isOp && !isOwner) {
+            src.sendFailure(Component.literal("§c[Mundo de Tronos] Solo el Líder actual del equipo o un Administrador pueden designar al nuevo Líder."));
+            return 0;
+        }
+
+        realm.setOwnerId(target.getUUID());
+
+        for (com.mundodetronos2.player.PlayerRealmData prd : RealmManager.getPlayerRealmDataMap().values()) {
+            if (prd.getRealmId().equals(realm.getId())) {
+                if (prd.getPlayerId().equals(target.getUUID())) {
+                    prd.setRole(com.mundodetronos2.realm.Role.OWNER);
+                } else if (prd.getRole() == com.mundodetronos2.realm.Role.OWNER) {
+                    prd.setRole(com.mundodetronos2.realm.Role.MEMBER);
+                }
+            }
+        }
+
+        RealmManager.giveLeaderKey(target);
+        com.mundodetronos2.data.SaveManager.markDirty();
+        RealmManager.save(false);
+
+        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] ¡Se ha designado a " + target.getGameProfile().getName() + " como Líder de " + realm.getName() + "!"), true);
+        com.mundodetronos2.network.MessageManager.actionBar(target, "§a★ ¡Ahora eres el Líder de tu equipo!");
+
+        return 1;
     }
 
     private static int salirEquipoCmd(CommandSourceStack src) {

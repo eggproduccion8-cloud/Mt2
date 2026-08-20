@@ -21,7 +21,9 @@ public class CrateBlockItem extends BlockItem {
 
     @Override
     protected boolean placeBlock(BlockPlaceContext context, BlockState state) {
-        boolean placed = super.placeBlock(context, state.setValue(CrateBlock.LEVEL, this.crateLevel));
+        BlockState placedState = state.setValue(CrateBlock.LEVEL, this.crateLevel)
+                                      .setValue(CrateBlock.FACING, context.getHorizontalDirection().getOpposite());
+        boolean placed = super.placeBlock(context, placedState);
         if (placed) {
             ItemStack stack = context.getItemInHand();
             stack.getOrCreateTag().putInt("mundodetronos2:crate_level", this.crateLevel);

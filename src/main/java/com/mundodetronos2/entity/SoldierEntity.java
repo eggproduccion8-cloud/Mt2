@@ -170,6 +170,41 @@ public class SoldierEntity extends CustomNPCEntity {
     }
 
     @Override
+    public void setTarget(@org.jetbrains.annotations.Nullable LivingEntity target) {
+        if (target instanceof Player player) {
+            PlayerRealmData prd = RealmManager.getPlayerRealmData(player.getUUID());
+            if (prd != null) {
+                RealmData myRealm = RealmManager.getRealmByColorKey(getTeamId());
+                if (myRealm != null && prd.getRealmId().equals(myRealm.getId())) {
+                    return;
+                }
+            }
+        } else if (target instanceof SoldierEntity other) {
+            if (other.getTeamId().equalsIgnoreCase(this.getTeamId())) {
+                return;
+            }
+        }
+        super.setTarget(target);
+    }
+
+    @Override
+    public boolean hurt(DamageSource source, float amount) {
+        boolean result = super.hurt(source, amount);
+        if (result && source.getEntity() instanceof Player player) {
+            PlayerRealmData prd = RealmManager.getPlayerRealmData(player.getUUID());
+            if (prd != null) {
+                RealmData myRealm = RealmManager.getRealmByColorKey(getTeamId());
+                if (myRealm != null && prd.getRealmId().equals(myRealm.getId())) {
+                    if (this.getTarget() == player) {
+                        this.setTarget(null);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    @Override
     public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
         boolean hurt = super.doHurtTarget(target);
         if (hurt) {

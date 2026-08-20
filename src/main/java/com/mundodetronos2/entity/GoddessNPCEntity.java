@@ -168,14 +168,8 @@ public class GoddessNPCEntity extends PathfinderMob {
             com.mundodetronos2.tutorial.TutorialManager.RealmTutorialData tut = realm != null ? com.mundodetronos2.tutorial.TutorialManager.getTutorialData(realm.getId()) : null;
 
             // Determinar nodo contextual según el estado del jugador/equipo frente al NPC
-            if (type.equalsIgnoreCase("manuel")) {
-                if (tut != null && tut.tutorialLevel >= 2) {
-                    initialNodeId = "m_post_completion";
-                } else if (realm != null) {
-                    initialNodeId = "m_grupo";
-                } else {
-                    initialNodeId = "inicio";
-                }
+            if (type.equalsIgnoreCase("manuel") || type.equalsIgnoreCase("karla")) {
+                initialNodeId = "inicio";
             } else if (type.equalsIgnoreCase("laura")) {
                 if (tut == null || tut.tutorialLevel < 2) {
                     initialNodeId = "l_locked";

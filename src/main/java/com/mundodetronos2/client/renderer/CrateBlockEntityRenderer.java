@@ -29,6 +29,11 @@ public class CrateBlockEntityRenderer implements BlockEntityRenderer<CrateBlockE
             crateLvl = state.getValue(CrateBlock.LEVEL);
         }
 
+        net.minecraft.core.Direction facing = net.minecraft.core.Direction.NORTH;
+        if (state.hasProperty(CrateBlock.FACING)) {
+            facing = state.getValue(CrateBlock.FACING);
+        }
+
         String modelId = "lvl" + crateLvl + "_crate";
         BlockModelRegistry.Entry entry = BlockModelRegistry.get(modelId);
         if (entry == null || entry.model == null) {
@@ -39,7 +44,9 @@ public class CrateBlockEntityRenderer implements BlockEntityRenderer<CrateBlockE
         poseStack.pushPose();
 
         poseStack.translate(0.5D, 0.0D, 0.5D);
+        poseStack.mulPose(Axis.YP.rotationDegrees(-facing.toYRot()));
         poseStack.scale(-1.0F, 1.0F, -1.0F);
+        poseStack.translate(-0.5D, 0.0D, -0.5D);
 
         VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(entry.textureLocation));
 
@@ -128,10 +135,10 @@ public class CrateBlockEntityRenderer implements BlockEntityRenderer<CrateBlockE
         float oy = ny * eps;
         float oz = nz * eps;
 
-        float u1 = face.u1 / (float) texW;
-        float v1 = face.v1 / (float) texH;
-        float u2 = face.u2 / (float) texW;
-        float v2 = face.v2 / (float) texH;
+        float u1 = face.u1 / 16.0F;
+        float v1 = face.v1 / 16.0F;
+        float u2 = face.u2 / 16.0F;
+        float v2 = face.v2 / 16.0F;
 
         float[] uvs = new float[]{u1, v2, u2, v2, u2, v1, u1, v1};
 

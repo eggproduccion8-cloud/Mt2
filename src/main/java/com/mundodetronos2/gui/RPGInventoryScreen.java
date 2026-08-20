@@ -809,8 +809,14 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         }
     }
 
+
     private void drawSlotFrame(GuiGraphics graphics, int x, int y, boolean hovered, int size) {
         ResourceLocation tex = hovered ? SLOTS_HOVER_TEX : SLOTS_TEX;
         graphics.blit(tex, x, y, 0, 0, size, size, size, size);
+    }
+
+    @Override
+    protected boolean isHovering(int x, int y, int width, int height, double mouseX, double mouseY) {
+        return mouseX >= (double) x && mouseX <= (double) (x + width) && mouseY >= (double) y && mouseY <= (double) (y + height);
     }
 }

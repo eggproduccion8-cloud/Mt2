@@ -44,6 +44,7 @@ public class ThroneBlockEntityRenderer implements BlockEntityRenderer<ThroneBloc
         // Center on block
         poseStack.translate(0.5D, 0.0D, 0.5D);
         poseStack.scale(-1.0F, 1.0F, -1.0F);
+        poseStack.translate(-0.5D, 0.0D, -0.5D);
 
         VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(entry.textureLocation));
 
@@ -132,10 +133,10 @@ public class ThroneBlockEntityRenderer implements BlockEntityRenderer<ThroneBloc
         float oy = ny * eps;
         float oz = nz * eps;
 
-        float u1 = face.u1 / (float) texW;
-        float v1 = face.v1 / (float) texH;
-        float u2 = face.u2 / (float) texW;
-        float v2 = face.v2 / (float) texH;
+        float u1 = face.u1 / 16.0F;
+        float v1 = face.v1 / 16.0F;
+        float u2 = face.u2 / 16.0F;
+        float v2 = face.v2 / 16.0F;
 
         float[] uvs = new float[]{u1, v2, u2, v2, u2, v1, u1, v1};
 
