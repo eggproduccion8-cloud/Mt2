@@ -42,7 +42,6 @@ public class NpcEditorScreen extends Screen {
         COMERCIO("Comercio"),
         REQUISITOS("Requisitos"),
         PROGRESION("Progresión"),
-        COMPORTAMIENTO("Comport."),
         SLOTS("Slots"),
         APARIENCIA("Apariencia"),
         ACCIONES("Acciones"),
@@ -69,10 +68,6 @@ public class NpcEditorScreen extends Screen {
     private EditBox rpgLevelInput;
     private EditBox campaignLevelInput;
     private EditBox requiredRoleInput;
-
-    // EditBoxes para Pestaña COMPORTAMIENTO
-    private EditBox radiusInput;
-    private EditBox speedInput;
 
     // EditBoxes para Pestaña COMERCIO
     private EditBox tradeInput1;
@@ -293,24 +288,6 @@ public class NpcEditorScreen extends Screen {
             requiredRoleInput.setValue(npcConfig.requirements.requiredRole);
             this.addRenderableWidget(requiredRoleInput);
 
-        } else if (currentTab == Tab.COMPORTAMIENTO) {
-            radiusInput = new EditBox(this.font, contentX + 110, contentY, 120, 14, Component.literal("Radio"));
-            radiusInput.setValue(String.valueOf(npcConfig.behavior.radius));
-            this.addRenderableWidget(radiusInput);
-
-            speedInput = new EditBox(this.font, contentX + 110, contentY + 22, 120, 14, Component.literal("Velocidad"));
-            speedInput.setValue(String.valueOf(npcConfig.behavior.speed));
-            this.addRenderableWidget(speedInput);
-
-            this.addRenderableWidget(Button.builder(Component.literal("Movimiento: " + (npcConfig.behavior.allowMovement ? "ACTIVO" : "INACTIVO")), btn -> {
-                npcConfig.behavior.allowMovement = !npcConfig.behavior.allowMovement;
-                this.init();
-            }).bounds(contentX, contentY + 46, 160, 16).build());
-
-            this.addRenderableWidget(Button.builder(Component.literal("Mirar Jugadores: " + (npcConfig.behavior.lookAtPlayers ? "SÍ" : "NO")), btn -> {
-                npcConfig.behavior.lookAtPlayers = !npcConfig.behavior.lookAtPlayers;
-                this.init();
-            }).bounds(contentX, contentY + 66, 160, 16).build());
         }
 
         // --- BOTONES INFERIORES GENERALES: GUARDAR / CANCELAR / REINICIAR ---
@@ -341,12 +318,6 @@ public class NpcEditorScreen extends Screen {
             try { npcConfig.requirements.requiredCampaignLevel = Integer.parseInt(campaignLevelInput.getValue().trim()); } catch (Exception ignored) {}
         }
         if (requiredRoleInput != null) npcConfig.requirements.requiredRole = requiredRoleInput.getValue().trim();
-        if (radiusInput != null) {
-            try { npcConfig.behavior.radius = Double.parseDouble(radiusInput.getValue().trim()); } catch (Exception ignored) {}
-        }
-        if (speedInput != null) {
-            try { npcConfig.behavior.speed = Double.parseDouble(speedInput.getValue().trim()); } catch (Exception ignored) {}
-        }
 
         String fullJson = GSON.toJson(npcConfig);
         NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SUpdateNpcDialoguePacket(
@@ -410,9 +381,6 @@ public class NpcEditorScreen extends Screen {
             graphics.drawString(this.font, "§0Nivel RPG Mínimo:", contentX, contentY + 3, 0, false);
             graphics.drawString(this.font, "§0Campaña Mínima:", contentX, contentY + 25, 0, false);
             graphics.drawString(this.font, "§0Rol Requerido:", contentX, contentY + 47, 0, false);
-        } else if (currentTab == Tab.COMPORTAMIENTO) {
-            graphics.drawString(this.font, "§0Radio Movimiento:", contentX, contentY + 3, 0, false);
-            graphics.drawString(this.font, "§0Velocidad Patrulla:", contentX, contentY + 25, 0, false);
         } else if (currentTab == Tab.SLOTS) {
             graphics.drawString(this.font, "§0CONFIGURACIÓN DE SLOTS E INVENTARIO (0 - 17)", contentX, contentY, 0, false);
             graphics.drawString(this.font, "§8Permite asignar menúes, acciones o items al inventario del NPC.", contentX, contentY + 16, 0, false);

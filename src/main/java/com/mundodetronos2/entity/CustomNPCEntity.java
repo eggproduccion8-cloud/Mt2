@@ -92,10 +92,13 @@ public class CustomNPCEntity extends PathfinderMob {
         this.entityData.set(INTERACTION_ANIMATION, anim != null ? anim : "greet");
     }
 
-    public String getActualCurrentAnimation() {
-        if (this.getDeltaMovement().horizontalDistanceSqr() > 0.001) {
-            return getWalkAnimation();
+    public void playAnimation(String animName) {
+        if (animName != null && !animName.isEmpty()) {
+            this.setIdleAnimation(animName);
         }
+    }
+
+    public String getActualCurrentAnimation() {
         return getIdleAnimation();
     }
 
@@ -105,7 +108,7 @@ public class CustomNPCEntity extends PathfinderMob {
             String name = this.getCustomName() != null ? this.getCustomName().getString() : "NPC";
             String type = getNpcModel().toLowerCase().trim();
             if (name.toLowerCase().contains("manuel")) type = "manuel";
-            else if (name.toLowerCase().contains("karla")) type = "karla";
+            else if (name.toLowerCase().contains("ivan") || name.toLowerCase().contains("karla")) type = "ivan";
 
             if (sp.isCrouching() && sp.hasPermissions(2)) {
                 com.mundodetronos2.network.NetworkManager.S2COpenNpcEditorPacket editorPkt =
@@ -120,8 +123,19 @@ public class CustomNPCEntity extends PathfinderMob {
                 return net.minecraft.world.InteractionResult.sidedSuccess(player.level().isClientSide());
             }
 
+            // Right click on Ivan opens Guild GUI directly!
+            if ("ivan".equalsIgnoreCase(type) || name.toLowerCase().contains("ivan")) {
+                com.mundodetronos2.realm.RealmData realm = com.mundodetronos2.realm.RealmManager.getPlayerRealm(sp.getUUID());
+                com.mundodetronos2.throne.ThroneData throne = realm != null && realm.getThroneId() != null ? com.mundodetronos2.throne.ThroneManager.getThroneById(realm.getThroneId()) : null;
+                java.util.List<com.mundodetronos2.realm.InviteData> invites = com.mundodetronos2.realm.RealmManager.getPlayerInvites(sp.getUUID());
+                com.mundodetronos2.network.NetworkManager.sendToPlayer(new com.mundodetronos2.network.NetworkManager.S2COpenMainGuiPacket(realm, throne, invites), sp);
+                playAnimation("greet");
+                return net.minecraft.world.InteractionResult.sidedSuccess(player.level().isClientSide());
+            }
+
             com.mundodetronos2.dialogue.DialogueNode initialNode = com.mundodetronos2.dialogue.NpcDialogueManager.getNode(type, "inicio");
             if (initialNode != null) {
+                playAnimation("greet");
                 java.util.List<String> optionTexts = new java.util.ArrayList<>();
                 for (com.mundodetronos2.dialogue.DialogueOption opt : initialNode.getOptions()) {
                     optionTexts.add(opt.getText());

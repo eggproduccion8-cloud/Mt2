@@ -54,11 +54,59 @@ public class SoldierEntity extends CustomNPCEntity {
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
 
-        // Melee Attack Goal
+        // 1. Melee Attack Goal
         this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.25D, true));
 
-        // Return to Throne / Defense zone if too far (> 75 blocks)
+        // 2. Follow Team Leader Goal (Before Throne is placed)
         this.goalSelector.addGoal(2, new Goal() {
+            private Player leaderPlayer;
+
+            @Override
+            public boolean canUse() {
+                if (getHomePos() != null && !getHomePos().equals(BlockPos.ZERO)) {
+                    return false; // Throne already placed -> Defend Throne
+                }
+                RealmData myRealm = RealmManager.getRealmByColorKey(getTeamId());
+                if (myRealm != null && myRealm.getOwnerId() != null) {
+                    if (SoldierEntity.this.level() instanceof net.minecraft.server.level.ServerLevel sLevel) {
+                        Player p = sLevel.getServer().getPlayerList().getPlayer(myRealm.getOwnerId());
+                        if (p != null && p.level() == SoldierEntity.this.level()) {
+                            this.leaderPlayer = p;
+                            return SoldierEntity.this.distanceToSqr(p) > 16.0D; // Follow if > 4 blocks away
+                        }
+                    }
+                }
+                return false;
+            }
+
+            @Override
+            public boolean canContinueToUse() {
+                return leaderPlayer != null && leaderPlayer.isAlive() && SoldierEntity.this.distanceToSqr(leaderPlayer) > 9.0D;
+            }
+
+            @Override
+            public void start() {
+                if (leaderPlayer != null) {
+                    SoldierEntity.this.getNavigation().moveTo(leaderPlayer, 1.15D);
+                }
+            }
+
+            @Override
+            public void tick() {
+                if (leaderPlayer != null && SoldierEntity.this.tickCount % 10 == 0) {
+                    SoldierEntity.this.getNavigation().moveTo(leaderPlayer, 1.15D);
+                }
+            }
+
+            @Override
+            public void stop() {
+                this.leaderPlayer = null;
+                SoldierEntity.this.getNavigation().stop();
+            }
+        });
+
+        // 3. Return to Throne Defense zone (> 75 blocks)
+        this.goalSelector.addGoal(3, new Goal() {
             @Override
             public boolean canUse() {
                 BlockPos home = getHomePos();
@@ -76,8 +124,6 @@ public class SoldierEntity extends CustomNPCEntity {
             }
         });
 
-        // Stroll around home position within 75 blocks
-        this.goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 0.8D));
         this.goalSelector.addGoal(4, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(5, new RandomLookAroundGoal(this));
 
