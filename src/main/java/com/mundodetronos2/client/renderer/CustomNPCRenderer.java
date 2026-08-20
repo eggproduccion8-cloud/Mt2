@@ -45,8 +45,8 @@ public class CustomNPCRenderer<T extends CustomNPCEntity> extends EntityRenderer
 
         poseStack.pushPose();
 
-        // Standard Minecraft entity transformation: Y stays positive (head up, feet down)
-        poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - entityYaw));
+        // Entity transformation: align Blockbench model forward with Minecraft entity facing direction
+        poseStack.mulPose(Axis.YP.rotationDegrees(360.0F - entityYaw));
         poseStack.scale(-1.0F, 1.0F, -1.0F);
         poseStack.translate(0.0D, 0.0D, 0.0D);
 
@@ -186,6 +186,12 @@ public class CustomNPCRenderer<T extends CustomNPCEntity> extends EntityRenderer
                             float nx, float ny, float nz, int light, int texW, int texH) {
         if (face == null) return;
 
+        // Apply a tiny offset along face normal to eliminate z-fighting / texture flickering on overlapping layers
+        float eps = 0.001F;
+        float ox = nx * eps;
+        float oy = ny * eps;
+        float oz = nz * eps;
+
         float u1 = face.u1 / (float) texW;
         float v1 = face.v1 / (float) texH;
         float u2 = face.u2 / (float) texW;
@@ -206,9 +212,9 @@ public class CustomNPCRenderer<T extends CustomNPCEntity> extends EntityRenderer
         float cu4 = uvs[(6 + shift) % 8];
         float cv4 = uvs[(7 + shift) % 8];
 
-        vc.vertex(pose, x1, y1, z1).color(255, 255, 255, 255).uv(cu1, cv1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(norm, nx, ny, nz).endVertex();
-        vc.vertex(pose, x2, y2, z2).color(255, 255, 255, 255).uv(cu2, cv2).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(norm, nx, ny, nz).endVertex();
-        vc.vertex(pose, x3, y3, z3).color(255, 255, 255, 255).uv(cu3, cv3).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(norm, nx, ny, nz).endVertex();
-        vc.vertex(pose, x4, y4, z4).color(255, 255, 255, 255).uv(cu4, cv4).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(norm, nx, ny, nz).endVertex();
+        vc.vertex(pose, x1 + ox, y1 + oy, z1 + oz).color(255, 255, 255, 255).uv(cu1, cv1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(norm, nx, ny, nz).endVertex();
+        vc.vertex(pose, x2 + ox, y2 + oy, z2 + oz).color(255, 255, 255, 255).uv(cu2, cv2).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(norm, nx, ny, nz).endVertex();
+        vc.vertex(pose, x3 + ox, y3 + oy, z3 + oz).color(255, 255, 255, 255).uv(cu3, cv3).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(norm, nx, ny, nz).endVertex();
+        vc.vertex(pose, x4 + ox, y4 + oy, z4 + oz).color(255, 255, 255, 255).uv(cu4, cv4).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(norm, nx, ny, nz).endVertex();
     }
 }
