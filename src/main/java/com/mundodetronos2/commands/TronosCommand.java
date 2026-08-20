@@ -37,8 +37,14 @@ public class TronosCommand {
         dispatcher.register(Commands.literal("tronos")
                 // Jugador Commands
                 .then(Commands.literal("crear")
+                        .requires(src -> src.hasPermission(2))
                         .then(Commands.argument("nombre", StringArgumentType.greedyString())
                                 .executes(ctx -> crearReino(ctx.getSource(), StringArgumentType.getString(ctx, "nombre")))))
+                .then(Commands.literal("gremio")
+                        .then(Commands.literal("llave")
+                                .requires(src -> src.hasPermission(2))
+                                .then(Commands.argument("jugador", EntityArgument.player())
+                                        .executes(ctx -> darLlaveLider(ctx.getSource(), EntityArgument.getPlayer(ctx, "jugador"))))))
                 .then(Commands.literal("buscar")
                         .executes(ctx -> buscarReinos(ctx.getSource())))
                 .then(Commands.literal("misreinos")
@@ -119,6 +125,27 @@ public class TronosCommand {
                                 .executes(ctx -> resetAllPlaytimes(ctx.getSource())))
                 )
 
+                // SISTEMA DE MONEDAS RPG COMMANDS
+                .then(Commands.literal("monedas")
+                        .then(Commands.literal("ver")
+                                .executes(ctx -> verMonedasCmd(ctx.getSource())))
+                        .then(Commands.literal("dar")
+                                .requires(src -> src.hasPermission(2))
+                                .then(Commands.argument("jugador", EntityArgument.player())
+                                        .then(Commands.argument("cantidad", IntegerArgumentType.integer(1))
+                                                .executes(ctx -> darMonedasCmd(ctx.getSource(), EntityArgument.getPlayer(ctx, "jugador"), IntegerArgumentType.getInteger(ctx, "cantidad"))))))
+                        .then(Commands.literal("quitar")
+                                .requires(src -> src.hasPermission(2))
+                                .then(Commands.argument("jugador", EntityArgument.player())
+                                        .then(Commands.argument("cantidad", IntegerArgumentType.integer(1))
+                                                .executes(ctx -> quitarMonedasCmd(ctx.getSource(), EntityArgument.getPlayer(ctx, "jugador"), IntegerArgumentType.getInteger(ctx, "cantidad"))))))
+                        .then(Commands.literal("set")
+                                .requires(src -> src.hasPermission(2))
+                                .then(Commands.argument("jugador", EntityArgument.player())
+                                        .then(Commands.argument("cantidad", IntegerArgumentType.integer(0))
+                                                .executes(ctx -> setMonedasCmd(ctx.getSource(), EntityArgument.getPlayer(ctx, "jugador"), IntegerArgumentType.getInteger(ctx, "cantidad"))))))
+                )
+
                 // SISTEMA DE PORTALES COMMANDS (GOLD SPAWNER)
                 .then(Commands.literal("portal")
                         .requires(src -> src.hasPermission(2))
@@ -129,6 +156,11 @@ public class TronosCommand {
                 // SISTEMA DE NPC COMMANDS
                 .then(Commands.literal("npc")
                         .requires(src -> src.hasPermission(2))
+                        .then(Commands.literal("guardia")
+                                .then(Commands.literal("rojo")
+                                        .then(Commands.argument("nombre", StringArgumentType.string())
+                                                .executes(ctx -> crearGuardiaRojoCmd(ctx.getSource(), StringArgumentType.getString(ctx, "nombre"))))
+                                        .executes(ctx -> crearGuardiaRojoCmd(ctx.getSource(), "Guardia Rojo"))))
                         .then(Commands.literal("modelos")
                                 .executes(ctx -> listarModelosNpc(ctx.getSource())))
                         .then(Commands.literal("soldado")
@@ -298,6 +330,47 @@ public class TronosCommand {
     private static int toggleChatTarget(CommandSourceStack src, ServerPlayer target) {
         NetworkManager.sendToPlayer(new NetworkManager.S2CToggleChatPacket(), target);
         src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Modo de chat alternado para " + target.getGameProfile().getName() + "."), true);
+        return 1;
+    }
+
+    private static int darLlaveLider(CommandSourceStack src, ServerPlayer target) {
+        RealmManager.giveLeaderKey(target);
+        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Se ha entregado la Llave del Líder a " + target.getGameProfile().getName() + "."), true);
+        return 1;
+    }
+
+    private static int verMonedasCmd(CommandSourceStack src) {
+        if (!(src.getEntity() instanceof ServerPlayer player)) {
+            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
+            return 0;
+        }
+
+        com.mundodetronos2.progression.PlayerProgressData pData = com.mundodetronos2.progression.ProgressionManager.getProgressData(player.getUUID());
+        src.sendSuccess(() -> Component.literal("§e✦ Monedas Personales: §f" + pData.getCoins()), false);
+        return 1;
+    }
+
+    private static int darMonedasCmd(CommandSourceStack src, ServerPlayer target, int cantidad) {
+        com.mundodetronos2.progression.PlayerProgressData pData = com.mundodetronos2.progression.ProgressionManager.getProgressData(target.getUUID());
+        pData.setCoins(pData.getCoins() + cantidad);
+        com.mundodetronos2.progression.ProgressionManager.save(true);
+        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Se entregaron " + cantidad + " monedas a " + target.getGameProfile().getName() + ". Total: " + pData.getCoins()), true);
+        return 1;
+    }
+
+    private static int quitarMonedasCmd(CommandSourceStack src, ServerPlayer target, int cantidad) {
+        com.mundodetronos2.progression.PlayerProgressData pData = com.mundodetronos2.progression.ProgressionManager.getProgressData(target.getUUID());
+        pData.setCoins(Math.max(0, pData.getCoins() - cantidad));
+        com.mundodetronos2.progression.ProgressionManager.save(true);
+        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Se quitaron " + cantidad + " monedas a " + target.getGameProfile().getName() + ". Total: " + pData.getCoins()), true);
+        return 1;
+    }
+
+    private static int setMonedasCmd(CommandSourceStack src, ServerPlayer target, int cantidad) {
+        com.mundodetronos2.progression.PlayerProgressData pData = com.mundodetronos2.progression.ProgressionManager.getProgressData(target.getUUID());
+        pData.setCoins(cantidad);
+        com.mundodetronos2.progression.ProgressionManager.save(true);
+        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Monedas de " + target.getGameProfile().getName() + " establecidas en " + cantidad), true);
         return 1;
     }
 
@@ -1118,6 +1191,32 @@ public class TronosCommand {
             final String mName = m;
             src.sendSuccess(() -> Component.literal("§e" + idx + ". §f" + mName), false);
         }
+        return 1;
+    }
+
+    private static int crearGuardiaRojoCmd(CommandSourceStack src, String nombre) {
+        if (!(src.getEntity() instanceof ServerPlayer player)) {
+            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
+            return 0;
+        }
+
+        com.mundodetronos2.entity.CustomNPCEntity guard = com.mundodetronos2.init.EntityInit.CUSTOM_NPC.get().create(player.level());
+        if (guard == null) return 0;
+
+        guard.setNpcModel("guardred");
+        guard.setNpcTexture("guardred");
+        guard.setIdleAnimation("idle");
+        guard.setWalkAnimation("idle");
+        guard.moveTo(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot());
+        guard.setNoAi(true); // Estático: no camina ni patrulla
+
+        String finalName = nombre != null ? nombre : "Guardia Rojo";
+        guard.setCustomName(Component.literal(finalName));
+        guard.setCustomNameVisible(true);
+
+        player.level().addFreshEntity(guard);
+
+        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Guardia Rojo '" + finalName + "' creado e inmovilizado correctamente."), true);
         return 1;
     }
 

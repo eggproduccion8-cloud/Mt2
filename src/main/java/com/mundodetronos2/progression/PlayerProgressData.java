@@ -11,8 +11,17 @@ public class PlayerProgressData {
     private int skillPoints = 0;
     private List<String> unlockedSkills = new ArrayList<>();
     private int backpackTier = 1;
+    private int coins = 0;
 
     public PlayerProgressData() {}
+
+    public int getCoins() {
+        return Math.max(0, coins);
+    }
+
+    public void setCoins(int coins) {
+        this.coins = Math.max(0, coins);
+    }
 
     public int getBackpackTier() {
         return Math.max(1, Math.min(3, backpackTier));
