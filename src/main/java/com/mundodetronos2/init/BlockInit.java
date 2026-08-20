@@ -36,6 +36,22 @@ public class BlockInit {
                     .noOcclusion()
             ));
 
+    public static final RegistryObject<Block> THRONE_BLOCK = BLOCKS.register("throne_block",
+            () -> new com.mundodetronos2.block.ThroneBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.STONE)
+                    .strength(-1.0F, 3600000.0F)
+                    .sound(SoundType.STONE)
+                    .noOcclusion()
+            ));
+
+    public static final RegistryObject<Block> CRATE_BLOCK = BLOCKS.register("crate_block",
+            () -> new com.mundodetronos2.block.CrateBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.WOOD)
+                    .strength(2.5F)
+                    .sound(SoundType.WOOD)
+                    .noOcclusion()
+            ));
+
     public static void register(IEventBus bus) {
         BLOCKS.register(bus);
     }

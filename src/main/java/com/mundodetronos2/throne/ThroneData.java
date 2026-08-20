@@ -20,7 +20,10 @@ public class ThroneData {
     private long cooldownEndsAt;
     private boolean eventEnabled = false;
     private UUID lastAttacker;
-    private int protectionRadius = 15; // default 15 blocks radius (30x30 protection zone)
+    private int protectionRadius = 75; // 75 blocks radius (150x150 defense zone)
+    private int throneLevel = 1;
+    private int wallLevel = 1;
+    private java.util.List<int[]> wallBlocks = new java.util.ArrayList<>();
 
     public ThroneData() {}
 
@@ -36,6 +39,55 @@ public class ThroneData {
         this.maxHealth = maxHealth;
         this.health = maxHealth;
         this.state = ThroneState.PROTECTED;
+        this.protectionRadius = 75;
+    }
+
+    public int getThroneLevel() { return throneLevel; }
+    public void setThroneLevel(int throneLevel) { this.throneLevel = Math.max(1, Math.min(3, throneLevel)); }
+
+    public int getWallLevel() { return wallLevel; }
+    public void setWallLevel(int wallLevel) { this.wallLevel = Math.max(1, Math.min(3, wallLevel)); }
+
+    public java.util.List<int[]> getWallBlocksRaw() {
+        if (wallBlocks == null) wallBlocks = new java.util.ArrayList<>();
+        return wallBlocks;
+    }
+
+    public void setWallBlocksRaw(java.util.List<int[]> wallBlocks) {
+        this.wallBlocks = wallBlocks;
+    }
+
+    public boolean isWallBlock(BlockPos pos) {
+        if (pos == null || wallBlocks == null) return false;
+        int px = pos.getX(), py = pos.getY(), pz = pos.getZ();
+        for (int[] arr : wallBlocks) {
+            if (arr != null && arr.length >= 3 && arr[0] == px && arr[1] == py && arr[2] == pz) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void addWallBlock(BlockPos pos) {
+        if (pos != null) {
+            if (wallBlocks == null) wallBlocks = new java.util.ArrayList<>();
+            if (!isWallBlock(pos)) {
+                wallBlocks.add(new int[]{pos.getX(), pos.getY(), pos.getZ()});
+            }
+        }
+    }
+
+    public void removeWallBlock(BlockPos pos) {
+        if (pos != null && wallBlocks != null) {
+            int px = pos.getX(), py = pos.getY(), pz = pos.getZ();
+            wallBlocks.removeIf(arr -> arr != null && arr.length >= 3 && arr[0] == px && arr[1] == py && arr[2] == pz);
+        }
+    }
+
+    public void clearWallBlocks() {
+        if (wallBlocks != null) {
+            wallBlocks.clear();
+        }
     }
 
     // Getters y Setters

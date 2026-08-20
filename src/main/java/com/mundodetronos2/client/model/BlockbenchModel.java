@@ -57,9 +57,19 @@ public class BlockbenchModel {
                 JsonObject res = root.getAsJsonObject("resolution");
                 if (res.has("width")) model.texWidth = res.get("width").getAsInt();
                 if (res.has("height")) model.texHeight = res.get("height").getAsInt();
+            } else if (root.has("texture_size") && root.get("texture_size").isJsonArray()) {
+                JsonArray ts = root.getAsJsonArray("texture_size");
+                if (ts.size() >= 2) {
+                    model.texWidth = ts.get(0).getAsInt();
+                    model.texHeight = ts.get(1).getAsInt();
+                }
+            } else {
+                model.texWidth = 16;
+                model.texHeight = 16;
             }
 
             Map<String, Cube> cubeByUuid = new HashMap<>();
+            List<Cube> allCubes = new ArrayList<>();
             if (root.has("elements") && root.get("elements").isJsonArray()) {
                 JsonArray elements = root.getAsJsonArray("elements");
                 for (JsonElement elem : elements) {
@@ -97,10 +107,25 @@ public class BlockbenchModel {
                         cube.originZ = o.get(2).getAsFloat();
                     }
                     if (eObj.has("rotation")) {
-                        JsonArray r = eObj.getAsJsonArray("rotation");
-                        cube.rotX = r.get(0).getAsFloat();
-                        cube.rotY = r.get(1).getAsFloat();
-                        cube.rotZ = r.get(2).getAsFloat();
+                        if (eObj.get("rotation").isJsonObject()) {
+                            JsonObject rObj = eObj.getAsJsonObject("rotation");
+                            float angle = rObj.has("angle") ? rObj.get("angle").getAsFloat() : 0;
+                            String axis = rObj.has("axis") ? rObj.get("axis").getAsString() : "y";
+                            if (rObj.has("origin") && rObj.get("origin").isJsonArray()) {
+                                JsonArray o = rObj.getAsJsonArray("origin");
+                                cube.originX = o.get(0).getAsFloat();
+                                cube.originY = o.get(1).getAsFloat();
+                                cube.originZ = o.get(2).getAsFloat();
+                            }
+                            if (axis.equalsIgnoreCase("x")) cube.rotX = angle;
+                            else if (axis.equalsIgnoreCase("y")) cube.rotY = angle;
+                            else if (axis.equalsIgnoreCase("z")) cube.rotZ = angle;
+                        } else if (eObj.get("rotation").isJsonArray()) {
+                            JsonArray r = eObj.getAsJsonArray("rotation");
+                            cube.rotX = r.get(0).getAsFloat();
+                            cube.rotY = r.get(1).getAsFloat();
+                            cube.rotZ = r.get(2).getAsFloat();
+                        }
                     }
 
                     if (eObj.has("faces") && eObj.get("faces").isJsonObject()) {
@@ -117,6 +142,7 @@ public class BlockbenchModel {
                         }
                     }
 
+                    allCubes.add(cube);
                     if (!uuid.isEmpty()) {
                         cubeByUuid.put(uuid, cube);
                     }
@@ -128,6 +154,14 @@ public class BlockbenchModel {
                 for (JsonElement item : outliner) {
                     parseOutlinerNode(item, null, model, cubeByUuid);
                 }
+            }
+
+            if (model.rootBones.isEmpty() && !allCubes.isEmpty()) {
+                BoneGroup defaultRoot = new BoneGroup();
+                defaultRoot.name = "root";
+                defaultRoot.cubes.addAll(allCubes);
+                model.rootBones.add(defaultRoot);
+                model.boneByName.put("root", defaultRoot);
             }
         } catch (Exception e) {
             e.printStackTrace();

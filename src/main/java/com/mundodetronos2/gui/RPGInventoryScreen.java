@@ -26,6 +26,7 @@ import java.util.Set;
 
 public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu> {
 
+    public static final ResourceLocation FONDO_TEX = new ResourceLocation("mundodetronos2", "textures/gui/inventory/fondo.png");
     public static final ResourceLocation LOGO_T2 = new ResourceLocation("mundodetronos2", "textures/gui/t2.png");
     public static final ResourceLocation LOGO_EGG = new ResourceLocation("mundodetronos2", "textures/gui/egg.png");
     public static final ResourceLocation BUTTON_TEX = new ResourceLocation("mundodetronos2", "textures/gui/button.png");
@@ -413,8 +414,9 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         int w = this.width;
         int h = this.height;
 
-        // Fondo transparente limpio
-        graphics.fill(0, 0, w, h, 0x880A0D12);
+        // Renderizar el fondo completo a pantalla completa
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        graphics.blit(FONDO_TEX, 0, 0, 0, 0, w, h, 1672, 941);
 
         Player player = this.minecraft.player;
         String name = player != null ? player.getGameProfile().getName() : "JUGADOR";
