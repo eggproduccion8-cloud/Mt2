@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "crate_level=1": { "model": "mundodetronos2:block/empty" },
+    "crate_level=2": { "model": "mundodetronos2:block/empty" },
+    "crate_level=3": { "model": "mundodetronos2:block/empty" },
+    "crate_level=4": { "model": "mundodetronos2:block/empty" }
+  }
+}

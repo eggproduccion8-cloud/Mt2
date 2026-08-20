@@ -31,6 +31,7 @@ public class SoldierEntity extends CustomNPCEntity {
     private static final EntityDataAccessor<String> TEAM_ID = SynchedEntityData.defineId(SoldierEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<String> THRONE_ID = SynchedEntityData.defineId(SoldierEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<BlockPos> HOME_POS = SynchedEntityData.defineId(SoldierEntity.class, EntityDataSerializers.BLOCK_POS);
+    private static final EntityDataAccessor<Integer> ATTACK_TICKS = SynchedEntityData.defineId(SoldierEntity.class, EntityDataSerializers.INT);
 
     public SoldierEntity(EntityType<? extends PathfinderMob> type, Level level) {
         super(type, level);
@@ -117,6 +118,16 @@ public class SoldierEntity extends CustomNPCEntity {
         this.entityData.define(TEAM_ID, "rojo");
         this.entityData.define(THRONE_ID, "");
         this.entityData.define(HOME_POS, BlockPos.ZERO);
+        this.entityData.define(ATTACK_TICKS, 0);
+    }
+
+    @Override
+    public void aiStep() {
+        super.aiStep();
+        int ticks = this.entityData.get(ATTACK_TICKS);
+        if (ticks > 0) {
+            this.entityData.set(ATTACK_TICKS, ticks - 1);
+        }
     }
 
     public String getTeamId() {
@@ -162,6 +173,7 @@ public class SoldierEntity extends CustomNPCEntity {
     public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
         boolean hurt = super.doHurtTarget(target);
         if (hurt) {
+            this.entityData.set(ATTACK_TICKS, 20);
             this.swing(InteractionHand.MAIN_HAND, true);
         }
         return hurt;
@@ -179,7 +191,7 @@ public class SoldierEntity extends CustomNPCEntity {
 
     @Override
     public String getActualCurrentAnimation() {
-        if (this.swingTime > 0) {
+        if (this.entityData.get(ATTACK_TICKS) > 0 || this.swingTime > 0) {
             return "attack";
         }
         if (this.getDeltaMovement().horizontalDistanceSqr() > 0.001) {

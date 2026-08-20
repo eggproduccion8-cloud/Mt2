@@ -1,7 +1,7 @@
 {
 	"credit": "Made with Blockbench",
 	"textures": {
-		"3": "crates1:lvl1_crate"
+		"3": "mundodetronos2:block/lvl1_crate"
 	},
 	"elements": [
 		{

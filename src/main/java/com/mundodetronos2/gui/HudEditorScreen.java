@@ -205,9 +205,9 @@ public class HudEditorScreen extends Screen {
             ComponentConfig config = tempConfig.get(selectedComponent);
             if (config != null) {
                 if (delta > 0) {
-                    config.scale = Math.min(2.5f, config.scale + 0.05f);
+                    config.scale = Math.min(4.0f, config.scale + 0.05f);
                 } else if (delta < 0) {
-                    config.scale = Math.max(0.4f, config.scale - 0.05f);
+                    config.scale = Math.max(0.25f, config.scale - 0.05f);
                 }
                 return true;
             }
@@ -221,10 +221,10 @@ public class HudEditorScreen extends Screen {
             ComponentConfig config = tempConfig.get(selectedComponent);
             if (config != null) {
                 if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_EQUAL || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ADD) {
-                    config.scale = Math.min(2.5f, config.scale + 0.05f);
+                    config.scale = Math.min(4.0f, config.scale + 0.05f);
                     return true;
                 } else if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_MINUS || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_SUBTRACT) {
-                    config.scale = Math.max(0.4f, config.scale - 0.05f);
+                    config.scale = Math.max(0.25f, config.scale - 0.05f);
                     return true;
                 }
             }

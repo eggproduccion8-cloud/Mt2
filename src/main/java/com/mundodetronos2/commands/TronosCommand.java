@@ -26,8 +26,11 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
+import com.mundodetronos2.entity.GoddessNPCEntity;
+import com.mundodetronos2.init.EntityInit;
 
 import java.util.List;
 import java.util.UUID;
@@ -248,9 +251,20 @@ public class TronosCommand {
                 .then(Commands.literal("save")
                         .requires(src -> src.hasPermission(2))
                         .executes(ctx -> saveAllData(ctx.getSource())))
-                .then(Commands.literal("team")
+                .then(Commands.literal("campaña")
                         .requires(src -> src.hasPermission(2))
+                        .then(Commands.literal("manuel")
+                                .executes(ctx -> invocarManuelCmd(ctx.getSource())))
+                        .then(Commands.literal("karla")
+                                .executes(ctx -> invocarKarlaCmd(ctx.getSource()))))
+                .then(Commands.literal("team")
+                        .then(Commands.literal("unir")
+                                .then(Commands.argument("color", StringArgumentType.string())
+                                        .executes(ctx -> unirEquipoCmd(ctx.getSource(), StringArgumentType.getString(ctx, "color")))))
+                        .then(Commands.literal("salir")
+                                .executes(ctx -> salirEquipoCmd(ctx.getSource())))
                         .then(Commands.literal("trono")
+                                .requires(src -> src.hasPermission(2))
                                 .then(Commands.argument("color", StringArgumentType.string())
                                         .executes(ctx -> darTronoEquipo(ctx.getSource(), StringArgumentType.getString(ctx, "color"))))))
                 .then(Commands.literal("muralla")
@@ -1519,6 +1533,117 @@ public class TronosCommand {
         target.getInventory().add(stack);
         src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Se ha entregado la Llave de Reubicación a " + target.getGameProfile().getName() + "."), true);
         return 1;
+    }
+
+    private static int unirEquipoCmd(CommandSourceStack src, String color) {
+        if (!(src.getEntity() instanceof ServerPlayer player)) {
+            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
+            return 0;
+        }
+
+        String colorLower = color.toLowerCase().trim();
+        RealmData team = RealmManager.getRealmByColorKey(colorLower);
+        if (team == null) {
+            src.sendFailure(Component.literal("§c[Mundo de Tronos] No existe ningún equipo con el color '" + color + "'. Usa: rojo, azul, verde, amarillo, morado, cian, naranja, rosa, blanco, negro."));
+            return 0;
+        }
+
+        if (RealmManager.getPlayerRealmData(player.getUUID()) != null) {
+            src.sendFailure(Component.literal("§c[Mundo de Tronos] Ya perteneces a un equipo. Usa /tronos team salir primero."));
+            return 0;
+        }
+
+        if (team.getMembers().size() >= team.getMaxPlayers()) {
+            src.sendFailure(Component.literal("§c[Mundo de Tronos] El equipo " + colorLower.toUpperCase() + " ya tiene 6/6 jugadores."));
+            return 0;
+        }
+
+        boolean success = RealmManager.joinTeam(player, colorLower);
+        if (success) {
+            src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Te has unido al equipo " + colorLower.toUpperCase() + "."), false);
+            NetworkManager.syncHud(player);
+            return 1;
+        } else {
+            src.sendFailure(Component.literal("§c[Mundo de Tronos] No te pudiste unir al equipo " + colorLower.toUpperCase() + "."));
+            return 0;
+        }
+    }
+
+    private static int invocarManuelCmd(CommandSourceStack src) {
+        if (!(src.getEntity() instanceof ServerPlayer player)) {
+            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
+            return 0;
+        }
+
+        AABB searchArea = player.getBoundingBox().inflate(16.0D);
+        List<GoddessNPCEntity> existing = player.level().getEntitiesOfClass(GoddessNPCEntity.class, searchArea,
+                npc -> "manuel".equalsIgnoreCase(npc.getNpcType()) || (npc.getCustomName() != null && npc.getCustomName().getString().toLowerCase().contains("manuel")));
+
+        if (!existing.isEmpty()) {
+            src.sendFailure(Component.literal("§c[Mundo de Tronos] Ya existe un Manuel cercano."));
+            return 0;
+        }
+
+        GoddessNPCEntity manuel = EntityInit.GODDESS_NPC.get().create(player.level());
+        if (manuel != null) {
+            manuel.setNpcType("manuel");
+            manuel.setSkinName("blacksmith");
+            manuel.moveTo(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot());
+            manuel.setCustomName(Component.literal("§6Manuel (Herrero)"));
+            manuel.setCustomNameVisible(true);
+            player.level().addFreshEntity(manuel);
+
+            src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] NPC Manuel invocado correctamente."), true);
+            return 1;
+        }
+        return 0;
+    }
+
+    private static int invocarKarlaCmd(CommandSourceStack src) {
+        if (!(src.getEntity() instanceof ServerPlayer player)) {
+            src.sendFailure(Component.literal("Este comando solo puede ser executed por un jugador."));
+            return 0;
+        }
+
+        AABB searchArea = player.getBoundingBox().inflate(16.0D);
+        List<GoddessNPCEntity> existing = player.level().getEntitiesOfClass(GoddessNPCEntity.class, searchArea,
+                npc -> "karla".equalsIgnoreCase(npc.getNpcType()) || (npc.getCustomName() != null && npc.getCustomName().getString().toLowerCase().contains("karla")));
+
+        if (!existing.isEmpty()) {
+            src.sendFailure(Component.literal("§c[Mundo de Tronos] Ya existe una Karla cercana."));
+            return 0;
+        }
+
+        GoddessNPCEntity karla = EntityInit.GODDESS_NPC.get().create(player.level());
+        if (karla != null) {
+            karla.setNpcType("karla");
+            karla.setSkinName("karla");
+            karla.moveTo(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot());
+            karla.setCustomName(Component.literal("§6Karla (Gremio)"));
+            karla.setCustomNameVisible(true);
+            player.level().addFreshEntity(karla);
+
+            src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] NPC Karla invocada correctamente."), true);
+            return 1;
+        }
+        return 0;
+    }
+
+    private static int salirEquipoCmd(CommandSourceStack src) {
+        if (!(src.getEntity() instanceof ServerPlayer player)) {
+            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
+            return 0;
+        }
+
+        boolean success = RealmManager.leaveRealm(player.getUUID());
+        if (success) {
+            src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Has salido de tu equipo exitosamente."), false);
+            NetworkManager.syncHud(player);
+            return 1;
+        } else {
+            src.sendFailure(Component.literal("§c[Mundo de Tronos] No perteneces a ningún equipo actualmente."));
+            return 0;
+        }
     }
 
     private static int darTronoEquipo(CommandSourceStack src, String color) {
