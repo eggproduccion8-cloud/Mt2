@@ -1,6 +1,7 @@
 package com.mundodetronos2.client;
 
 import com.mundodetronos2.config.ConfigManager;
+import net.minecraft.core.BlockPos;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.PlayerFaceRenderer;
@@ -17,13 +18,19 @@ public class ModHudOverlay {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null || mc.options.hideGui) return;
 
-        // 1. Barra de Trono en MIRA/Target
-        long now = System.currentTimeMillis();
-        long delta = now - ClientPacketHandler.targetThroneLastHitTime;
-        long maxDelta = ConfigManager.get().targetBarSinksSeconds * 1000L;
+        // 1. Barra de Trono o Muralla en MIRA/Target
         if (mc.hitResult != null && mc.hitResult.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) {
-            if (delta < maxDelta && !ClientPacketHandler.targetThroneRealmName.isEmpty()) {
-                drawThroneHpBar(graphics, width, height);
+            net.minecraft.world.phys.BlockHitResult bhr = (net.minecraft.world.phys.BlockHitResult) mc.hitResult;
+            BlockPos pos = bhr.getBlockPos();
+            if (com.mundodetronos2.throne.ThroneManager.isWallBlock(pos)) {
+                drawWallHpBar(graphics, width, height);
+            } else {
+                long now = System.currentTimeMillis();
+                long delta = now - ClientPacketHandler.targetThroneLastHitTime;
+                long maxDelta = ConfigManager.get().targetBarSinksSeconds * 1000L;
+                if (delta < maxDelta && !ClientPacketHandler.targetThroneRealmName.isEmpty()) {
+                    drawThroneHpBar(graphics, width, height);
+                }
             }
         }
 
@@ -55,22 +62,49 @@ public class ModHudOverlay {
         drawNotificationsAndSiege(graphics, width);
     };
 
+    private static void drawLeftMissionHudPanel(GuiGraphics graphics) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return;
+
+        if (ClientPacketHandler.hudActiveMissionTitle == null || ClientPacketHandler.hudActiveMissionTitle.isEmpty()) {
+            return;
+        }
+
+        int x = 12;
+        int y = 70; // Left side below player portrait
+        int boxW = 150;
+        int boxH = 48;
+
+        // Background MMORPG Card
+        graphics.fill(x - 3, y - 3, x + boxW + 3, y + boxH + 3, 0xAA221810);
+        graphics.fill(x - 1, y - 1, x + boxW + 1, y + boxH + 1, 0xFFD4AF37);
+        graphics.fill(x, y, x + boxW, y + boxH, 0xEE2D2218);
+
+        // Header Title
+        graphics.drawString(mc.font, "📜 MISIÓN ACTIVA", x + 6, y + 5, 0xFFFFD700, false);
+
+        // Mission Name
+        String name = ClientPacketHandler.hudActiveMissionTitle;
+        if (name.length() > 22) name = name.substring(0, 20) + "...";
+        graphics.drawString(mc.font, name, x + 6, y + 18, 0xFFFFFFFF, false);
+
+        // Progress Objective
+        if (ClientPacketHandler.hudActiveMissionProgress != null && !ClientPacketHandler.hudActiveMissionProgress.isEmpty()) {
+            String prog = "Objetivo: " + ClientPacketHandler.hudActiveMissionProgress;
+            if (prog.length() > 22) prog = prog.substring(0, 20) + "...";
+            graphics.drawString(mc.font, prog, x + 6, y + 31, 0xFF55FF55, false);
+        }
+    }
+
     private static void drawNotificationsAndSiege(GuiGraphics graphics, int screenWidth) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
 
+        // Render Mission HUD Panel on the LEFT side of the screen
+        drawLeftMissionHudPanel(graphics);
+
         int x = screenWidth - 145;
         int y = 10;
-
-        // Panel de Misión Activa
-        if (ClientPacketHandler.hudActiveMissionTitle != null && !ClientPacketHandler.hudActiveMissionTitle.isEmpty()) {
-            graphics.drawString(mc.font, "MISIÓN ACTIVA", x, y, 0xFFFFD700, true);
-            graphics.drawString(mc.font, ClientPacketHandler.hudActiveMissionTitle, x, y + 10, 0xFFFFFFFF, true);
-            if (ClientPacketHandler.hudActiveMissionProgress != null && !ClientPacketHandler.hudActiveMissionProgress.isEmpty()) {
-                graphics.drawString(mc.font, "Progreso: " + ClientPacketHandler.hudActiveMissionProgress, x, y + 20, 0xFF55FF55, true);
-            }
-            y += 34;
-        }
 
         // Tarjeta de Asedio Activo
         if (ClientPacketHandler.isAttackActive()) {
@@ -291,6 +325,27 @@ public class ModHudOverlay {
         if (alpha > 0.85f) {
             graphics.drawString(Minecraft.getInstance().font, "La Diosa María te observa...", width / 2 - Minecraft.getInstance().font.width("La Diosa María te observa...") / 2, height / 2, 0xFFFFFFFF, false);
         }
+    }
+
+    private static void drawWallHpBar(GuiGraphics graphics, int width, int height) {
+        int barWidth = 140;
+        int barHeight = 8;
+        int x = (width - barWidth) / 2;
+        int y = 25;
+
+        graphics.fill(x - 2, y - 2, x + barWidth + 2, y + barHeight + 2, 0xFF000000);
+        graphics.fill(x, y, x + barWidth, y + barHeight, 0xFF444444);
+        graphics.fill(x, y, x + (int)(barWidth * 0.8D), y + barHeight, 0xFF55FF55);
+
+        Minecraft mc = Minecraft.getInstance();
+        String title = "MURALLA DE PIEDRA OFICIAL";
+        String hpText = "80 / 100 HP";
+
+        int titleWidth = mc.font.width(title);
+        int hpWidth = mc.font.width(hpText);
+
+        graphics.drawString(mc.font, title, (width - titleWidth) / 2, y - 11, 0xFFFFFFFF, false);
+        graphics.drawString(mc.font, hpText, (width - hpWidth) / 2, y + 1, 0xFFFFFFFF, false);
     }
 
     private static void drawThroneHpBar(GuiGraphics graphics, int width, int height) {

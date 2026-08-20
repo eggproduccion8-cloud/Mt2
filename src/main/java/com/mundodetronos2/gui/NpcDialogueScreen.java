@@ -69,17 +69,17 @@ public class NpcDialogueScreen extends Screen {
         this.boxH = Math.max(80, 32 + textHeight + 12);
         this.boxY = this.height - this.boxH - 12;
 
-        // 3. Position option buttons safely above or alongside the dialog box
-        int btnW = Math.min(220, this.width - 40);
-        int btnH = 18;
-        int btnX = this.width - btnW - 24;
-        int startBtnY = this.boxY - (optionTexts.size() * 22) - 8;
+        // 3. Position option buttons grouped on the right side
+        int btnW = Math.min(200, this.width - 40);
+        int btnH = 20;
+        int btnX = this.boxX + this.boxW - btnW - 12;
+        int startBtnY = this.boxY + 26;
 
         for (int i = 0; i < optionTexts.size(); i++) {
             final int index = i;
             String optionText = optionTexts.get(i);
-            if (optionText.length() > 38) {
-                optionText = optionText.substring(0, 35) + "...";
+            if (optionText.length() > 32) {
+                optionText = optionText.substring(0, 29) + "...";
             }
 
             this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(
@@ -87,7 +87,6 @@ public class NpcDialogueScreen extends Screen {
                 Component.literal("➤ " + optionText),
                 btn -> {
                     NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SSelectDialogueOptionPacket(npcId, npcType, nodeId, index));
-                    this.onClose();
                 }
             ));
         }

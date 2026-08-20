@@ -1,11 +1,13 @@
 package com.mundodetronos2.throne;
 
+import com.mundodetronos2.block.CargaAsaltoBlockEntity;
 import com.mundodetronos2.events.GameEventHandler;
 import com.mundodetronos2.network.NetworkManager;
 import com.mundodetronos2.realm.RealmData;
 import com.mundodetronos2.realm.RealmManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -27,17 +29,19 @@ public class ThroneAttackManager {
         public final BlockPos targetBlockPos;
         public final int requiredCharges;
         public int currentCharges = 0;
+        public int chargeLevel = 1;
         public final List<BlockPos> chargeVisualPositions = new ArrayList<>();
         public UUID attackerId;
         public String attackerTeamName;
         public int remainingSeconds = 10;
 
-        public ChargeGroup(String dimension, BlockPos targetBlockPos, int requiredCharges, UUID attackerId, String attackerTeamName) {
+        public ChargeGroup(String dimension, BlockPos targetBlockPos, int requiredCharges, UUID attackerId, String attackerTeamName, int chargeLevel) {
             this.dimension = dimension;
             this.targetBlockPos = targetBlockPos;
             this.requiredCharges = requiredCharges;
             this.attackerId = attackerId;
             this.attackerTeamName = attackerTeamName;
+            this.chargeLevel = chargeLevel;
             this.remainingSeconds = 10;
         }
     }
@@ -64,23 +68,24 @@ public class ThroneAttackManager {
         return dimension + ":" + pos.getX() + "," + pos.getY() + "," + pos.getZ();
     }
 
-    public static void startAttack(UUID throneId, BlockPos chargePos, String dimension, UUID attackerId, String attackerTeamName) {
-        ThroneAttack attack = new ThroneAttack(throneId, chargePos, dimension, attackerId, attackerTeamName);
+    public static void startAttack(UUID throneId, BlockPos chargePos, String dimension, UUID attackerId, String attackerTeamName, int chargeLevel) {
+        ThroneAttack attack = new ThroneAttack(throneId, chargePos, dimension, attackerId, attackerTeamName, chargeLevel);
         throneAttacks.put(throneId, attack);
         syncAttackAlert(attack, true);
     }
 
-    public static ChargeGroup registerBlockCharge(String dimension, BlockPos targetBlockPos, BlockPos visualChargePos, BlockState targetState, UUID attackerId, String attackerTeamName) {
+    public static ChargeGroup registerBlockCharge(String dimension, BlockPos targetBlockPos, BlockPos visualChargePos, BlockState targetState, UUID attackerId, String attackerTeamName, int chargeLevel) {
         String key = getTargetKey(dimension, targetBlockPos);
         int req = getRequiredCharges(targetState);
 
-        ChargeGroup group = blockChargeGroups.computeIfAbsent(key, k -> new ChargeGroup(dimension, targetBlockPos, req, attackerId, attackerTeamName));
+        ChargeGroup group = blockChargeGroups.computeIfAbsent(key, k -> new ChargeGroup(dimension, targetBlockPos, req, attackerId, attackerTeamName, chargeLevel));
         group.currentCharges++;
         if (!group.chargeVisualPositions.contains(visualChargePos)) {
             group.chargeVisualPositions.add(visualChargePos);
         }
         group.attackerId = attackerId;
         group.attackerTeamName = attackerTeamName;
+        group.chargeLevel = chargeLevel;
         return group;
     }
 
@@ -201,7 +206,13 @@ public class ThroneAttackManager {
                         if (throne != null) {
                             int currentHp = throne.getHealth();
                             if (currentHp > 0) {
-                                currentHp--;
+                                int chargeCount = 1;
+                                BlockEntity be = level.getBlockEntity(cPos);
+                                if (be instanceof CargaAsaltoBlockEntity cbe) {
+                                    chargeCount = cbe.getChargeCount();
+                                }
+                                int damage = attack.getChargeLevel() * chargeCount;
+                                currentHp = Math.max(0, currentHp - damage);
                                 throne.setHealth(currentHp);
                                 throne.setLastAttacker(attack.getAttackerId());
 

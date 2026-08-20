@@ -9,21 +9,27 @@ public class ThroneAttack {
     private final String dimension;
     private final UUID attackerId;
     private final String attackerTeamName;
+    private int chargeLevel = 1;
     private int remainingSeconds = 30;
 
     // Para ataques a bloques de construcción
     private final boolean isBlockAttack;
     private final BlockPos baseBlockPos;
 
-    public ThroneAttack(UUID throneId, BlockPos chargePos, String dimension, UUID attackerId, String attackerTeamName) {
+    public ThroneAttack(UUID throneId, BlockPos chargePos, String dimension, UUID attackerId, String attackerTeamName, int chargeLevel) {
         this.throneId = throneId;
         this.chargePos = chargePos;
         this.dimension = dimension;
         this.attackerId = attackerId;
         this.attackerTeamName = attackerTeamName;
+        this.chargeLevel = chargeLevel;
         this.remainingSeconds = 30; // 30 seconds for Throne
         this.isBlockAttack = false;
         this.baseBlockPos = null;
+    }
+
+    public int getChargeLevel() {
+        return chargeLevel;
     }
 
     public ThroneAttack(UUID blockAttackId, BlockPos baseBlockPos, BlockPos chargePos, String dimension, UUID attackerId, String attackerTeamName, boolean isBlockAttack, int durationSeconds) {

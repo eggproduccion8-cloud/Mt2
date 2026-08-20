@@ -112,8 +112,46 @@ public class CargaAsaltoItem extends Item {
             }
         }
 
-        // 4. Colocar la carga
+        // 4. Colocar o apilar la carga
         BlockState targetState = level.getBlockState(placePos);
+        BlockPos existingChargePos = null;
+
+        if (targetState.is(com.mundodetronos2.init.BlockInit.CARGA_ASALTO_BLOCK.get())) {
+            existingChargePos = placePos;
+        } else if (level.getBlockState(clickedPos).is(com.mundodetronos2.init.BlockInit.CARGA_ASALTO_BLOCK.get())) {
+            existingChargePos = clickedPos;
+        }
+
+        String attackerTeamName = "Sin Equipo";
+        if (playerRealm != null) {
+            attackerTeamName = playerRealm.getName();
+        }
+
+        if (existingChargePos != null) {
+            BlockEntity existingBE = level.getBlockEntity(existingChargePos);
+            if (existingBE instanceof CargaAsaltoBlockEntity cargaBE) {
+                if (cargaBE.getChargeLevel() != this.chargeLevel) {
+                    com.mundodetronos2.network.MessageManager.actionBar(sp, "§c⚠ No puedes mezclar niveles de cargas en el mismo bloque.");
+                    return InteractionResult.FAIL;
+                }
+                if (!cargaBE.addCharge()) {
+                    com.mundodetronos2.network.MessageManager.actionBar(sp, "§c⚠ Límite alcanzado: Máximo 3 cargas por bloque.");
+                    return InteractionResult.FAIL;
+                }
+
+                if (isThroneAttack) {
+                    com.mundodetronos2.network.MessageManager.actionBar(sp, "§a✔ Carga Nivel " + chargeLevel + " apilada (x" + cargaBE.getChargeCount() + "). Detonando en 30s.");
+                } else {
+                    ThroneAttackManager.ChargeGroup group = ThroneAttackManager.registerBlockCharge(level.dimension().location().toString(), clickedPos, existingChargePos, clickedState, playerId, attackerTeamName, this.chargeLevel);
+                    com.mundodetronos2.network.MessageManager.actionBar(sp, "§a✔ Carga Nivel " + chargeLevel + " apilada en bloque (x" + cargaBE.getChargeCount() + "). Detonando en 10s.");
+                }
+
+                level.playSound(null, existingChargePos, net.minecraft.sounds.SoundEvents.TNT_PRIMED, net.minecraft.sounds.SoundSource.BLOCKS, 1.2F, 1.2F);
+                context.getItemInHand().shrink(1);
+                return InteractionResult.SUCCESS;
+            }
+        }
+
         if (!targetState.isAir() && !targetState.canBeReplaced()) {
             placePos = clickedPos;
         }
@@ -122,19 +160,14 @@ public class CargaAsaltoItem extends Item {
         BlockEntity be = level.getBlockEntity(placePos);
         if (be instanceof CargaAsaltoBlockEntity cargaBE) {
             cargaBE.setChargeLevel(this.chargeLevel);
-        }
-
-        // Registrar el ataque en el manager
-        String attackerTeamName = "Sin Equipo";
-        if (playerRealm != null) {
-            attackerTeamName = playerRealm.getName();
+            cargaBE.setChargeCount(1);
         }
 
         if (isThroneAttack) {
-            ThroneAttackManager.startAttack(nearestThrone.getId(), placePos, level.dimension().location().toString(), playerId, attackerTeamName);
+            ThroneAttackManager.startAttack(nearestThrone.getId(), placePos, level.dimension().location().toString(), playerId, attackerTeamName, this.chargeLevel);
             com.mundodetronos2.network.MessageManager.actionBar(sp, "§a✔ Carga Nivel " + chargeLevel + " colocada en el Trono. Detonando en 30 segundos.");
         } else {
-            ThroneAttackManager.ChargeGroup group = ThroneAttackManager.registerBlockCharge(level.dimension().location().toString(), clickedPos, placePos, clickedState, playerId, attackerTeamName);
+            ThroneAttackManager.ChargeGroup group = ThroneAttackManager.registerBlockCharge(level.dimension().location().toString(), clickedPos, placePos, clickedState, playerId, attackerTeamName, this.chargeLevel);
             com.mundodetronos2.network.MessageManager.actionBar(sp, "§a✔ Carga Nivel " + chargeLevel + " colocada en muro (" + group.currentCharges + " / " + group.requiredCharges + " cargas). Detonando en 10s.");
         }
 

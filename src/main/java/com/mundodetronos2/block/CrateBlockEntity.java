@@ -17,15 +17,33 @@ import org.jetbrains.annotations.Nullable;
 
 public class CrateBlockEntity extends BlockEntity implements Container {
 
-    private final NonNullList<ItemStack> items = NonNullList.withSize(27, ItemStack.EMPTY);
+    private int crateLevel = 1;
+    private NonNullList<ItemStack> items = NonNullList.withSize(27, ItemStack.EMPTY);
 
     public CrateBlockEntity(BlockPos pos, BlockState state) {
         super(BlockEntityInit.CRATE_BE.get(), pos, state);
     }
 
+    public int getCrateLevel() {
+        return crateLevel;
+    }
+
+    public void setCrateLevel(int level) {
+        this.crateLevel = level;
+        int size = level >= 2 ? 54 : 27;
+        if (this.items.size() != size) {
+            NonNullList<ItemStack> newItems = NonNullList.withSize(size, ItemStack.EMPTY);
+            for (int i = 0; i < Math.min(items.size(), size); i++) {
+                newItems.set(i, items.get(i));
+            }
+            this.items = newItems;
+        }
+        setChanged();
+    }
+
     @Override
     public int getContainerSize() {
-        return 27;
+        return items.size();
     }
 
     @Override
@@ -79,6 +97,9 @@ public class CrateBlockEntity extends BlockEntity implements Container {
     @Override
     public void load(CompoundTag tag) {
         super.load(tag);
+        if (tag.contains("CrateLevel")) {
+            setCrateLevel(tag.getInt("CrateLevel"));
+        }
         this.items.clear();
         ContainerHelper.loadAllItems(tag, this.items);
     }
@@ -86,6 +107,7 @@ public class CrateBlockEntity extends BlockEntity implements Container {
     @Override
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
+        tag.putInt("CrateLevel", this.crateLevel);
         ContainerHelper.saveAllItems(tag, this.items);
     }
 

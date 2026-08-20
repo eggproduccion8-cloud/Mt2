@@ -92,6 +92,29 @@ public class GameEventHandler {
             if (event.player instanceof ServerPlayer sp) {
                 // Check Guardia del Rey exploration checkpoints
                 com.mundodetronos2.tutorial.TutorialManager.checkGuardiaExploration(sp);
+
+                // Push back non-member players trying to cross unbroken wall territory borders
+                if (!sp.hasPermissions(2)) {
+                    BlockPos pos = sp.blockPosition();
+                    String dim = sp.level().dimension().location().toString();
+                    for (ThroneData t : ThroneManager.getThronesMap().values()) {
+                        if (t.getDimension().equals(dim) && t.getPos() != null) {
+                            BlockPos tPos = t.getPos();
+                            int radius = t.getProtectionRadius();
+                            if (Math.abs(tPos.getX() - pos.getX()) <= radius && Math.abs(tPos.getZ() - pos.getZ()) <= radius) {
+                                RealmData r = RealmManager.getRealm(t.getRealmId());
+                                if (r != null && !r.getMembers().contains(sp.getUUID())) {
+                                    // Check if closest wall is unbroken
+                                    if (ThroneManager.isWallBlock(pos) || ThroneManager.isWallBlock(pos.below())) {
+                                        sp.setDeltaMovement(sp.getDeltaMovement().x * -1.5D, 0.2D, sp.getDeltaMovement().z * -1.5D);
+                                        sp.hurtMarked = true;
+                                        com.mundodetronos2.network.MessageManager.actionBar(sp, "§c⚠ Territorio enemigo fortificado. Debes abrir una brecha en la muralla.");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             // Prevent player from falling into the void in the Goddess dimension
@@ -209,8 +232,8 @@ public class GameEventHandler {
             // Cancelar el evento de muerte real para que no muera físicamente
             event.setCanceled(true);
 
-            // Iniciar espectador fantasma de 6 segundos
-            DeathSpectatorManager.startSpectating(sp);
+            // Iniciar espectador de muerte de 10 segundos
+            DeathSpectatorManager.startPlayerDeathSpectating(sp);
 
             // Enviar paquete para abrir la pantalla cinemática de resurrección de Isekai en el cliente
             NetworkManager.sendToPlayer(new NetworkManager.S2CStartDeathRebirthCinematicPacket(), sp);
@@ -390,6 +413,31 @@ public class GameEventHandler {
                 event.setCanceled(true);
                 if (player instanceof ServerPlayer sp) {
                     com.mundodetronos2.network.MessageManager.actionBar(sp, "§c⚠ Esta zona está protegida por una base enemiga.");
+                }
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onEnderPearlTeleport(net.minecraftforge.event.entity.EntityTeleportEvent.EnderPearl event) {
+        if (!event.getEntity().level().isClientSide() && event.getEntity() instanceof ServerPlayer sp) {
+            if (sp.hasPermissions(2)) return;
+
+            BlockPos targetPos = BlockPos.containing(event.getTargetX(), event.getTargetY(), event.getTargetZ());
+            String dim = sp.level().dimension().location().toString();
+
+            for (ThroneData t : ThroneManager.getThronesMap().values()) {
+                if (t.getDimension().equals(dim) && t.getPos() != null) {
+                    BlockPos tPos = t.getPos();
+                    int radius = t.getProtectionRadius();
+                    if (Math.abs(tPos.getX() - targetPos.getX()) <= radius && Math.abs(tPos.getZ() - targetPos.getZ()) <= radius) {
+                        RealmData r = RealmManager.getRealm(t.getRealmId());
+                        if (r != null && !r.getMembers().contains(sp.getUUID())) {
+                            event.setCanceled(true);
+                            com.mundodetronos2.network.MessageManager.actionBar(sp, "§c⚠ Prohibido usar Ender Pearls para atravesar la muralla enemiga.");
+                            return;
+                        }
+                    }
                 }
             }
         }
