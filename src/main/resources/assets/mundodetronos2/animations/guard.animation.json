@@ -663,12 +663,11 @@
             ]
           },
           "position": {
-            "post": [
+            "0.0": [
               0,
               0,
               0
-            ],
-            "lerp_mode": "catmullrom"
+            ]
           }
         },
         "righthand": {
@@ -685,12 +684,11 @@
             ]
           },
           "position": {
-            "post": [
+            "0.0": [
               0,
               0,
               0
-            ],
-            "lerp_mode": "catmullrom"
+            ]
           }
         }
       }

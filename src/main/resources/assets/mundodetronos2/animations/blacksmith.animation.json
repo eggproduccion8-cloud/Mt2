@@ -589,11 +589,13 @@
           }
         },
         "rightfoot": {
-          "rotation": [
-            0,
-            0,
-            0
-          ]
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ]
+          }
         },
         "lefthand": {
           "rotation": {
@@ -783,12 +785,11 @@
             ]
           },
           "position": {
-            "post": [
+            "0.0": [
               0,
               0,
               0
-            ],
-            "lerp_mode": "catmullrom"
+            ]
           }
         },
         "rightleg": {
@@ -830,30 +831,27 @@
             ]
           },
           "position": {
-            "post": [
+            "0.0": [
               0,
               0,
               0
-            ],
-            "lerp_mode": "catmullrom"
+            ]
           }
         },
         "rightfoot": {
           "rotation": {
-            "post": [
+            "0.0": [
               0,
               0,
               0
-            ],
-            "lerp_mode": "catmullrom"
+            ]
           },
           "position": {
-            "post": [
+            "0.0": [
               0,
               0,
               0
-            ],
-            "lerp_mode": "catmullrom"
+            ]
           }
         },
         "leftleg": {
@@ -909,20 +907,18 @@
         },
         "leftfoot": {
           "rotation": {
-            "post": [
+            "0.0": [
               0,
               0,
               0
-            ],
-            "lerp_mode": "catmullrom"
+            ]
           },
           "position": {
-            "post": [
+            "0.0": [
               0,
               0,
               0
-            ],
-            "lerp_mode": "catmullrom"
+            ]
           }
         },
         "rightarm": {
@@ -1066,30 +1062,27 @@
             ]
           },
           "position": {
-            "post": [
+            "0.0": [
               0,
               0,
               0
-            ],
-            "lerp_mode": "catmullrom"
+            ]
           }
         },
         "lefthand": {
           "rotation": {
-            "post": [
+            "0.0": [
               0,
               0,
               0
-            ],
-            "lerp_mode": "catmullrom"
+            ]
           },
           "position": {
-            "post": [
+            "0.0": [
               0,
               0,
               0
-            ],
-            "lerp_mode": "catmullrom"
+            ]
           }
         }
       }
