@@ -129,6 +129,20 @@ public class TronosCommand {
                 // SISTEMA DE NPC COMMANDS
                 .then(Commands.literal("npc")
                         .requires(src -> src.hasPermission(2))
+                        .then(Commands.literal("modelos")
+                                .executes(ctx -> listarModelosNpc(ctx.getSource())))
+                        .then(Commands.literal("soldado")
+                                .then(Commands.argument("equipo", StringArgumentType.string())
+                                        .executes(ctx -> crearSoldado(ctx.getSource(), StringArgumentType.getString(ctx, "equipo")))))
+                        .then(Commands.literal("soldados")
+                                .then(Commands.argument("equipo", StringArgumentType.string())
+                                        .then(Commands.argument("cantidad", IntegerArgumentType.integer(1, 100))
+                                                .executes(ctx -> crearSoldados(ctx.getSource(), StringArgumentType.getString(ctx, "equipo"), IntegerArgumentType.getInteger(ctx, "cantidad"))))))
+                        .then(Commands.literal("batalla")
+                                .then(Commands.literal("iniciar")
+                                        .executes(ctx -> iniciarBatalla(ctx.getSource())))
+                                .then(Commands.literal("detener")
+                                        .executes(ctx -> detenerBatalla(ctx.getSource()))))
                         .then(Commands.literal("listar")
                                 .executes(ctx -> listarNpcs(ctx.getSource())))
                         .then(Commands.literal("crear")
@@ -1082,6 +1096,77 @@ public class TronosCommand {
         return 1;
     }
 
+    private static int listarModelosNpc(CommandSourceStack src) {
+        src.sendSuccess(() -> Component.literal("§6=== MODELOS DE NPC REGISTRADOS EN EL MOD ==="), false);
+        String[] modelos = {
+            "archer", "blacksmith", "butcher", "farmer", "guard",
+            "guardcyan", "guardgreen", "guardorange", "guardparts", "guardpink",
+            "guardpurple", "guardred", "guardyellow", "wizard"
+        };
+        int i = 1;
+        for (String m : modelos) {
+            final int idx = i++;
+            final String mName = m;
+            src.sendSuccess(() -> Component.literal("§e" + idx + ". §f" + mName), false);
+        }
+        return 1;
+    }
+
+    private static int crearSoldado(CommandSourceStack src, String equipo) {
+        if (!(src.getEntity() instanceof ServerPlayer player)) {
+            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
+            return 0;
+        }
+
+        com.mundodetronos2.entity.SoldierEntity soldier = com.mundodetronos2.init.EntityInit.SOLDIER.get().create(player.level());
+        if (soldier == null) return 0;
+
+        soldier.setTeamId(equipo);
+        soldier.moveTo(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot());
+        soldier.setCustomName(Component.literal("§cSoldado (" + equipo.toUpperCase() + ")"));
+        soldier.setCustomNameVisible(true);
+
+        player.level().addFreshEntity(soldier);
+        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Soldado del equipo '" + equipo + "' generado correctamente."), true);
+        return 1;
+    }
+
+    private static int crearSoldados(CommandSourceStack src, String equipo, int cantidad) {
+        if (!(src.getEntity() instanceof ServerPlayer player)) {
+            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
+            return 0;
+        }
+
+        for (int i = 0; i < cantidad; i++) {
+            com.mundodetronos2.entity.SoldierEntity soldier = com.mundodetronos2.init.EntityInit.SOLDIER.get().create(player.level());
+            if (soldier == null) continue;
+
+            soldier.setTeamId(equipo);
+            double offsetX = (player.getRandom().nextDouble() - 0.5D) * 4.0D;
+            double offsetZ = (player.getRandom().nextDouble() - 0.5D) * 4.0D;
+            soldier.moveTo(player.getX() + offsetX, player.getY(), player.getZ() + offsetZ, player.getYRot(), player.getXRot());
+            soldier.setCustomName(Component.literal("§cSoldado (" + equipo.toUpperCase() + ")"));
+            soldier.setCustomNameVisible(true);
+
+            player.level().addFreshEntity(soldier);
+        }
+
+        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Generados " + cantidad + " soldados del equipo '" + equipo + "'."), true);
+        return 1;
+    }
+
+    private static int iniciarBatalla(CommandSourceStack src) {
+        com.mundodetronos2.npc.BattleManager.setBattleActive(true);
+        src.sendSuccess(() -> Component.literal("§c[Mundo de Tronos] ¡BATALLA INICIADA! Los soldados comenzarán el combate."), true);
+        return 1;
+    }
+
+    private static int detenerBatalla(CommandSourceStack src) {
+        com.mundodetronos2.npc.BattleManager.setBattleActive(false);
+        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Batalla detenida. Los soldados vuelven al estado de reposo/espera."), true);
+        return 1;
+    }
+
     private static int listarNpcs(CommandSourceStack src) {
         src.sendSuccess(() -> Component.literal("§6=== NPC DISPONIBLES EN MUNDO DE TRONOS 2 ==="), false);
         int index = 1;
@@ -1099,28 +1184,21 @@ public class TronosCommand {
             return 0;
         }
 
-        com.mundodetronos2.npc.NpcRegistryManager.NpcDefinition def = com.mundodetronos2.npc.NpcRegistryManager.getDefinition(tipoOrId);
-        if (def == null) {
-            src.sendFailure(Component.literal("§c[Mundo de Tronos] ID/Tipo de NPC '" + tipoOrId + "' no reconocido. Usa '/tronos npc listar' para ver los disponibles."));
-            return 1;
-        }
-
-        com.mundodetronos2.entity.GoddessNPCEntity npc = com.mundodetronos2.init.EntityInit.GODDESS_NPC.get().create(player.level());
+        // Standard custom NPC creation via model name or registered NPC definition
+        com.mundodetronos2.entity.CustomNPCEntity npc = com.mundodetronos2.init.EntityInit.CUSTOM_NPC.get().create(player.level());
         if (npc == null) return 0;
 
-        npc.setNpcType(def.npcType);
-        npc.setSkinName(def.defaultSkin);
+        npc.setNpcModel(tipoOrId);
+        npc.setNpcTexture(tipoOrId);
         npc.moveTo(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot());
-        npc.setNoAi(false);
 
-        String finalName = nombre != null ? nombre : def.defaultName;
+        String finalName = nombre != null ? nombre : tipoOrId.toUpperCase();
         npc.setCustomName(Component.literal(finalName));
         npc.setCustomNameVisible(true);
 
         player.level().addFreshEntity(npc);
-        com.mundodetronos2.npc.NpcRegistryManager.registerNpcInstance(npc, def, finalName);
 
-        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] NPC '" + finalName + "' (" + def.internalId + ") creado y registrado exitosamente."), true);
+        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] NPC '" + finalName + "' (" + tipoOrId + ") creado exitosamente."), true);
         return 1;
     }
 
