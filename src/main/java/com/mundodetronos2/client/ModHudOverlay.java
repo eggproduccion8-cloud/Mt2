@@ -333,13 +333,22 @@ public class ModHudOverlay {
         int x = (width - barWidth) / 2;
         int y = 25;
 
+        int currentHp = 100;
+        int maxHp = 100;
+
         graphics.fill(x - 2, y - 2, x + barWidth + 2, y + barHeight + 2, 0xFF000000);
         graphics.fill(x, y, x + barWidth, y + barHeight, 0xFF444444);
-        graphics.fill(x, y, x + (int)(barWidth * 0.8D), y + barHeight, 0xFF55FF55);
+
+        double fillRatio = (double) currentHp / (double) maxHp;
+        int fillWidth = (int) (barWidth * fillRatio);
+
+        if (fillWidth > 0) {
+            graphics.fill(x, y, x + fillWidth, y + barHeight, 0xFF55FF55);
+        }
 
         Minecraft mc = Minecraft.getInstance();
         String title = "MURALLA DE PIEDRA OFICIAL";
-        String hpText = "80 / 100 HP";
+        String hpText = currentHp + " / " + maxHp + " HP";
 
         int titleWidth = mc.font.width(title);
         int hpWidth = mc.font.width(hpText);

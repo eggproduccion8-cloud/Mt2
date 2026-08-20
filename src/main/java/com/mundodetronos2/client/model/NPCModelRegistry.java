@@ -32,9 +32,10 @@ public class NPCModelRegistry {
         ResourceManager rm = Minecraft.getInstance().getResourceManager();
 
         String[] knownModels = {
-            "archer", "blacksmith", "butcher", "farmer", "guard",
+            "adventurer", "anchor", "archer", "blacksmith", "butcher", "farmer", "guard",
             "guardcyan", "guardgreen", "guardorange", "guardparts", "guardpink",
-            "guardpurple", "guardred", "guardyellow", "npcgreeting", "wizard"
+            "guardpurple", "guardred", "guardyellow", "king", "lootbag", "minecart",
+            "miner", "npcgreeting", "pirate", "tap", "tavern", "throne", "wizard"
         };
 
         for (String id : knownModels) {

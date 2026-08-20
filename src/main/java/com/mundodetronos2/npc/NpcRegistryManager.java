@@ -181,6 +181,12 @@ public class NpcRegistryManager {
         registerDef(new NpcDefinition("custodio_trono", "Custodio del Trono", "Grog", "custodio_trono", false, 0, 0, null, null, null));
         registerDef(new NpcDefinition("maestro_roles", "Maestro de Roles", "Alex", "maestro_roles", false, 0, 0, null, null, null));
         registerDef(new NpcDefinition("mercader_gremio", "Mercader del Gremio", "Steve", "mercader_gremio", false, 0, 0, null, null, null));
+
+        // New Character NPCs
+        registerDef(new NpcDefinition("adventurer", "Aventurero", "adventurer", "adventurer", false, 0, 0, null, null, null));
+        registerDef(new NpcDefinition("king", "Rey", "king", "king", false, 0, 0, null, null, null));
+        registerDef(new NpcDefinition("miner", "Minero", "miner", "miner", false, 0, 0, null, null, null));
+        registerDef(new NpcDefinition("pirate", "Pirata", "pirate", "pirate", false, 0, 0, null, null, null));
     }
 
     private static void registerDef(NpcDefinition def) {
