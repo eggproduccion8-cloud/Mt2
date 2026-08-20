@@ -35,6 +35,15 @@ public class NpcActionExecutor {
                 }
             }
         });
+        registerAction("COMPLETE_SAMUEL_INTRO", (player, arg) -> {
+            MessageManager.actionBar(player, "§a✔ Hablaste con Samuel. Ve con Karla al Gremio.");
+        });
+        registerAction("OPEN_GUILD_GUI", (player, arg) -> {
+            com.mundodetronos2.realm.RealmData realm = com.mundodetronos2.realm.RealmManager.getPlayerRealm(player.getUUID());
+            com.mundodetronos2.throne.ThroneData throne = realm != null && realm.getThroneId() != null ? com.mundodetronos2.throne.ThroneManager.getThroneById(realm.getThroneId()) : null;
+            java.util.List<com.mundodetronos2.realm.InviteData> invites = com.mundodetronos2.realm.RealmManager.getPlayerInvites(player.getUUID());
+            NetworkManager.sendToPlayer(new NetworkManager.S2COpenMainGuiPacket(realm, throne, invites), player);
+        });
         registerAction("COMPLETE_MANUEL", (player, arg) -> TutorialManager.completeManuel(player));
         registerAction("COMPLETE_MANUEL_TUT", (player, arg) -> TutorialManager.completeManuel(player));
         registerAction("DELIVER_WHEAT_LAURA", (player, arg) -> TutorialManager.deliverWheatLaura(player));
