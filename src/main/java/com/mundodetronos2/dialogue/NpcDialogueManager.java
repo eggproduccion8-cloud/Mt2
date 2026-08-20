@@ -101,7 +101,39 @@ public class NpcDialogueManager {
     }
 
     private static void populateDefaults() {
-        // 1. SAMUEL — PRIMER NPC DEL TUTORIAL
+        // 1. MANUEL — HERRERO Y TUTORIAL INICIAL
+        Map<String, DialogueNode> manuel = getOrCreateNpcTypeMap("manuel");
+
+        DialogueNode m01 = new DialogueNode("inicio",
+            "Bienvenido, viajero. Soy Manuel, el herrero del reino.\n\n" +
+            "Has puesto los pies en una tierra donde ningún nombre está escrito en piedra y donde cada reino comienza con una sola decisión.\n\n" +
+            "Aquí no basta con sobrevivir. Tendrás que construir y elegir tu equipo.",
+            "npc_manuel_001");
+        m01.addOption(new DialogueOption("¿Qué debo hacer?", "m_que_hacer", null));
+        m01.addOption(new DialogueOption("¿Dónde encuentro un equipo?", "m_equipo", null));
+        manuel.put("inicio", m01);
+
+        DialogueNode mQueHacer = new DialogueNode("m_que_hacer",
+            "Primero dirígete al Gremio a hablar con Karla.\n\n" +
+            "Ella se encargará de mostrarte los equipos disponibles para que te unas a uno.",
+            "npc_manuel_002");
+        mQueHacer.addOption(new DialogueOption("Iré al Gremio con Karla.", "m_final", null));
+        manuel.put("m_que_hacer", mQueHacer);
+
+        DialogueNode mEquipo = new DialogueNode("m_equipo",
+            "Existen 10 equipos principales representados por su color.\n\n" +
+            "Cada equipo puede tener hasta 6 integrantes. Habla con Karla en el Gremio para unirte a uno.",
+            "npc_manuel_003");
+        mEquipo.addOption(new DialogueOption("Entendido, iré con Karla.", "m_final", null));
+        manuel.put("m_equipo", mEquipo);
+
+        DialogueNode mFinal = new DialogueNode("m_final",
+            "Ve al Gremio y busca a Karla. Ella te guiará para elegir tu equipo.",
+            "npc_manuel_001");
+        mFinal.addOption(new DialogueOption("Voy al Gremio", "inicio", "COMPLETE_MANUEL"));
+        manuel.put("m_final", mFinal);
+
+        // 2. SAMUEL — PRIMER NPC DEL TUTORIAL
         Map<String, DialogueNode> samuel = getOrCreateNpcTypeMap("samuel");
 
         DialogueNode s01 = new DialogueNode("inicio",
@@ -179,12 +211,21 @@ public class NpcDialogueManager {
 
         // 2. KARLA — GREMIO Y EQUIPOS
         Map<String, DialogueNode> karla = getOrCreateNpcTypeMap("karla");
+
         DialogueNode k01 = new DialogueNode("inicio",
-            "¡Bienvenido al Gremio del Reino! Samuel me avisó de tu llegada.\n\n" +
-            "Aquí es donde los viajeros se unen bajo un estandarte para forjar su destino.",
-            "npc_laura_001");
-        k01.addOption(new DialogueOption("Abrir Panel del Gremio / Equipos", "inicio", "OPEN_GUILD_GUI"));
+            "¡Bienvenido al Gremio del Reino! Soy Karla.\n\n" +
+            "Aquí es donde los viajeros eligen su estandarte entre los 10 equipos oficiales del reino.",
+            "npc_karla_001");
+        k01.addOption(new DialogueOption("Abrir Panel de Equipos del Gremio", "inicio", "OPEN_GUILD_GUI"));
+        k01.addOption(new DialogueOption("¿Cómo funcionan los equipos?", "k_info", null));
         karla.put("inicio", k01);
+
+        DialogueNode kInfo = new DialogueNode("k_info",
+            "Existen 10 equipos predefinidos por color. Cada equipo admite hasta 6 integrantes.\n\n" +
+            "Puedes unirte desde este panel o con el comando /tronos team unir <color>.",
+            "npc_karla_002");
+        kInfo.addOption(new DialogueOption("Abrir Panel de Equipos", "inicio", "OPEN_GUILD_GUI"));
+        karla.put("k_info", kInfo);
 
         // 3. DIOSA MARÍA
         Map<String, DialogueNode> diosa = getOrCreateNpcTypeMap("diosa_maria");

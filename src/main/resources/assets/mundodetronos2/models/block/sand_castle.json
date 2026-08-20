@@ -3,7 +3,7 @@
 	"credit": "Made with Blockbench",
 	"texture_size": [512, 512],
 	"textures": {
-		"1": "block/fortress_turtle"
+		"1": "mundodetronos2:block/sand_castle"
 	},
 	"elements": [
 		{

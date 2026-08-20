@@ -307,6 +307,14 @@ public class GameEventHandler {
                 return;
             }
 
+            if (ThroneManager.isWallBlock(pos)) {
+                event.setCanceled(true);
+                if (event.getPlayer() instanceof ServerPlayer sp) {
+                    NetworkManager.sendToPlayer(new NetworkManager.S2CShowMessagePacket("§c[Mundo de Tronos] ¡Las murallas de la fortaleza son indestructibles! Usa Cargas de Asalto para destruirlas.", true), sp);
+                }
+                return;
+            }
+
             // Protección de zona
             Player player = event.getPlayer();
             String dim = player.level().dimension().location().toString();
@@ -316,6 +324,13 @@ public class GameEventHandler {
                     com.mundodetronos2.network.MessageManager.actionBar(sp, "§c⚠ Esta zona está protegida por una base enemiga.");
                 }
             }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onExplosionDetonate(net.minecraftforge.event.level.ExplosionEvent.Detonate event) {
+        if (!event.getLevel().isClientSide()) {
+            event.getAffectedBlocks().removeIf(pos -> ThroneManager.getThroneAt(pos) != null || ThroneManager.isWallBlock(pos));
         }
     }
 
@@ -353,7 +368,9 @@ public class GameEventHandler {
                     ThroneData throne = ThroneManager.registerThrone(realm.getId(), pos, dim, 3);
                     if (throne != null) {
                         throne.setProtectionRadius(75);
-                        com.mundodetronos2.network.MessageManager.actionBar(sp, "§a✔ ¡El Trono ha sido colocado y registrado con éxito!");
+                        com.mundodetronos2.throne.FortressWallManager.buildOrUpdateWall(sp.serverLevel(), throne);
+                        com.mundodetronos2.throne.DefenderManager.spawnInitialDefenders(sp.serverLevel(), throne);
+                        com.mundodetronos2.network.MessageManager.actionBar(sp, "§a✔ ¡El Trono ha sido colocado, fortaleza fortificada y defensores invocados!");
                         sp.serverLevel().sendParticles(
                             net.minecraft.core.particles.ParticleTypes.HAPPY_VILLAGER,
                             pos.getX() + 0.5D, pos.getY() + 1.5D, pos.getZ() + 0.5D,

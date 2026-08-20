@@ -242,7 +242,7 @@ public class InventoryEditorScreen extends Screen {
             if (config != null) {
                 if (isResizing) {
                     int deltaX = (int) mouseX - dragStartX;
-                    float newScale = Math.max(0.4f, Math.min(4.0f, initialScale + (deltaX / 100.0f)));
+                    float newScale = Math.max(0.25f, Math.min(4.0f, initialScale + (deltaX / 100.0f)));
                     config.scale = newScale;
                     return true;
                 } else if (isDragging) {
@@ -265,7 +265,7 @@ public class InventoryEditorScreen extends Screen {
                 if (delta > 0) {
                     config.scale = Math.min(4.0f, config.scale + 0.05f);
                 } else if (delta < 0) {
-                    config.scale = Math.max(0.4f, config.scale - 0.05f);
+                    config.scale = Math.max(0.25f, config.scale - 0.05f);
                 }
                 return true;
             }

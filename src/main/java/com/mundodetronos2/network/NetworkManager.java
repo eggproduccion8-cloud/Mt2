@@ -843,17 +843,13 @@ public class NetworkManager {
                 ServerPlayer player = ctx.get().getSender();
                 if (player == null) return;
 
-                if (msg.realmName.trim().isEmpty()) {
-                    sendToPlayer(new S2CShowMessagePacket("¡El nombre del reino no puede estar vacío!", true), player);
-                    return;
-                }
-
-                RealmData realm = RealmManager.createRealm(msg.realmName, player.getUUID(), player.getGameProfile().getName());
-                if (realm != null) {
-                    sendToPlayer(new S2CShowMessagePacket("¡Reino '" + realm.getName() + "' creado exitosamente!", false), player);
+                String colorKey = msg.realmName.toLowerCase().trim();
+                boolean ok = RealmManager.joinTeam(player, colorKey);
+                if (ok) {
+                    sendToPlayer(new S2CShowMessagePacket("¡Te has unido al equipo " + colorKey.toUpperCase() + "!", false), player);
                     C2SOpenMainGuiPacket.handle(new C2SOpenMainGuiPacket(), ctx);
                 } else {
-                    sendToPlayer(new S2CShowMessagePacket("No se pudo crear el reino. Nombre ya en uso o ya perteneces a un reino.", true), player);
+                    sendToPlayer(new S2CShowMessagePacket("No te pudiste unir al equipo " + colorKey.toUpperCase() + ". (¿Ya perteneces a uno o el equipo está lleno 6/6?)", true), player);
                 }
             });
             ctx.get().setPacketHandled(true);

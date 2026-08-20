@@ -42,24 +42,32 @@ public class GuildScreen extends Screen {
 
         if (!initialData.hasRealm()) {
             // UNASSIGNED PLAYER: 10 COLOR TEAM SELECTION GRID
-            int startX = centerX - 180;
-            int startY = centerY - 60;
-            int btnW = 70;
+            int startX = centerX - 200;
+            int startY = centerY - 50;
+            int btnW = 75;
             int btnH = 22;
 
             for (int i = 0; i < RealmManager.PREDEFINED_COLORS.length; i++) {
                 final String colorKey = RealmManager.PREDEFINED_COLORS[i];
                 int col = i % 5;
                 int row = i / 5;
-                int bx = startX + col * 74;
-                int by = startY + row * 40;
+                int bx = startX + col * 82;
+                int by = startY + row * 45;
 
                 String colorDisplay = colorKey.substring(0, 1).toUpperCase() + colorKey.substring(1);
+                com.mundodetronos2.realm.RealmData r = RealmManager.getRealmByColorKey(colorKey);
+                int count = r != null ? r.getMembers().size() : 0;
+                boolean isFull = count >= 6;
 
-                this.addRenderableWidget(Button.builder(Component.literal("§l" + colorDisplay), b -> {
+                Button btn = Button.builder(Component.literal(colorDisplay + "\n§7" + count + "/6"), b -> {
                     NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SCreateRealmPacket(colorKey));
                     this.onClose();
-                }).bounds(bx, by, btnW, btnH).build());
+                }).bounds(bx, by, btnW, btnH + 10).build();
+
+                if (isFull) {
+                    btn.active = false;
+                }
+                this.addRenderableWidget(btn);
             }
 
             this.addRenderableWidget(Button.builder(Component.literal("§cSalir"), b -> this.onClose())

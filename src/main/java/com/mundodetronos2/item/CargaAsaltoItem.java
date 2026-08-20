@@ -1,5 +1,6 @@
 package com.mundodetronos2.item;
 
+import com.mundodetronos2.block.CargaAsaltoBlockEntity;
 import com.mundodetronos2.realm.RealmData;
 import com.mundodetronos2.realm.RealmManager;
 import com.mundodetronos2.throne.ThroneData;
@@ -7,22 +8,32 @@ import com.mundodetronos2.throne.ThroneManager;
 import com.mundodetronos2.throne.ThroneState;
 import com.mundodetronos2.throne.ThroneAttackManager;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.UUID;
 
 public class CargaAsaltoItem extends Item {
 
-    public CargaAsaltoItem(Properties properties) {
+    private final int chargeLevel;
+
+    public CargaAsaltoItem(int chargeLevel, Properties properties) {
         super(properties);
+        this.chargeLevel = chargeLevel;
+    }
+
+    public CargaAsaltoItem(Properties properties) {
+        this(1, properties);
+    }
+
+    public int getChargeLevel() {
+        return chargeLevel;
     }
 
     @Override
@@ -72,11 +83,11 @@ public class CargaAsaltoItem extends Item {
         }
 
         boolean isThroneAttack = nearestThrone != null && nearestDistSq <= 25.0D;
-
-        boolean isWallStructure = isVerticalWallStructure(level, clickedPos, context.getClickedFace(), clickedState, blockName);
+        boolean isWallBlock = ThroneManager.isWallBlock(clickedPos);
+        boolean isWallStructure = isWallBlock || isVerticalWallStructure(level, clickedPos, context.getClickedFace(), clickedState, blockName);
 
         if (!isThroneAttack && !isWallStructure) {
-            com.mundodetronos2.network.MessageManager.actionBar(sp, "§c⚠ Esta Carga de Asalto no puede destruir ese bloque.");
+            com.mundodetronos2.network.MessageManager.actionBar(sp, "§c⚠ Esta Carga de Asalto Nivel " + chargeLevel + " no puede destruir ese bloque.");
             return InteractionResult.FAIL;
         }
 
@@ -108,6 +119,10 @@ public class CargaAsaltoItem extends Item {
         }
 
         level.setBlockAndUpdate(placePos, com.mundodetronos2.init.BlockInit.CARGA_ASALTO_BLOCK.get().defaultBlockState());
+        BlockEntity be = level.getBlockEntity(placePos);
+        if (be instanceof CargaAsaltoBlockEntity cargaBE) {
+            cargaBE.setChargeLevel(this.chargeLevel);
+        }
 
         // Registrar el ataque en el manager
         String attackerTeamName = "Sin Equipo";
@@ -117,11 +132,10 @@ public class CargaAsaltoItem extends Item {
 
         if (isThroneAttack) {
             ThroneAttackManager.startAttack(nearestThrone.getId(), placePos, level.dimension().location().toString(), playerId, attackerTeamName);
-            com.mundodetronos2.network.MessageManager.actionBar(sp, "§a✔ Carga de asalto colocada en el Trono. Detonando en 30 segundos.");
+            com.mundodetronos2.network.MessageManager.actionBar(sp, "§a✔ Carga Nivel " + chargeLevel + " colocada en el Trono. Detonando en 30 segundos.");
         } else {
-            // Muro / estructura vertical: asociar la carga directamente al clickedPos (bloque objetivo real)
             ThroneAttackManager.ChargeGroup group = ThroneAttackManager.registerBlockCharge(level.dimension().location().toString(), clickedPos, placePos, clickedState, playerId, attackerTeamName);
-            com.mundodetronos2.network.MessageManager.actionBar(sp, "§a✔ Carga de asalto colocada en muro (" + group.currentCharges + " / " + group.requiredCharges + " cargas). Detonando en 10s.");
+            com.mundodetronos2.network.MessageManager.actionBar(sp, "§a✔ Carga Nivel " + chargeLevel + " colocada en muro (" + group.currentCharges + " / " + group.requiredCharges + " cargas). Detonando en 10s.");
         }
 
         // Sonido de mecha de TNT
@@ -134,7 +148,6 @@ public class CargaAsaltoItem extends Item {
     }
 
     private boolean isVerticalWallStructure(Level level, BlockPos pos, net.minecraft.core.Direction clickedFace, BlockState state, String blockName) {
-        // Excluir terreno natural del suelo y decoraciones horizontales
         if (blockName.contains("dirt") || blockName.contains("grass") || blockName.contains("sand") ||
             blockName.contains("gravel") || blockName.contains("mud") || blockName.contains("clay") ||
             blockName.contains("farmland") || blockName.contains("path") || blockName.contains("podzol") ||
@@ -144,7 +157,6 @@ public class CargaAsaltoItem extends Item {
             return false;
         }
 
-        // Materiales estructurales permitidos (Madera, Piedra, Obsidiana)
         boolean isWood = blockName.contains("wood") || blockName.contains("log") || blockName.contains("planks") || blockName.contains("fence") || blockName.contains("slab") || blockName.contains("stairs") || state.is(net.minecraft.tags.BlockTags.PLANKS);
         boolean isStone = blockName.contains("stone") || blockName.contains("cobble") || blockName.contains("andesite") || blockName.contains("granite") || blockName.contains("diorite") || blockName.contains("deepslate") || blockName.contains("brick") || blockName.contains("basalt") || blockName.contains("obsidian");
 
@@ -152,7 +164,6 @@ public class CargaAsaltoItem extends Item {
             return false;
         }
 
-        // Comprobar que forma parte de una estructura vertical/pared
         boolean sideClick = clickedFace.getAxis().isHorizontal();
         BlockState aboveState = level.getBlockState(pos.above());
         BlockState belowState = level.getBlockState(pos.below());

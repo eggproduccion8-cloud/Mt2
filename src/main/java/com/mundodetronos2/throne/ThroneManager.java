@@ -165,16 +165,46 @@ public class ThroneManager {
         return throne;
     }
 
+    public static boolean isWallBlock(BlockPos pos) {
+        if (pos == null) return false;
+        for (ThroneData t : thronesById.values()) {
+            if (t.isWallBlock(pos)) return true;
+        }
+        return false;
+    }
+
+    public static ThroneData getThroneByWallBlock(BlockPos pos) {
+        if (pos == null) return null;
+        for (ThroneData t : thronesById.values()) {
+            if (t.isWallBlock(pos)) return t;
+        }
+        return null;
+    }
+
     public static void checkCooldownExpired(ThroneData throne) {
         if (throne.getState() == ThroneState.REPAIRING) {
             long now = System.currentTimeMillis();
             if (now >= throne.getCooldownEndsAt()) {
                 throne.setHealth(throne.getMaxHealth());
                 throne.setState(globalEventActive ? ThroneState.ACTIVE : ThroneState.PROTECTED);
+                restoreWallAndDefendersOnRepairEnd(throne);
                 SaveManager.markDirty();
                 RealmManager.save(false);
                 LOGGER.info("Trono del reino con ID {} finalizó su reparación y vuelve a la normalidad.", throne.getRealmId());
             }
+        }
+    }
+
+    public static void restoreWallAndDefendersOnRepairEnd(ThroneData throne) {
+        if (throne == null || throne.getPos() == null) return;
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        if (server == null) return;
+
+        ResourceLocation dimRl = new ResourceLocation(throne.getDimension());
+        ResourceKey<net.minecraft.world.level.Level> dimKey = ResourceKey.create(Registries.DIMENSION, dimRl);
+        ServerLevel level = server.getLevel(dimKey);
+        if (level != null) {
+            FortressWallManager.buildOrUpdateWall(level, throne);
         }
     }
 
@@ -190,6 +220,7 @@ public class ThroneManager {
             if (t.getState() == ThroneState.REPAIRING && now >= t.getCooldownEndsAt()) {
                 t.setHealth(t.getMaxHealth());
                 t.setState(globalEventActive ? ThroneState.ACTIVE : ThroneState.PROTECTED);
+                restoreWallAndDefendersOnRepairEnd(t);
                 changed = true;
                 LOGGER.info("Trono del reino con ID {} finalizó su reparación vía tick.", t.getRealmId());
             }
@@ -197,6 +228,11 @@ public class ThroneManager {
         if (changed) {
             SaveManager.markDirty();
             RealmManager.save(false);
+        }
+
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        if (server != null) {
+            DefenderManager.tick(server);
         }
     }
 }

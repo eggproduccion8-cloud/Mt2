@@ -3,7 +3,7 @@
 	"credit": "Made with Blockbench",
 	"texture_size": [64, 64],
 	"textures": {
-		"2": "block/sand_castle_broken"
+		"2": "mundodetronos2:block/sand_castle_parts"
 	},
 	"elements": [
 		{

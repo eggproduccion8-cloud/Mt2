@@ -24,6 +24,7 @@ public class MundoDeTronos2Mod {
 
         // Registrar los bloques y items en el bus del mod
         com.mundodetronos2.init.BlockInit.register(modEventBus);
+        com.mundodetronos2.init.BlockEntityInit.register(modEventBus);
         ItemInit.register(modEventBus);
         com.mundodetronos2.init.ModMenuTypes.register(modEventBus);
         com.mundodetronos2.init.EntityInit.register(modEventBus);
@@ -43,6 +44,7 @@ public class MundoDeTronos2Mod {
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
         TronosCommand.register(event.getDispatcher());
+        com.mundodetronos2.commands.CofreCommand.register(event.getDispatcher());
         LOGGER.info("Comandos de Mundo de Tronos 2 registrados con éxito.");
     }
 }

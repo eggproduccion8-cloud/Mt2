@@ -100,6 +100,51 @@ public class CustomNPCEntity extends PathfinderMob {
     }
 
     @Override
+    public net.minecraft.world.InteractionResult mobInteract(Player player, net.minecraft.world.InteractionHand hand) {
+        if (!player.level().isClientSide() && player instanceof net.minecraft.server.level.ServerPlayer sp) {
+            String name = this.getCustomName() != null ? this.getCustomName().getString() : "NPC";
+            String type = getNpcModel().toLowerCase().trim();
+            if (name.toLowerCase().contains("manuel")) type = "manuel";
+            else if (name.toLowerCase().contains("karla")) type = "karla";
+
+            if (sp.isCrouching() && sp.hasPermissions(2)) {
+                com.mundodetronos2.network.NetworkManager.S2COpenNpcEditorPacket editorPkt =
+                    new com.mundodetronos2.network.NetworkManager.S2COpenNpcEditorPacket(
+                        this.getId(),
+                        type,
+                        name,
+                        getNpcTexture(),
+                        com.mundodetronos2.dialogue.NpcDialogueManager.getSerializedNpcDialogues(type)
+                    );
+                com.mundodetronos2.network.NetworkManager.sendToPlayer(editorPkt, sp);
+                return net.minecraft.world.InteractionResult.sidedSuccess(player.level().isClientSide());
+            }
+
+            com.mundodetronos2.dialogue.DialogueNode initialNode = com.mundodetronos2.dialogue.NpcDialogueManager.getNode(type, "inicio");
+            if (initialNode != null) {
+                java.util.List<String> optionTexts = new java.util.ArrayList<>();
+                for (com.mundodetronos2.dialogue.DialogueOption opt : initialNode.getOptions()) {
+                    optionTexts.add(opt.getText());
+                }
+
+                com.mundodetronos2.network.NetworkManager.S2COpenNpcDialoguePacket pkt =
+                    new com.mundodetronos2.network.NetworkManager.S2COpenNpcDialoguePacket(
+                        this.getId(),
+                        type,
+                        name,
+                        initialNode.getText(),
+                        initialNode.getId(),
+                        getNpcTexture(),
+                        optionTexts
+                    );
+                com.mundodetronos2.network.NetworkManager.sendToPlayer(pkt, sp);
+                return net.minecraft.world.InteractionResult.sidedSuccess(player.level().isClientSide());
+            }
+        }
+        return super.mobInteract(player, hand);
+    }
+
+    @Override
     public boolean isInvulnerableTo(DamageSource source) {
         return true; // Normal NPCs are invulnerable
     }

@@ -26,6 +26,7 @@ import java.util.Set;
 
 public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu> {
 
+    public static final ResourceLocation FONDO_TEX = new ResourceLocation("mundodetronos2", "textures/gui/inventory/fondo.png");
     public static final ResourceLocation LOGO_T2 = new ResourceLocation("mundodetronos2", "textures/gui/t2.png");
     public static final ResourceLocation LOGO_EGG = new ResourceLocation("mundodetronos2", "textures/gui/egg.png");
     public static final ResourceLocation BUTTON_TEX = new ResourceLocation("mundodetronos2", "textures/gui/button.png");
@@ -342,58 +343,78 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         }
 
         // 1. ARMADURA (0..3) -> Pestaña PERSONAJE
-        int eqX = InventoryLayoutManager.getRenderX(InventoryComponentId.EQUIPMENT_SLOTS, w, h);
-        int eqY = InventoryLayoutManager.getRenderY(InventoryComponentId.EQUIPMENT_SLOTS, w, h);
+        InventoryLayoutManager.ComponentConfig eqConfig = InventoryLayoutManager.getConfig(InventoryComponentId.EQUIPMENT_SLOTS);
+        float eqScale = eqConfig.scale;
+        int eqX = InventoryLayoutManager.getRenderX(eqConfig, w, h);
+        int eqY = InventoryLayoutManager.getRenderY(eqConfig, w, h);
         for (int i = 0; i < 4; i++) {
-            this.menu.setSlotState(i, eqX + 1, eqY + i * 32 + 1, isPersonaje);
+            int frameY = eqY + (int) (i * 32 * eqScale);
+            this.menu.setSlotState(i, eqX + (int) (5 * eqScale), frameY + (int) (5 * eqScale), isPersonaje);
         }
 
         // 2. SEGUNDA MANO (4) -> Pestaña PERSONAJE
-        int offhandY = eqY + 4 * 32 + 10;
-        this.menu.setSlotState(4, eqX + 1, offhandY + 1, isPersonaje);
+        int offhandFrameY = eqY + (int) (4 * 32 * eqScale + 10 * eqScale);
+        this.menu.setSlotState(4, eqX + (int) (5 * eqScale), offhandFrameY + (int) (5 * eqScale), isPersonaje);
 
         // 3. CRAFTEO 3x3 (5 RESULTADO, 6..14 GRILLA) -> Pestaña FABRICACIÓN
-        int craftGridX = InventoryLayoutManager.getRenderX(InventoryComponentId.CRAFTING_STATION_3X3, w, h);
-        int craftGridY = InventoryLayoutManager.getRenderY(InventoryComponentId.CRAFTING_STATION_3X3, w, h);
+        InventoryLayoutManager.ComponentConfig craftConfig = InventoryLayoutManager.getConfig(InventoryComponentId.CRAFTING_STATION_3X3);
+        float craftScale = craftConfig.scale;
+        int craftGridX = InventoryLayoutManager.getRenderX(craftConfig, w, h);
+        int craftGridY = InventoryLayoutManager.getRenderY(craftConfig, w, h);
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 3; col++) {
-                this.menu.setSlotState(6 + col + row * 3, craftGridX + col * 26 + 1, craftGridY + row * 26 + 1, isCrafting);
+                int frameX = craftGridX + (int) (col * 26 * craftScale);
+                int frameY = craftGridY + (int) (row * 26 * craftScale);
+                this.menu.setSlotState(6 + col + row * 3, frameX + (int) (5 * craftScale), frameY + (int) (5 * craftScale), isCrafting);
             }
         }
-        this.menu.setSlotState(5, craftGridX + 140 + 1, craftGridY + 26 + 1, isCrafting);
+        int resFrameX = craftGridX + (int) (140 * craftScale);
+        int resFrameY = craftGridY + (int) (26 * craftScale);
+        this.menu.setSlotState(5, resFrameX + (int) (5 * craftScale), resFrameY + (int) (5 * craftScale), isCrafting);
 
         // 4. MOCHILA (15..59) -> Pestaña MOCHILA
-        int mochilaX = InventoryLayoutManager.getRenderX(InventoryComponentId.MOCHILA_CONTAINER, w, h);
-        int mochilaY = InventoryLayoutManager.getRenderY(InventoryComponentId.MOCHILA_CONTAINER, w, h);
+        InventoryLayoutManager.ComponentConfig mochilaConfig = InventoryLayoutManager.getConfig(InventoryComponentId.MOCHILA_CONTAINER);
+        float mochilaScale = mochilaConfig.scale;
+        int mochilaX = InventoryLayoutManager.getRenderX(mochilaConfig, w, h);
+        int mochilaY = InventoryLayoutManager.getRenderY(mochilaConfig, w, h);
         for (int row = 0; row < 5; row++) {
             for (int col = 0; col < 9; col++) {
-                this.menu.setSlotState(15 + col + row * 9, mochilaX + col * 26 + 1, mochilaY + row * 26 + 1, isBackpack);
+                int frameX = mochilaX + (int) (col * 26 * mochilaScale);
+                int frameY = mochilaY + (int) (row * 26 * mochilaScale);
+                this.menu.setSlotState(15 + col + row * 9, frameX + (int) (5 * mochilaScale), frameY + (int) (5 * mochilaScale), isBackpack);
             }
         }
 
         // 5. INVENTARIO PRINCIPAL REAL DEL JUGADOR 27 SLOTS (60..86)
-        int invX = InventoryLayoutManager.getRenderX(InventoryComponentId.PLAYER_INVENTORY_GRID, w, h);
-        int invY = InventoryLayoutManager.getRenderY(InventoryComponentId.PLAYER_INVENTORY_GRID, w, h);
+        InventoryLayoutManager.ComponentConfig invConfig = InventoryLayoutManager.getConfig(InventoryComponentId.PLAYER_INVENTORY_GRID);
+        float invScale = invConfig.scale;
+        int invX = InventoryLayoutManager.getRenderX(invConfig, w, h);
+        int invY = InventoryLayoutManager.getRenderY(invConfig, w, h);
 
         if (isCrafting) {
             invX = craftGridX;
-            invY = craftGridY + 110;
+            invY = craftGridY + (int) (110 * craftScale);
+            invScale = craftScale;
         } else if (isBackpack) {
             invX = mochilaX;
-            invY = mochilaY + 5 * 26 + 25;
+            invY = mochilaY + (int) ((5 * 26 + 25) * mochilaScale);
+            invScale = mochilaScale;
         }
 
         boolean invActive = isPersonaje || isCrafting || isBackpack;
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                this.menu.setSlotState(60 + col + row * 9, invX + col * 26 + 1, invY + row * 26 + 1, invActive);
+                int frameX = invX + (int) (col * 26 * invScale);
+                int frameY = invY + (int) (row * 26 * invScale);
+                this.menu.setSlotState(60 + col + row * 9, frameX + (int) (5 * invScale), frameY + (int) (5 * invScale), invActive);
             }
         }
 
         // 6. HOTBAR (87..95)
-        int hotbarY = invY + 80;
+        int hotbarFrameY = invY + (int) (80 * invScale);
         for (int col = 0; col < 9; col++) {
-            this.menu.setSlotState(87 + col, invX + col * 26 + 1, hotbarY + 1, invActive);
+            int frameX = invX + (int) (col * 26 * invScale);
+            this.menu.setSlotState(87 + col, frameX + (int) (5 * invScale), hotbarFrameY + (int) (5 * invScale), invActive);
         }
     }
 
@@ -413,8 +434,9 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         int w = this.width;
         int h = this.height;
 
-        // Fondo transparente limpio
-        graphics.fill(0, 0, w, h, 0x880A0D12);
+        // Renderizar el fondo completo a pantalla completa
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        graphics.blit(FONDO_TEX, 0, 0, 0, 0, w, h, 1672, 941);
 
         Player player = this.minecraft.player;
         String name = player != null ? player.getGameProfile().getName() : "JUGADOR";
@@ -468,44 +490,47 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
 
     private void renderPersonajeTab(GuiGraphics graphics, int w, int h, int mouseX, int mouseY, Player player, String name, String roleStr) {
         // LADO IZQUIERDO: EQUIPAMIENTO
-        int armorX = InventoryLayoutManager.getRenderX(InventoryComponentId.EQUIPMENT_SLOTS, w, h);
-        int armorY = InventoryLayoutManager.getRenderY(InventoryComponentId.EQUIPMENT_SLOTS, w, h);
+        InventoryLayoutManager.ComponentConfig eqConfig = InventoryLayoutManager.getConfig(InventoryComponentId.EQUIPMENT_SLOTS);
+        float eqScale = eqConfig.scale;
+        int armorX = InventoryLayoutManager.getRenderX(eqConfig, w, h);
+        int armorY = InventoryLayoutManager.getRenderY(eqConfig, w, h);
+        int slotSize = (int) (26 * eqScale);
 
         graphics.drawString(this.font, "EQUIPAMIENTO", armorX, armorY - 14, 0xFFFFD700, true);
 
         String[] armorNames = {"CASCO", "PECHERA", "PANTALONES", "BOTAS"};
         for (int i = 0; i < 4; i++) {
-            int sy = armorY + i * 32;
-            boolean hovered = mouseX >= armorX && mouseX <= armorX + 26 && mouseY >= sy && mouseY <= sy + 26;
-            drawSlotFrame(graphics, armorX, sy, hovered, 26);
+            int sy = armorY + (int) (i * 32 * eqScale);
+            boolean hovered = mouseX >= armorX && mouseX <= armorX + slotSize && mouseY >= sy && mouseY <= sy + slotSize;
+            drawSlotFrame(graphics, armorX, sy, hovered, slotSize);
 
             ItemStack armorStack = this.menu.getSlot(i).getItem();
-            graphics.drawString(this.font, armorNames[i], armorX + 32, sy + 2, 0x88FFFFFF, false);
+            graphics.drawString(this.font, armorNames[i], armorX + slotSize + 6, sy + 2, 0x88FFFFFF, false);
             if (!armorStack.isEmpty()) {
                 if (!EquipmentRestrictions.isItemAuthorized(armorStack, roleStr)) {
-                    graphics.drawString(this.font, "NO CLASS", armorX + 32, sy + 14, 0xFFFF5555, true);
+                    graphics.drawString(this.font, "NO CLASS", armorX + slotSize + 6, sy + 14, 0xFFFF5555, true);
                 } else {
-                    graphics.drawString(this.font, "EQUIPADO", armorX + 32, sy + 14, 0xFF55FF55, true);
+                    graphics.drawString(this.font, "EQUIPADO", armorX + slotSize + 6, sy + 14, 0xFF55FF55, true);
                 }
             } else {
-                graphics.drawString(this.font, "VACÍO", armorX + 32, sy + 14, 0x44FFFFFF, false);
+                graphics.drawString(this.font, "VACÍO", armorX + slotSize + 6, sy + 14, 0x44FFFFFF, false);
             }
         }
 
         // SEGUNDA MANO
-        int offhandY = armorY + 4 * 32 + 10;
-        boolean offHovered = mouseX >= armorX && mouseX <= armorX + 26 && mouseY >= offhandY && mouseY <= offhandY + 26;
-        drawSlotFrame(graphics, armorX, offhandY, offHovered, 26);
+        int offhandY = armorY + (int) (4 * 32 * eqScale + 10 * eqScale);
+        boolean offHovered = mouseX >= armorX && mouseX <= armorX + slotSize && mouseY >= offhandY && mouseY <= offhandY + slotSize;
+        drawSlotFrame(graphics, armorX, offhandY, offHovered, slotSize);
         ItemStack offhandStack = this.menu.getSlot(4).getItem();
-        graphics.drawString(this.font, "SEGUNDA MANO", armorX + 32, offhandY + 2, 0x88FFFFFF, false);
+        graphics.drawString(this.font, "SEGUNDA MANO", armorX + slotSize + 6, offhandY + 2, 0x88FFFFFF, false);
         if (!offhandStack.isEmpty()) {
             if (!EquipmentRestrictions.isItemAuthorized(offhandStack, roleStr)) {
-                graphics.drawString(this.font, "NO CLASS", armorX + 32, offhandY + 14, 0xFFFF5555, true);
+                graphics.drawString(this.font, "NO CLASS", armorX + slotSize + 6, offhandY + 14, 0xFFFF5555, true);
             } else {
-                graphics.drawString(this.font, "EQUIPADO", armorX + 32, offhandY + 14, 0xFF55FF55, true);
+                graphics.drawString(this.font, "EQUIPADO", armorX + slotSize + 6, offhandY + 14, 0xFF55FF55, true);
             }
         } else {
-            graphics.drawString(this.font, "VACÍO", armorX + 32, offhandY + 14, 0x44FFFFFF, false);
+            graphics.drawString(this.font, "VACÍO", armorX + slotSize + 6, offhandY + 14, 0x44FFFFFF, false);
         }
 
         // CENTRO: PERSONAJE 3D (FIJO, NO GIRA CON EL MOUSE)
@@ -544,33 +569,39 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         graphics.renderItem(carnetItem, statsX + 180, statsY);
 
         // LADO DERECHO: INVENTARIO REAL COMPLETO
-        int invX = InventoryLayoutManager.getRenderX(InventoryComponentId.PLAYER_INVENTORY_GRID, w, h);
-        int invY = InventoryLayoutManager.getRenderY(InventoryComponentId.PLAYER_INVENTORY_GRID, w, h);
+        InventoryLayoutManager.ComponentConfig invConfig = InventoryLayoutManager.getConfig(InventoryComponentId.PLAYER_INVENTORY_GRID);
+        int invX = InventoryLayoutManager.getRenderX(invConfig, w, h);
+        int invY = InventoryLayoutManager.getRenderY(invConfig, w, h);
 
         graphics.drawString(this.font, "INVENTARIO DEL JUGADOR", invX, invY - 14, 0xFFFFD700, true);
-        drawInventoryGrid(graphics, invX, invY, mouseX, mouseY);
+        drawInventoryGrid(graphics, invX, invY, invConfig.scale, mouseX, mouseY);
     }
 
     private void renderFabricacionTab(GuiGraphics graphics, int w, int h, int mouseX, int mouseY) {
         // LADO IZQUIERDO: CRAFTEO 3x3 Y RECETA SELECCIONADA
-        int craftGridX = InventoryLayoutManager.getRenderX(InventoryComponentId.CRAFTING_STATION_3X3, w, h);
-        int craftGridY = InventoryLayoutManager.getRenderY(InventoryComponentId.CRAFTING_STATION_3X3, w, h);
+        InventoryLayoutManager.ComponentConfig craftConfig = InventoryLayoutManager.getConfig(InventoryComponentId.CRAFTING_STATION_3X3);
+        float craftScale = craftConfig.scale;
+        int craftGridX = InventoryLayoutManager.getRenderX(craftConfig, w, h);
+        int craftGridY = InventoryLayoutManager.getRenderY(craftConfig, w, h);
+        int craftSlotSize = (int) (26 * craftScale);
 
         graphics.drawString(this.font, "ESTACIÓN DE FABRICACIÓN", craftGridX, craftGridY - 14, 0xFFFFD700, true);
 
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 3; col++) {
-                int sx = craftGridX + col * 26;
-                int sy = craftGridY + row * 26;
-                boolean hov = mouseX >= sx && mouseX <= sx + 26 && mouseY >= sy && mouseY <= sy + 26;
-                drawSlotFrame(graphics, sx, sy, hov, 26);
+                int sx = craftGridX + (int) (col * 26 * craftScale);
+                int sy = craftGridY + (int) (row * 26 * craftScale);
+                boolean hov = mouseX >= sx && mouseX <= sx + craftSlotSize && mouseY >= sy && mouseY <= sy + craftSlotSize;
+                drawSlotFrame(graphics, sx, sy, hov, craftSlotSize);
             }
         }
 
-        graphics.drawString(this.font, "➔", craftGridX + 95, craftGridY + 30, 0xFFFFD700, true);
+        graphics.drawString(this.font, "➔", craftGridX + (int) (95 * craftScale), craftGridY + (int) (30 * craftScale), 0xFFFFD700, true);
 
-        boolean resHov = mouseX >= craftGridX + 140 && mouseX <= craftGridX + 166 && mouseY >= craftGridY + 26 && mouseY <= craftGridY + 52;
-        drawSlotFrame(graphics, craftGridX + 140, craftGridY + 26, resHov, 26);
+        int resX = craftGridX + (int) (140 * craftScale);
+        int resY = craftGridY + (int) (26 * craftScale);
+        boolean resHov = mouseX >= resX && mouseX <= resX + craftSlotSize && mouseY >= resY && mouseY <= resY + craftSlotSize;
+        drawSlotFrame(graphics, resX, resY, resHov, craftSlotSize);
 
         // BOTÓN FABRICAR (button.png)
         int fabBtnX = craftGridX + 130;
@@ -630,9 +661,9 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
 
         // ABAJO IZQUIERDA: INVENTARIO DEL JUGADOR
         int invX = craftGridX;
-        int invY = craftGridY + 110;
+        int invY = craftGridY + (int) (110 * craftConfig.scale);
         graphics.drawString(this.font, "MATERIALES / INVENTARIO", invX, invY - 14, 0xFFFFD700, true);
-        drawInventoryGrid(graphics, invX, invY, mouseX, mouseY);
+        drawInventoryGrid(graphics, invX, invY, craftConfig.scale, mouseX, mouseY);
 
         // LADO DERECHO: CATÁLOGO COMPLETO
         int catalogX = InventoryLayoutManager.getRenderX(InventoryComponentId.CRAFTING_CATALOG, w, h);
@@ -723,8 +754,11 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
 
     private void renderMochilaTab(GuiGraphics graphics, int w, int h, int mouseX, int mouseY) {
         int tier = this.menu.getBackpackTier();
-        int backpackX = InventoryLayoutManager.getRenderX(InventoryComponentId.MOCHILA_CONTAINER, w, h);
-        int backpackY = InventoryLayoutManager.getRenderY(InventoryComponentId.MOCHILA_CONTAINER, w, h);
+        InventoryLayoutManager.ComponentConfig mochilaConfig = InventoryLayoutManager.getConfig(InventoryComponentId.MOCHILA_CONTAINER);
+        float mochilaScale = mochilaConfig.scale;
+        int backpackX = InventoryLayoutManager.getRenderX(mochilaConfig, w, h);
+        int backpackY = InventoryLayoutManager.getRenderY(mochilaConfig, w, h);
+        int mochilaSlotSize = (int) (26 * mochilaScale);
         int maxUnlocked = tier * 15;
 
         int headerY = backpackY - 45;
@@ -738,44 +772,51 @@ public class RPGInventoryScreen extends AbstractContainerScreen<RPGInventoryMenu
         for (int row = 0; row < 5; row++) {
             for (int col = 0; col < 9; col++) {
                 int slotIdx = col + row * 9;
-                int sx = backpackX + col * 26;
-                int sy = backpackY + row * 26;
-                boolean hov = mouseX >= sx && mouseX <= sx + 26 && mouseY >= sy && mouseY <= sy + 26;
+                int sx = backpackX + (int) (col * 26 * mochilaScale);
+                int sy = backpackY + (int) (row * 26 * mochilaScale);
+                boolean hov = mouseX >= sx && mouseX <= sx + mochilaSlotSize && mouseY >= sy && mouseY <= sy + mochilaSlotSize;
 
                 if (slotIdx < maxUnlocked) {
-                    drawSlotFrame(graphics, sx, sy, hov, 26);
+                    drawSlotFrame(graphics, sx, sy, hov, mochilaSlotSize);
                 } else {
-                    drawSlotFrame(graphics, sx, sy, false, 26);
-                    graphics.fill(sx + 1, sy + 1, sx + 25, sy + 25, 0x88330000);
-                    graphics.drawString(this.font, "🔒", sx + 7, sy + 7, 0xFFFF5555, false);
+                    drawSlotFrame(graphics, sx, sy, false, mochilaSlotSize);
+                    graphics.fill(sx + 1, sy + 1, sx + mochilaSlotSize - 1, sy + mochilaSlotSize - 1, 0x88330000);
+                    graphics.drawString(this.font, "🔒", sx + (int)(7 * mochilaScale), sy + (int)(7 * mochilaScale), 0xFFFF5555, false);
                 }
             }
         }
 
-        int invY = backpackY + 5 * 26 + 25;
+        int invY = backpackY + (int) ((5 * 26 + 25) * mochilaConfig.scale);
         graphics.drawString(this.font, "INVENTARIO DEL JUGADOR", backpackX, invY - 14, 0xFFFFD700, true);
-        drawInventoryGrid(graphics, backpackX, invY, mouseX, mouseY);
+        drawInventoryGrid(graphics, backpackX, invY, mochilaConfig.scale, mouseX, mouseY);
     }
 
-    private void drawInventoryGrid(GuiGraphics graphics, int invX, int invY, int mouseX, int mouseY) {
+    private void drawInventoryGrid(GuiGraphics graphics, int invX, int invY, float invScale, int mouseX, int mouseY) {
+        int slotSize = (int) (26 * invScale);
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                int sx = invX + col * 26;
-                int sy = invY + row * 26;
-                boolean hov = mouseX >= sx && mouseX <= sx + 26 && mouseY >= sy && mouseY <= sy + 26;
-                drawSlotFrame(graphics, sx, sy, hov, 26);
+                int sx = invX + (int) (col * 26 * invScale);
+                int sy = invY + (int) (row * 26 * invScale);
+                boolean hov = mouseX >= sx && mouseX <= sx + slotSize && mouseY >= sy && mouseY <= sy + slotSize;
+                drawSlotFrame(graphics, sx, sy, hov, slotSize);
             }
         }
-        int hotbarY = invY + 80;
+        int hotbarY = invY + (int) (80 * invScale);
         for (int col = 0; col < 9; col++) {
-            int sx = invX + col * 26;
-            boolean hov = mouseX >= sx && mouseX <= sx + 26 && mouseY >= hotbarY && mouseY <= hotbarY + 26;
-            drawSlotFrame(graphics, sx, hotbarY, hov, 26);
+            int sx = invX + (int) (col * 26 * invScale);
+            boolean hov = mouseX >= sx && mouseX <= sx + slotSize && mouseY >= hotbarY && mouseY <= hotbarY + slotSize;
+            drawSlotFrame(graphics, sx, hotbarY, hov, slotSize);
         }
     }
+
 
     private void drawSlotFrame(GuiGraphics graphics, int x, int y, boolean hovered, int size) {
         ResourceLocation tex = hovered ? SLOTS_HOVER_TEX : SLOTS_TEX;
         graphics.blit(tex, x, y, 0, 0, size, size, size, size);
+    }
+
+    @Override
+    protected boolean isHovering(int x, int y, int width, int height, double mouseX, double mouseY) {
+        return mouseX >= (double) x && mouseX <= (double) (x + width) && mouseY >= (double) y && mouseY <= (double) (y + height);
     }
 }
