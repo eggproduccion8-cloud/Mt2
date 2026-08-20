@@ -278,18 +278,27 @@ public class TronosCommand {
                 .then(Commands.literal("limites")
                         .executes(ctx -> toggleLimits(ctx.getSource())))
                 .then(Commands.literal("chat")
-                        .executes(ctx -> toggleChat(ctx.getSource())))
+                        .then(Commands.argument("jugador", EntityArgument.player())
+                                .requires(src -> src.hasPermission(2))
+                                .executes(ctx -> toggleChatTarget(ctx.getSource(), EntityArgument.getPlayer(ctx, "jugador"))))
+                        .executes(ctx -> toggleChatSelf(ctx.getSource())))
         );
     }
 
-    private static int toggleChat(CommandSourceStack src) {
+    private static int toggleChatSelf(CommandSourceStack src) {
         if (src.getEntity() instanceof ServerPlayer player) {
             NetworkManager.sendToPlayer(new NetworkManager.S2CToggleChatPacket(), player);
             return 1;
         } else {
-            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
+            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador o especificando un objetivo."));
             return 0;
         }
+    }
+
+    private static int toggleChatTarget(CommandSourceStack src, ServerPlayer target) {
+        NetworkManager.sendToPlayer(new NetworkManager.S2CToggleChatPacket(), target);
+        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Modo de chat alternado para " + target.getGameProfile().getName() + "."), true);
+        return 1;
     }
 
     // ------------------ PLAYER COMMANDS IMPLEMENTATION ------------------

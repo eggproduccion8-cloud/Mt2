@@ -67,24 +67,22 @@ public class CustomNPCRenderer<T extends CustomNPCEntity> extends EntityRenderer
 
         BlockbenchModel model = entry.model;
         for (BlockbenchModel.BoneGroup rootBone : model.rootBones) {
-            renderBoneGroup(rootBone, poseStack, vc, packedLight, animData, animTime, model.texWidth, model.texHeight, 0, 0, 0);
+            renderBoneGroup(rootBone, poseStack, vc, packedLight, animData, animTime, model.texWidth, model.texHeight);
         }
 
         poseStack.popPose();
     }
 
     private void renderBoneGroup(BlockbenchModel.BoneGroup bone, PoseStack poseStack, VertexConsumer vc, int packedLight,
-                                 AnimationEngine.AnimationData animData, float animTime, int texWidth, int texHeight,
-                                 float parentPivotX, float parentPivotY, float parentPivotZ) {
+                                 AnimationEngine.AnimationData animData, float animTime, int texWidth, int texHeight) {
         poseStack.pushPose();
 
-        // Convert absolute bone pivot to parent-relative pivot offset
-        float relPivotX = (bone.pivotX - parentPivotX) / 16.0F;
-        float relPivotY = (bone.pivotY - parentPivotY) / 16.0F;
-        float relPivotZ = (bone.pivotZ - parentPivotZ) / 16.0F;
+        float px = bone.pivotX / 16.0F;
+        float py = bone.pivotY / 16.0F;
+        float pz = bone.pivotZ / 16.0F;
 
-        // 1. Pivot translation
-        poseStack.translate(relPivotX, relPivotY, relPivotZ);
+        // 1. Move to the bone's pivot in model space
+        poseStack.translate(px, py, pz);
 
         // 2. Base rotations
         float rotX = bone.rotX;
@@ -118,8 +116,8 @@ public class CustomNPCRenderer<T extends CustomNPCEntity> extends EntityRenderer
         if (rotY != 0) poseStack.mulPose(Axis.YP.rotationDegrees(rotY));
         if (rotX != 0) poseStack.mulPose(Axis.XP.rotationDegrees(rotX));
 
-        // 4. Translate back from pivot relative to bone origin
-        poseStack.translate(-bone.pivotX / 16.0F, -bone.pivotY / 16.0F, -bone.pivotZ / 16.0F);
+        // 4. Move back from pivot
+        poseStack.translate(-px, -py, -pz);
 
         // 5. Render Cubes inside this bone
         Matrix4f poseMat = poseStack.last().pose();
@@ -129,9 +127,9 @@ public class CustomNPCRenderer<T extends CustomNPCEntity> extends EntityRenderer
             renderCube(cube, poseStack, poseMat, normMat, vc, packedLight, texWidth, texHeight);
         }
 
-        // 6. Render Child Bones using current bone pivot as parent pivot
+        // 6. Render Child Bones (children inherit parent transform seamlessly)
         for (BlockbenchModel.BoneGroup child : bone.children) {
-            renderBoneGroup(child, poseStack, vc, packedLight, animData, animTime, texWidth, texHeight, bone.pivotX, bone.pivotY, bone.pivotZ);
+            renderBoneGroup(child, poseStack, vc, packedLight, animData, animTime, texWidth, texHeight);
         }
 
         poseStack.popPose();
@@ -193,10 +191,24 @@ public class CustomNPCRenderer<T extends CustomNPCEntity> extends EntityRenderer
         float u2 = face.u2 / (float) texW;
         float v2 = face.v2 / (float) texH;
 
-        // Quad corners (v1 top-left, v2 bottom-right)
-        vc.vertex(pose, x1, y1, z1).color(255, 255, 255, 255).uv(u1, v2).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(norm, nx, ny, nz).endVertex();
-        vc.vertex(pose, x2, y2, z2).color(255, 255, 255, 255).uv(u2, v2).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(norm, nx, ny, nz).endVertex();
-        vc.vertex(pose, x3, y3, z3).color(255, 255, 255, 255).uv(u2, v1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(norm, nx, ny, nz).endVertex();
-        vc.vertex(pose, x4, y4, z4).color(255, 255, 255, 255).uv(u1, v1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(norm, nx, ny, nz).endVertex();
+        float[] uvs = new float[]{u1, v2, u2, v2, u2, v1, u1, v1};
+
+        // Handle UV rotations (0, 90, 180, 270)
+        int rot = (face.rotation % 360 + 360) % 360;
+        int shift = (rot / 90) * 2;
+
+        float cu1 = uvs[(0 + shift) % 8];
+        float cv1 = uvs[(1 + shift) % 8];
+        float cu2 = uvs[(2 + shift) % 8];
+        float cv2 = uvs[(3 + shift) % 8];
+        float cu3 = uvs[(4 + shift) % 8];
+        float cv3 = uvs[(5 + shift) % 8];
+        float cu4 = uvs[(6 + shift) % 8];
+        float cv4 = uvs[(7 + shift) % 8];
+
+        vc.vertex(pose, x1, y1, z1).color(255, 255, 255, 255).uv(cu1, cv1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(norm, nx, ny, nz).endVertex();
+        vc.vertex(pose, x2, y2, z2).color(255, 255, 255, 255).uv(cu2, cv2).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(norm, nx, ny, nz).endVertex();
+        vc.vertex(pose, x3, y3, z3).color(255, 255, 255, 255).uv(cu3, cv3).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(norm, nx, ny, nz).endVertex();
+        vc.vertex(pose, x4, y4, z4).color(255, 255, 255, 255).uv(cu4, cv4).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(norm, nx, ny, nz).endVertex();
     }
 }
