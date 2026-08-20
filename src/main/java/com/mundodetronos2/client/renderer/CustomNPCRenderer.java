@@ -45,10 +45,10 @@ public class CustomNPCRenderer<T extends CustomNPCEntity> extends EntityRenderer
 
         poseStack.pushPose();
 
-        // Standard entity transformation
+        // Standard Minecraft entity transformation: Y stays positive (head up, feet down)
         poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - entityYaw));
-        poseStack.scale(-1.0F, -1.0F, 1.0F);
-        poseStack.translate(0.0D, -1.5D, 0.0D);
+        poseStack.scale(-1.0F, 1.0F, -1.0F);
+        poseStack.translate(0.0D, 0.0D, 0.0D);
 
         ResourceLocation texLoc = getTextureLocation(entity);
         VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(texLoc));

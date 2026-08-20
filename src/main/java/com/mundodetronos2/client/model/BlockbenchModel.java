@@ -34,6 +34,7 @@ public class BlockbenchModel {
         public float maxX, maxY, maxZ;
         public float originX, originY, originZ;
         public float rotX, rotY, rotZ;
+        public boolean visible = true;
         public final Map<String, CubeFace> faces = new HashMap<>();
     }
 
@@ -67,6 +68,15 @@ public class BlockbenchModel {
 
                     Cube cube = new Cube();
                     String uuid = eObj.has("uuid") ? eObj.get("uuid").getAsString() : "";
+
+                    if (eObj.has("visibility")) {
+                        cube.visible = eObj.get("visibility").getAsBoolean();
+                    }
+
+                    // Skip invisible elements (hitboxes / bounding volumes)
+                    if (!cube.visible) {
+                        continue;
+                    }
 
                     if (eObj.has("from")) {
                         JsonArray f = eObj.getAsJsonArray("from");
@@ -135,6 +145,12 @@ public class BlockbenchModel {
             }
         } else if (element.isJsonObject()) {
             JsonObject obj = element.getAsJsonObject();
+
+            // Check bone visibility if present
+            if (obj.has("visibility") && !obj.get("visibility").getAsBoolean()) {
+                return;
+            }
+
             BoneGroup bone = new BoneGroup();
             bone.name = obj.has("name") ? obj.get("name").getAsString() : "unnamed";
             bone.uuid = obj.has("uuid") ? obj.get("uuid").getAsString() : "";
