@@ -568,12 +568,12 @@ public class NetworkManager {
                 ServerPlayer player = ctx.get().getSender();
                 if (player == null) return;
 
-                // Buscar un NPC de este tipo en la dimensión actual
-                com.mundodetronos2.entity.GoddessNPCEntity targetNpc = null;
+                // Buscar un CustomNPCEntity de este tipo en la dimensión actual
+                com.mundodetronos2.entity.CustomNPCEntity targetNpc = null;
                 for (ServerLevel level : player.getServer().getAllLevels()) {
                     if (level.dimension().location().toString().equals(player.level().dimension().location().toString())) {
                         for (net.minecraft.world.entity.Entity e : level.getAllEntities()) {
-                            if (e instanceof com.mundodetronos2.entity.GoddessNPCEntity npc && npc.getNpcType().equalsIgnoreCase(msg.npcType)) {
+                            if (e instanceof com.mundodetronos2.entity.CustomNPCEntity npc && npc.getNpcModel().equalsIgnoreCase(msg.npcType)) {
                                 targetNpc = npc;
                                 break;
                             }
@@ -584,10 +584,8 @@ public class NetworkManager {
                 if (targetNpc != null) {
                     targetNpc.mobInteract(player, net.minecraft.world.InteractionHand.MAIN_HAND);
                 } else {
-                    String defaultName = "Diosa María";
-                    if (msg.npcType.equalsIgnoreCase("sacerdote")) defaultName = "El Sacerdote";
-                    else if (msg.npcType.equalsIgnoreCase("herrero")) defaultName = "Samuel, el Herrero";
-                    else if (msg.npcType.equalsIgnoreCase("heraldo")) defaultName = "El Heraldo";
+                    String defaultName = "Manuel";
+                    if (msg.npcType.equalsIgnoreCase("ivan")) defaultName = "Iván";
 
                     com.mundodetronos2.dialogue.DialogueNode initialNode = com.mundodetronos2.dialogue.NpcDialogueManager.getNode(msg.npcType, "inicio");
                     if (initialNode != null) {
@@ -595,7 +593,7 @@ public class NetworkManager {
                         for (com.mundodetronos2.dialogue.DialogueOption opt : initialNode.getOptions()) {
                             optionTexts.add(opt.getText());
                         }
-                        sendToPlayer(new S2COpenNpcDialoguePacket(0, msg.npcType.toLowerCase(), defaultName, initialNode.getText(), initialNode.getId(), "Wyldune", optionTexts), player);
+                        sendToPlayer(new S2COpenNpcDialoguePacket(0, msg.npcType.toLowerCase(), defaultName, initialNode.getText(), initialNode.getId(), msg.npcType, optionTexts), player);
                     }
                 }
             });

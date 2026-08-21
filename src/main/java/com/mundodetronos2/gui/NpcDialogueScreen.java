@@ -92,10 +92,10 @@ public class NpcDialogueScreen extends Screen {
 
     @Override
     public void onClose() {
-        // Restore previous camera perspective upon closing
+        // Strictly restore 1st-person camera perspective upon closing dialogue
         Minecraft mc = Minecraft.getInstance();
-        if (mc != null && mc.options != null && previousCameraType != null) {
-            mc.options.setCameraType(previousCameraType);
+        if (mc != null && mc.options != null) {
+            mc.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON);
         }
         super.onClose();
     }

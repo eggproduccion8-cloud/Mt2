@@ -31,31 +31,25 @@ public class NPCModelRegistry {
         REGISTRY.clear();
         ResourceManager rm = Minecraft.getInstance().getResourceManager();
 
-        String[] knownModels = {
-            "adventurer", "anchor", "archer", "blacksmith", "butcher", "farmer", "guard",
-            "guardcyan", "guardgreen", "guardorange", "guardparts", "guardpink",
-            "guardpurple", "guardred", "guardyellow", "king", "lootbag", "minecart",
-            "miner", "npcgreeting", "pirate", "tap", "tavern", "throne", "wizard"
-        };
+        Map<ResourceLocation, Resource> modelResources = rm.listResources("models/blockbench", loc -> loc.getPath().endsWith(".bbmodel"));
 
-        for (String id : knownModels) {
+        for (Map.Entry<ResourceLocation, Resource> entryRes : modelResources.entrySet()) {
+            ResourceLocation modelLoc = entryRes.getKey();
+            String path = modelLoc.getPath();
+            String id = path.substring(path.lastIndexOf('/') + 1, path.length() - 8).toLowerCase(Locale.ROOT);
+
             ModelEntry entry = new ModelEntry(id);
 
-            // Load .bbmodel
-            ResourceLocation modelLoc = new ResourceLocation("mundodetronos2", "models/blockbench/" + id + ".bbmodel");
-            Optional<Resource> modelRes = rm.getResource(modelLoc);
-            if (modelRes.isPresent()) {
-                try (InputStream is = modelRes.get().open()) {
-                    entry.model = BlockbenchModel.parse(is);
-                    LOGGER.info("Loaded custom Blockbench model for NPC: {}", id);
-                } catch (Exception e) {
-                    LOGGER.error("Failed to load model asset: {}", modelLoc, e);
-                }
+            try (InputStream is = entryRes.getValue().open()) {
+                entry.model = BlockbenchModel.parse(is);
+                LOGGER.info("Loaded dynamic Blockbench model for NPC: {}", id);
+            } catch (Exception e) {
+                LOGGER.error("Failed to load model asset: {}", modelLoc, e);
+                continue;
             }
 
-            // Load .animation.json (e.g. guard.animation.json)
-            // Note: guard color variants (guardred, guardcyan, etc.) share guard.animation.json if guardred.animation.json does not exist.
-            String animId = id.startsWith("guard") && !id.equals("guardparts") ? "guard" : id;
+            // Dedicated or fallback animation JSON file
+            String animId = id.startsWith("guard") ? "guard" : id;
             ResourceLocation animLoc = new ResourceLocation("mundodetronos2", "animations/" + animId + ".animation.json");
             Optional<Resource> animRes = rm.getResource(animLoc);
             if (animRes.isPresent()) {
@@ -68,10 +62,16 @@ public class NPCModelRegistry {
                 }
             }
 
-            // Default texture location
-            ResourceLocation texLoc = new ResourceLocation("mundodetronos2", "textures/entity/" + id + ".png");
+            // Mapped or default texture resolution
+            String texName = id;
+            if (id.equals("guardparts")) texName = "guard";
+            else if (id.equals("npcgreeting")) texName = "helloeng";
+
+            ResourceLocation texLoc = new ResourceLocation("mundodetronos2", "textures/entity/" + texName + ".png");
             if (rm.getResource(texLoc).isPresent()) {
-                entry.textures.add(id);
+                entry.textures.add(texName);
+            } else {
+                LOGGER.warn("NPC TEXTURE MISSING for model '{}' at location: {}", id, texLoc);
             }
 
             if (entry.model != null) {

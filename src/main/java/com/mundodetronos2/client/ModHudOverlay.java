@@ -68,27 +68,33 @@ public class ModHudOverlay {
         }
 
         int x = 12;
-        int y = 70; // Left side below player status
-        int boxW = 140;
-        int boxH = 42;
+        int y = 70;
+        int boxW = 150;
 
-        // Clean subtle transparent MMORPG overlay without dark brown card fills
+        java.util.List<net.minecraft.util.FormattedCharSequence> nameLines = mc.font.split(net.minecraft.network.chat.Component.literal("§f" + ClientPacketHandler.hudActiveMissionTitle), boxW - 12);
+        java.util.List<net.minecraft.util.FormattedCharSequence> progLines = new java.util.ArrayList<>();
+        if (ClientPacketHandler.hudActiveMissionProgress != null && !ClientPacketHandler.hudActiveMissionProgress.isEmpty()) {
+            progLines = mc.font.split(net.minecraft.network.chat.Component.literal("§aProgreso: " + ClientPacketHandler.hudActiveMissionProgress), boxW - 12);
+        }
+
+        int boxH = 18 + (nameLines.size() * 11) + (progLines.size() * 11) + 4;
+
+        // Clean subtle transparent MMORPG overlay without truncating words
         graphics.fill(x - 2, y - 2, x + boxW + 2, y + boxH + 2, 0xAA111111);
         graphics.fill(x, y, x + boxW, y + boxH, 0xCC1A1A1A);
 
         // Gold Title Accent
         graphics.drawString(mc.font, "📜 MISIÓN ACTIVA", x + 6, y + 4, 0xFFFFD700, false);
 
-        // Mission Name
-        String name = ClientPacketHandler.hudActiveMissionTitle;
-        if (name.length() > 20) name = name.substring(0, 18) + "...";
-        graphics.drawString(mc.font, name, x + 6, y + 16, 0xFFFFFFFF, false);
+        int textY = y + 18;
+        for (net.minecraft.util.FormattedCharSequence line : nameLines) {
+            graphics.drawString(mc.font, line, x + 6, textY, 0xFFFFFFFF, false);
+            textY += 11;
+        }
 
-        // Progress Objective
-        if (ClientPacketHandler.hudActiveMissionProgress != null && !ClientPacketHandler.hudActiveMissionProgress.isEmpty()) {
-            String prog = "Objetivo: " + ClientPacketHandler.hudActiveMissionProgress;
-            if (prog.length() > 20) prog = prog.substring(0, 18) + "...";
-            graphics.drawString(mc.font, prog, x + 6, y + 27, 0xFF88FF88, false);
+        for (net.minecraft.util.FormattedCharSequence line : progLines) {
+            graphics.drawString(mc.font, line, x + 6, textY, 0xFF88FF88, false);
+            textY += 11;
         }
     }
 
