@@ -120,11 +120,7 @@ public class InventoryEditorScreen extends Screen {
     }
 
     private int getComponentBoxX(ComponentConfig config) {
-        int baseX = InventoryLayoutManager.getRenderX(config, this.width, this.height);
-        if (config.anchor == Anchor.BOTTOM_CENTER || config.anchor == Anchor.TOP_CENTER || config.anchor == Anchor.CENTER) {
-            return baseX - (int) (config.width * config.scale) / 2;
-        }
-        return baseX;
+        return InventoryLayoutManager.getRenderX(config, this.width, this.height);
     }
 
     private int getComponentBoxY(ComponentConfig config) {

@@ -22,7 +22,7 @@ public class NpcDialogueScreen extends Screen {
     private final String skinName;
     private final List<String> optionTexts;
 
-    private ResourceLocation skinTexture;
+    private net.minecraft.client.CameraType previousCameraType = net.minecraft.client.CameraType.FIRST_PERSON;
     private List<FormattedCharSequence> wrappedLines = new ArrayList<>();
     private int boxX;
     private int boxY;
@@ -52,38 +52,36 @@ public class NpcDialogueScreen extends Screen {
     protected void init() {
         this.clearWidgets();
 
-        // 1. Resolve skin texture
-        this.skinTexture = com.mundodetronos2.client.GoddessNPCRenderer.getSkinLocationByName(skinName);
+        // Switch camera to 3rd person back perspective on opening dialogue
+        Minecraft mc = Minecraft.getInstance();
+        if (mc != null && mc.options != null) {
+            this.previousCameraType = mc.options.getCameraType();
+            mc.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_BACK);
+        }
 
-        // 2. Responsive Box Dimension Calculations
+        // Responsive Box Dimension Calculations
         this.boxW = Math.max(260, this.width - 40);
         this.boxX = (this.width - this.boxW) / 2;
 
-        int faceSize = 36;
-        int textLeft = this.boxX + 12 + faceSize + 12;
-        int maxTextWidth = this.boxX + this.boxW - textLeft - 12;
-
-        this.wrappedLines = this.font.split(Component.literal("§0" + this.text), Math.max(120, maxTextWidth));
+        int maxTextWidth = this.boxX + this.boxW - 40;
+        this.wrappedLines = this.font.split(Component.literal(this.text), Math.max(120, maxTextWidth));
 
         int textHeight = this.wrappedLines.size() * 11;
-        this.boxH = Math.max(80, 32 + textHeight + 12);
+        this.boxH = Math.max(60, 32 + textHeight + 12);
         this.boxY = this.height - this.boxH - 12;
 
-        // 3. Position option buttons grouped on the right side
-        int btnW = Math.min(200, this.width - 40);
+        // Position option buttons grouped on the right side
+        int btnW = Math.min(220, this.width - 40);
         int btnH = 20;
-        int btnX = this.boxX + this.boxW - btnW - 12;
-        int startBtnY = this.boxY + 26;
+        int btnX = this.width - btnW - 20;
+        int startBtnY = this.height / 2 - (optionTexts.size() * 24) / 2;
 
         for (int i = 0; i < optionTexts.size(); i++) {
             final int index = i;
             String optionText = optionTexts.get(i);
-            if (optionText.length() > 32) {
-                optionText = optionText.substring(0, 29) + "...";
-            }
 
             this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(
-                btnX, startBtnY + (i * 22), btnW, btnH,
+                btnX, startBtnY + (i * 24), btnW, btnH,
                 Component.literal("➤ " + optionText),
                 btn -> {
                     NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SSelectDialogueOptionPacket(npcId, npcType, nodeId, index));
@@ -93,27 +91,29 @@ public class NpcDialogueScreen extends Screen {
     }
 
     @Override
+    public void onClose() {
+        // Restore previous camera perspective upon closing
+        Minecraft mc = Minecraft.getInstance();
+        if (mc != null && mc.options != null && previousCameraType != null) {
+            mc.options.setCameraType(previousCameraType);
+        }
+        super.onClose();
+    }
+
+    @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        // Subtle dark gradient background overlay (world in third person remains visible)
-        graphics.fill(0, 0, this.width, this.height, 0x44000000);
+        // Completely transparent background - 3rd person world view stays clear
+        int textX = 20;
+        int textY = this.height - (wrappedLines.size() * 12) - 30;
 
-        // Clean transparent MMORPG dialogue panel
-        graphics.fill(boxX - 2, boxY - 2, boxX + boxW + 2, boxY + boxH + 2, 0xAA111111);
-        graphics.fill(boxX, boxY, boxX + boxW, boxY + boxH, 0xDD222222);
+        // Clean NPC Name tag
+        String npcTitle = "[" + npcName + "]:";
+        graphics.drawString(this.font, npcTitle, textX, textY - 14, 0xFFFFAA00, true);
 
-        // Gold title accent line
-        graphics.fill(boxX + 6, boxY + 20, boxX + boxW - 6, boxY + 21, 0xFFD4AF37);
-
-        // Title NPC Name
-        String npcTitle = "💬 " + npcName.toUpperCase();
-        graphics.drawString(this.font, npcTitle, boxX + 12, boxY + 8, 0xFFFFD700, false);
-
-        // Render Wrapped Dialogue Lines
-        int textX = boxX + 12;
-        int textY = boxY + 28;
+        // Clean Dialogue Text
         for (FormattedCharSequence line : wrappedLines) {
-            graphics.drawString(this.font, line, textX, textY, 0xFFFFFFFF, false);
-            textY += 11;
+            graphics.drawString(this.font, line, textX, textY, 0xFFFFFFFF, true);
+            textY += 12;
         }
 
         super.render(graphics, mouseX, mouseY, partialTicks);

@@ -41,9 +41,9 @@ public class ThroneBlockEntityRenderer implements BlockEntityRenderer<ThroneBloc
 
         poseStack.pushPose();
 
-        // Center on block
+        // Center on block and scale 2x2 size
         poseStack.translate(0.5D, 0.0D, 0.5D);
-        poseStack.scale(-1.0F, 1.0F, -1.0F);
+        poseStack.scale(-2.0F, 2.0F, -2.0F);
         poseStack.translate(-0.5D, 0.0D, -0.5D);
 
         VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(entry.textureLocation));

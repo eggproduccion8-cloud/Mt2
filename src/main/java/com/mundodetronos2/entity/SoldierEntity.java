@@ -253,10 +253,9 @@ public class SoldierEntity extends CustomNPCEntity {
     @Override
     public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
         boolean hurt = super.doHurtTarget(target);
-        if (hurt) {
-            this.entityData.set(ATTACK_TICKS, 20);
-            this.swing(InteractionHand.MAIN_HAND, true);
-        }
+        this.entityData.set(ATTACK_TICKS, 20);
+        this.swing(InteractionHand.MAIN_HAND, true);
+        this.playAnimation("attack");
         return hurt;
     }
 

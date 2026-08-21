@@ -52,34 +52,38 @@ public class FortressWallManager {
 
         List<int[]> newWallBlocks = new ArrayList<>();
 
-        // Generate wall segments along 4 sides
+        // Generate wall segments along 4 sides with 3-block width depth
         for (int x = minX; x <= maxX; x++) {
-            // North wall (minZ)
-            if (!isEntrance(x, cx)) {
-                buildWallColumn(level, x, minZ, wallState, newWallBlocks);
-            } else {
-                clearEntranceColumn(level, x, minZ);
-            }
-            // South wall (maxZ)
-            if (!isEntrance(x, cx)) {
-                buildWallColumn(level, x, maxZ, wallState, newWallBlocks);
-            } else {
-                clearEntranceColumn(level, x, maxZ);
+            for (int w = -1; x + w >= minX && x + w <= maxX && w <= 1; w++) {
+                // North wall (minZ)
+                if (!isEntrance(x, cx)) {
+                    buildWallColumn(level, x, minZ + w, wallState, newWallBlocks);
+                } else {
+                    clearEntranceColumn(level, x, minZ + w);
+                }
+                // South wall (maxZ)
+                if (!isEntrance(x, cx)) {
+                    buildWallColumn(level, x, maxZ + w, wallState, newWallBlocks);
+                } else {
+                    clearEntranceColumn(level, x, maxZ + w);
+                }
             }
         }
 
         for (int z = minZ + 1; z < maxZ; z++) {
-            // West wall (minX)
-            if (!isEntrance(z, cz)) {
-                buildWallColumn(level, minX, z, wallState, newWallBlocks);
-            } else {
-                clearEntranceColumn(level, minX, z);
-            }
-            // East wall (maxX)
-            if (!isEntrance(z, cz)) {
-                buildWallColumn(level, maxX, z, wallState, newWallBlocks);
-            } else {
-                clearEntranceColumn(level, maxX, z);
+            for (int w = -1; w <= 1; w++) {
+                // West wall (minX)
+                if (!isEntrance(z, cz)) {
+                    buildWallColumn(level, minX + w, z, wallState, newWallBlocks);
+                } else {
+                    clearEntranceColumn(level, minX + w, z);
+                }
+                // East wall (maxX)
+                if (!isEntrance(z, cz)) {
+                    buildWallColumn(level, maxX + w, z, wallState, newWallBlocks);
+                } else {
+                    clearEntranceColumn(level, maxX + w, z);
+                }
             }
         }
 

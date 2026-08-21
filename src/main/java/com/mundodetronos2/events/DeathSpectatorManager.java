@@ -46,12 +46,12 @@ public class DeathSpectatorManager {
 
         BlockPos pos = player.blockPosition();
         String dim = player.level().dimension().location().toString();
-        SpectatorSession session = new SpectatorSession(playerId, player.getScoreboardName(), dim, pos, 10, false);
+        SpectatorSession session = new SpectatorSession(playerId, player.getScoreboardName(), dim, pos, 15, false);
 
         player.setGameMode(GameType.SPECTATOR);
         activeSessions.put(playerId, session);
 
-        player.sendSystemMessage(Component.literal("§c[Has muerto] §e" + player.getScoreboardName() + " ha muerto. Reapareciendo en 10 segundos..."));
+        player.sendSystemMessage(Component.literal("§c[Has muerto] §e" + player.getScoreboardName() + " ha muerto. Reapareciendo en 15 segundos..."));
     }
 
     public static void triggerThroneDestructionSpectating(net.minecraft.server.MinecraftServer server, RealmData realm) {
@@ -104,6 +104,9 @@ public class DeathSpectatorManager {
         player.getFoodData().setFoodLevel(20);
         player.fallDistance = 0.0F;
         player.setDeltaMovement(0, 0, 0);
+
+        // Send resurrection cinematic screen packet after 15s spectator period ends
+        com.mundodetronos2.network.NetworkManager.sendToPlayer(new com.mundodetronos2.network.NetworkManager.S2CStartDeathRebirthCinematicPacket(), player);
 
         BlockPos targetPos = null;
         ServerLevel targetLevel = player.serverLevel();

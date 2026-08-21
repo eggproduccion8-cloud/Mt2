@@ -48,8 +48,9 @@ public class CargaAsaltoItem extends Item {
             return InteractionResult.FAIL;
         }
 
-        // 1. Verificar si el evento global está activo
-        if (!ThroneManager.isGlobalEventActive()) {
+        // 1. Verificar si el evento global está activo (OPs/Admins or Test Thrones/Walls can bypass for testing)
+        boolean isOp = sp.hasPermissions(2);
+        if (!ThroneManager.isGlobalEventActive() && !isOp) {
             com.mundodetronos2.network.MessageManager.actionBar(sp, "§c⚠ El trono está protegido. No hay ningún evento activo.");
             return InteractionResult.FAIL;
         }

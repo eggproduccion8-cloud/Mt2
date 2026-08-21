@@ -232,11 +232,8 @@ public class GameEventHandler {
             // Cancelar el evento de muerte real para que no muera físicamente
             event.setCanceled(true);
 
-            // Iniciar espectador de muerte de 10 segundos
+            // Iniciar espectador de muerte de 15 segundos donde murió
             DeathSpectatorManager.startPlayerDeathSpectating(sp);
-
-            // Enviar paquete para abrir la pantalla cinemática de resurrección de Isekai en el cliente
-            NetworkManager.sendToPlayer(new NetworkManager.S2CStartDeathRebirthCinematicPacket(), sp);
 
             // Enviar alerta global de muerte y pérdida de puntos a todos los jugadores online
             for (ServerPlayer player : sp.getServer().getPlayerList().getPlayers()) {
