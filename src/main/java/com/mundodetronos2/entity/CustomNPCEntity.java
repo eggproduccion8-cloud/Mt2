@@ -26,6 +26,8 @@ public class CustomNPCEntity extends PathfinderMob {
     private static final EntityDataAccessor<Integer> ANIMATION_START_TICK = SynchedEntityData.defineId(CustomNPCEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> ANIMATION_LOOP = SynchedEntityData.defineId(CustomNPCEntity.class, EntityDataSerializers.BOOLEAN);
 
+    public int clientAnimTick = 0;
+
     public CustomNPCEntity(EntityType<? extends PathfinderMob> type, Level level) {
         super(type, level);
         this.setPersistenceRequired();
@@ -126,6 +128,9 @@ public class CustomNPCEntity extends PathfinderMob {
         if (animName != null && !animName.isEmpty()) {
             this.setCurrentAnimation(animName);
             this.setAnimationStartTick(this.tickCount);
+            if (this.level().isClientSide()) {
+                this.clientAnimTick = 0;
+            }
         }
     }
 
@@ -223,11 +228,13 @@ public class CustomNPCEntity extends PathfinderMob {
     @Override
     public void tick() {
         super.tick();
-        if (!this.level().isClientSide()) {
+        if (this.level().isClientSide()) {
+            this.clientAnimTick++;
+        } else {
             String activeAnim = getCurrentAnimation();
             if (activeAnim != null && !activeAnim.isEmpty()) {
                 int elapsed = this.tickCount - getAnimationStartTick();
-                if (elapsed >= 30) { // Clear temporary animation after ~1.5s
+                if (elapsed >= 40) { // Clear temporary animation after ~2.0s
                     setCurrentAnimation("");
                 }
             }

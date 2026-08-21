@@ -53,13 +53,30 @@ public class CustomNPCRenderer<T extends CustomNPCEntity> extends EntityRenderer
         ResourceLocation texLoc = getTextureLocation(entity);
         VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(texLoc));
 
-        float animTime = ((entity.tickCount - entity.getAnimationStartTick()) + partialTicks) / 20.0F;
+        String activeAnimName = entity.getActualCurrentAnimation();
+
+        float animTime;
+        if (entity.getCurrentAnimation() != null && !entity.getCurrentAnimation().isEmpty()) {
+            // Temporary triggered animation (e.g. greet, attack, cast) -> use client tick relative to trigger
+            animTime = (entity.clientAnimTick + partialTicks) / 20.0F;
+        } else {
+            // Idle or loop animation -> continuous time clock
+            animTime = (entity.tickCount + partialTicks) / 20.0F;
+        }
 
         // Determine active animation
-        String activeAnimName = entity.getActualCurrentAnimation();
         AnimationEngine.AnimationData animData = null;
         if (entry.animationSet != null && activeAnimName != null && !activeAnimName.isEmpty()) {
             animData = entry.animationSet.animations.get(activeAnimName.toLowerCase(java.util.Locale.ROOT));
+            if (animData == null) {
+                // Fallback search for any matching animation key (case-insensitive)
+                for (java.util.Map.Entry<String, AnimationEngine.AnimationData> aEntry : entry.animationSet.animations.entrySet()) {
+                    if (aEntry.getKey().equalsIgnoreCase(activeAnimName)) {
+                        animData = aEntry.getValue();
+                        break;
+                    }
+                }
+            }
             if (animData == null) {
                 animData = entry.animationSet.animations.get("idle");
             }

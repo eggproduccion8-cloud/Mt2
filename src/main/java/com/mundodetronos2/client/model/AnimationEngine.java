@@ -150,8 +150,12 @@ public class AnimationEngine {
         if (keyframes.isEmpty()) return defaultVal;
         if (keyframes.size() == 1) return keyframes.get(0).vector;
 
-        if (loop && maxTime > 0) {
-            animTime = animTime % maxTime;
+        float maxKeyframeTime = keyframes.get(keyframes.size() - 1).time;
+        float effectiveMaxTime = maxTime > 0 ? maxTime : maxKeyframeTime;
+
+        if (loop && effectiveMaxTime > 0) {
+            animTime = animTime % effectiveMaxTime;
+            if (animTime < 0) animTime += effectiveMaxTime;
         }
 
         if (animTime <= keyframes.get(0).time) {

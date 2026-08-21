@@ -38,6 +38,28 @@ import java.util.UUID;
 public class TronosCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        // Register top-level /npc command
+        dispatcher.register(Commands.literal("npc")
+                .then(Commands.literal("list")
+                        .executes(ctx -> listarModelosNpc(ctx.getSource())))
+                .then(Commands.literal("spawn")
+                        .then(Commands.argument("tipo", StringArgumentType.string())
+                                .then(Commands.argument("nombre", StringArgumentType.string())
+                                        .executes(ctx -> crearNpc(ctx.getSource(), StringArgumentType.getString(ctx, "tipo"), StringArgumentType.getString(ctx, "nombre"))))
+                                .executes(ctx -> crearNpc(ctx.getSource(), StringArgumentType.getString(ctx, "tipo"), null))))
+                .then(Commands.literal("animation")
+                        .then(Commands.argument("anim", StringArgumentType.string())
+                                .executes(ctx -> reproducirAnimacionNpcCmd(ctx.getSource(), StringArgumentType.getString(ctx, "anim")))))
+                .then(Commands.literal("resetanimation")
+                        .executes(ctx -> reproducirAnimacionNpcCmd(ctx.getSource(), "idle")))
+                .then(Commands.literal("remove")
+                        .executes(ctx -> eliminarNpc(ctx.getSource())))
+                .then(Commands.literal("remove_all")
+                        .executes(ctx -> eliminarTodosNpcs(ctx.getSource())))
+                .then(Commands.literal("info")
+                        .executes(ctx -> infoNpc(ctx.getSource())))
+        );
+
         dispatcher.register(Commands.literal("tronos")
                 // Jugador Commands
                 .then(Commands.literal("crear")
@@ -1222,13 +1244,12 @@ public class TronosCommand {
 
     private static int listarModelosNpc(CommandSourceStack src) {
         src.sendSuccess(() -> Component.literal("§6=== MODELOS DE NPC REGISTRADOS EN EL MOD ==="), false);
-        String[] modelos = {
-            "archer", "blacksmith", "butcher", "farmer", "guard",
-            "guardcyan", "guardgreen", "guardorange", "guardparts", "guardpink",
-            "guardpurple", "guardred", "guardyellow", "wizard"
-        };
+        java.util.Collection<String> registered = com.mundodetronos2.client.model.NPCModelRegistry.getRegisteredModelIds();
+        if (registered.isEmpty()) {
+            registered = java.util.Set.of("archer", "adventurer", "bard", "blacksmith", "butcher", "farmer", "guard", "king", "miner", "pirate", "tavern", "wizard");
+        }
         int i = 1;
-        for (String m : modelos) {
+        for (String m : registered) {
             final int idx = i++;
             final String mName = m;
             src.sendSuccess(() -> Component.literal("§e" + idx + ". §f" + mName), false);
