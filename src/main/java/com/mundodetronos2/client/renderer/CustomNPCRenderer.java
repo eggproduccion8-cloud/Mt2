@@ -75,6 +75,11 @@ public class CustomNPCRenderer<T extends CustomNPCEntity> extends EntityRenderer
 
     private void renderBoneGroup(BlockbenchModel.BoneGroup bone, PoseStack poseStack, VertexConsumer vc, int packedLight,
                                  AnimationEngine.AnimationData animData, float animTime, int texWidth, int texHeight) {
+        // Skip rendering cape/cloak bone group if bone name contains "cape" or "capa"
+        if (bone.name != null && (bone.name.toLowerCase().contains("cape") || bone.name.toLowerCase().contains("capa"))) {
+            return;
+        }
+
         poseStack.pushPose();
 
         float px = bone.pivotX / 16.0F;
@@ -106,9 +111,9 @@ public class CustomNPCRenderer<T extends CustomNPCEntity> extends EntityRenderer
         if (channel != null) {
             float[] animRot = AnimationEngine.interpolate(channel.rotations, animTime, animData.length, animData.loop, null);
             if (animRot != null) {
-                rotX += animRot[0];
-                rotY += animRot[1];
-                rotZ += animRot[2];
+                rotX = animRot[0];
+                rotY = animRot[1];
+                rotZ = animRot[2];
             }
 
             float[] animPos = AnimationEngine.interpolate(channel.positions, animTime, animData.length, animData.loop, null);

@@ -181,6 +181,9 @@ public class TronosCommand {
                                         .executes(ctx -> detenerBatalla(ctx.getSource()))))
                         .then(Commands.literal("listar")
                                 .executes(ctx -> listarNpcs(ctx.getSource())))
+                        .then(Commands.literal("animacion")
+                                .then(Commands.argument("anim", StringArgumentType.string())
+                                        .executes(ctx -> reproducirAnimacionNpcCmd(ctx.getSource(), StringArgumentType.getString(ctx, "anim")))))
                         .then(Commands.literal("crear")
                                 .then(Commands.argument("tipo", StringArgumentType.string())
                                         .then(Commands.argument("nombre", StringArgumentType.string())
@@ -1322,6 +1325,23 @@ public class TronosCommand {
             String tutStr = def.isTutorial ? "§aSí (Orden: " + def.tutorialOrder + ")" : "§cNo";
             src.sendSuccess(() -> Component.literal("§e" + idx + ". " + def.defaultName + " §7(ID: §f" + def.internalId + "§7) | Tutorial: " + tutStr + " §7| Nivel req: §6" + def.requiredLevel), false);
         }
+        return 1;
+    }
+
+    private static int reproducirAnimacionNpcCmd(CommandSourceStack src, String animName) {
+        if (!(src.getEntity() instanceof ServerPlayer player)) {
+            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
+            return 0;
+        }
+
+        CustomNPCEntity npc = findNpcByNameOrType(player, null);
+        if (npc == null) {
+            src.sendFailure(Component.literal("§c[Mundo de Tronos] No se encontró ningún NPC cercano."));
+            return 0;
+        }
+
+        npc.playAnimation(animName);
+        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Animación '" + animName + "' activada en " + npc.getNpcModel() + "."), true);
         return 1;
     }
 

@@ -305,35 +305,6 @@ public class NetworkManager {
             }
         }
 
-        // If no custom active mission, check team tutorial stage
-        if (missionTitle.isEmpty()) {
-            if (realm == null) {
-                missionTitle = "Paso 1: Habla con Manuel";
-                missionProgress = "Habla con Manuel en Spawn";
-            } else {
-                com.mundodetronos2.tutorial.TutorialManager.RealmTutorialData tut = com.mundodetronos2.tutorial.TutorialManager.getTutorialData(realm.getId());
-                int totalMembers = Math.max(1, realm.getMembers().size());
-
-                switch (tut.tutorialLevel) {
-                    case 1 -> { missionTitle = "Gremio: Ve con Karla"; missionProgress = "Habla con Karla en Gremio"; }
-                    case 2 -> { missionTitle = "Misión 1 del Gremio: Laura"; missionProgress = "Trigo: " + tut.wheatCount + " / 150"; }
-                    case 3 -> { missionTitle = "Oscar: Armadura Inicial"; missionProgress = tut.oscarArmorClaimedMembers.size() + " / " + totalMembers; }
-                    case 4 -> { missionTitle = "Samuel: Prueba del Acero"; missionProgress = tut.samuelGolemHitMembers.size() + " / " + totalMembers; }
-                    case 5 -> { missionTitle = "Heraldo: Cargas de Asalto"; missionProgress = "Aprender Demolición"; }
-                    case 6 -> { missionTitle = "Guardia del Rey: Ojos del Reino"; missionProgress = tut.guardiaCheckpointsVisited.size() + " / 4"; }
-                    case 7 -> { missionTitle = "Sacerdote: Leyenda de María"; missionProgress = "Escuchar Leyenda"; }
-                    case 8 -> { missionTitle = "Capitán: Prueba de Unidad"; missionProgress = tut.arenaParticipatedMembers.size() + " / " + totalMembers; }
-                    case 9 -> { missionTitle = "Maestro: Prueba Final"; missionProgress = "Asedio Final"; }
-                    case 10 -> {
-                        if (!tut.throneClaimed) {
-                            missionTitle = "Sacerdote: Reclamar Trono"; missionProgress = "Líder debe Reclamar";
-                        } else {
-                            missionTitle = "Tutorial Completado"; missionProgress = "Aventura Libre";
-                        }
-                    }
-                }
-            }
-        }
 
         S2CHudSyncPacket pkt = new S2CHudSyncPacket(lives, points, remaining, roleStr, level, currentXp, neededXp, tutorialLevel, missionTitle, missionProgress, teamName, tx, ty, tz, tDim);
         sendToPlayer(pkt, player);
