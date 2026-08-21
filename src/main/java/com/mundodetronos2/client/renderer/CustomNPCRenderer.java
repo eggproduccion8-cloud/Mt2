@@ -53,13 +53,13 @@ public class CustomNPCRenderer<T extends CustomNPCEntity> extends EntityRenderer
         ResourceLocation texLoc = getTextureLocation(entity);
         VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(texLoc));
 
-        float animTime = (entity.tickCount + partialTicks) / 20.0F;
+        float animTime = ((entity.tickCount - entity.getAnimationStartTick()) + partialTicks) / 20.0F;
 
         // Determine active animation
         String activeAnimName = entity.getActualCurrentAnimation();
         AnimationEngine.AnimationData animData = null;
         if (entry.animationSet != null && activeAnimName != null && !activeAnimName.isEmpty()) {
-            animData = entry.animationSet.animations.get(activeAnimName);
+            animData = entry.animationSet.animations.get(activeAnimName.toLowerCase(java.util.Locale.ROOT));
             if (animData == null) {
                 animData = entry.animationSet.animations.get("idle");
             }
@@ -89,10 +89,21 @@ public class CustomNPCRenderer<T extends CustomNPCEntity> extends EntityRenderer
         float rotY = bone.rotY;
         float rotZ = bone.rotZ;
 
-        // 3. Apply animation overrides if present
-        if (animData != null && animData.boneChannels.containsKey(bone.name)) {
-            AnimationEngine.BoneAnimationChannel channel = animData.boneChannels.get(bone.name);
+        // 3. Apply animation overrides if present (flexible bone lookup)
+        AnimationEngine.BoneAnimationChannel channel = null;
+        if (animData != null) {
+            channel = animData.boneChannels.get(bone.name);
+            if (channel == null) {
+                for (java.util.Map.Entry<String, AnimationEngine.BoneAnimationChannel> chEntry : animData.boneChannels.entrySet()) {
+                    if (chEntry.getKey().replace("_", "").equalsIgnoreCase(bone.name.replace("_", ""))) {
+                        channel = chEntry.getValue();
+                        break;
+                    }
+                }
+            }
+        }
 
+        if (channel != null) {
             float[] animRot = AnimationEngine.interpolate(channel.rotations, animTime, animData.length, animData.loop, null);
             if (animRot != null) {
                 rotX += animRot[0];

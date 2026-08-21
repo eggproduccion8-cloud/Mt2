@@ -22,6 +22,9 @@ public class CustomNPCEntity extends PathfinderMob {
     private static final EntityDataAccessor<String> IDLE_ANIMATION = SynchedEntityData.defineId(CustomNPCEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<String> WALK_ANIMATION = SynchedEntityData.defineId(CustomNPCEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<String> INTERACTION_ANIMATION = SynchedEntityData.defineId(CustomNPCEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<String> CURRENT_ANIMATION = SynchedEntityData.defineId(CustomNPCEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Integer> ANIMATION_START_TICK = SynchedEntityData.defineId(CustomNPCEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Boolean> ANIMATION_LOOP = SynchedEntityData.defineId(CustomNPCEntity.class, EntityDataSerializers.BOOLEAN);
 
     public CustomNPCEntity(EntityType<? extends PathfinderMob> type, Level level) {
         super(type, level);
@@ -38,8 +41,9 @@ public class CustomNPCEntity extends PathfinderMob {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        this.goalSelector.addGoal(2, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(1, new net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal(this, 0.6D));
+        this.goalSelector.addGoal(2, new LookAtPlayerGoal(this, Player.class, 8.0F));
+        this.goalSelector.addGoal(3, new RandomLookAroundGoal(this));
     }
 
     @Override
@@ -50,6 +54,9 @@ public class CustomNPCEntity extends PathfinderMob {
         this.entityData.define(IDLE_ANIMATION, "idle");
         this.entityData.define(WALK_ANIMATION, "walk");
         this.entityData.define(INTERACTION_ANIMATION, "greet");
+        this.entityData.define(CURRENT_ANIMATION, "");
+        this.entityData.define(ANIMATION_START_TICK, 0);
+        this.entityData.define(ANIMATION_LOOP, true);
     }
 
     public String getNpcModel() {
@@ -92,13 +99,49 @@ public class CustomNPCEntity extends PathfinderMob {
         this.entityData.set(INTERACTION_ANIMATION, anim != null ? anim : "greet");
     }
 
+    public String getCurrentAnimation() {
+        return this.entityData.get(CURRENT_ANIMATION);
+    }
+
+    public void setCurrentAnimation(String anim) {
+        this.entityData.set(CURRENT_ANIMATION, anim != null ? anim : "");
+    }
+
+    public int getAnimationStartTick() {
+        return this.entityData.get(ANIMATION_START_TICK);
+    }
+
+    public void setAnimationStartTick(int tick) {
+        this.entityData.set(ANIMATION_START_TICK, tick);
+    }
+
+    public boolean isAnimationLoop() {
+        return this.entityData.get(ANIMATION_LOOP);
+    }
+
+    public void setAnimationLoop(boolean loop) {
+        this.entityData.set(ANIMATION_LOOP, loop);
+    }
+
     public void playAnimation(String animName) {
         if (animName != null && !animName.isEmpty()) {
-            this.setIdleAnimation(animName);
+            this.setCurrentAnimation(animName);
+            this.setAnimationStartTick(this.tickCount);
         }
     }
 
+    public boolean isMoving() {
+        return this.getDeltaMovement().horizontalDistanceSqr() > 0.001D;
+    }
+
     public String getActualCurrentAnimation() {
+        String activeTemp = getCurrentAnimation();
+        if (activeTemp != null && !activeTemp.isEmpty()) {
+            return activeTemp;
+        }
+        if (isMoving()) {
+            return getWalkAnimation();
+        }
         return getIdleAnimation();
     }
 
@@ -179,6 +222,20 @@ public class CustomNPCEntity extends PathfinderMob {
     }
 
     @Override
+    public void tick() {
+        super.tick();
+        if (!this.level().isClientSide()) {
+            String activeAnim = getCurrentAnimation();
+            if (activeAnim != null && !activeAnim.isEmpty()) {
+                int elapsed = this.tickCount - getAnimationStartTick();
+                if (elapsed >= 30) { // Clear temporary animation after ~1.5s
+                    setCurrentAnimation("");
+                }
+            }
+        }
+    }
+
+    @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         tag.putString("NpcModel", getNpcModel());
@@ -186,6 +243,8 @@ public class CustomNPCEntity extends PathfinderMob {
         tag.putString("IdleAnim", getIdleAnimation());
         tag.putString("WalkAnim", getWalkAnimation());
         tag.putString("InteractionAnim", getInteractionAnimation());
+        tag.putString("CurrentAnim", getCurrentAnimation());
+        tag.putInt("AnimStartTick", getAnimationStartTick());
     }
 
     @Override
@@ -196,5 +255,7 @@ public class CustomNPCEntity extends PathfinderMob {
         if (tag.contains("IdleAnim")) setIdleAnimation(tag.getString("IdleAnim"));
         if (tag.contains("WalkAnim")) setWalkAnimation(tag.getString("WalkAnim"));
         if (tag.contains("InteractionAnim")) setInteractionAnimation(tag.getString("InteractionAnim"));
+        if (tag.contains("CurrentAnim")) setCurrentAnimation(tag.getString("CurrentAnim"));
+        if (tag.contains("AnimStartTick")) setAnimationStartTick(tag.getInt("AnimStartTick"));
     }
 }
