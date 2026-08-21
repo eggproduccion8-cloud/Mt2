@@ -117,7 +117,7 @@ public class RoleCardScreen extends Screen {
         // Encabezado Principal
         ClientEvents.drawFlatCenteredString(graphics, this.font, "§4✧ CARNET ASPIRANTE ✧", centerX, y + 8, 0);
 
-        String translatedRole = roleName.equalsIgnoreCase("viajero") ? "Viajero" : MainGuiScreen.getTranslatedRole(roleName);
+        String translatedRole = roleName.equalsIgnoreCase("viajero") ? "Viajero" : getTranslatedRole(roleName);
         ClientEvents.drawFlatCenteredString(graphics, this.font, "§5TÍTULO: §0Aspirante  §5|  ROL: §1" + translatedRole.toUpperCase(), centerX, y + 19, 0);
 
         // Línea divisoria
@@ -159,7 +159,7 @@ public class RoleCardScreen extends Screen {
 
         int textX = faceX + faceSize + 12;
         graphics.drawString(this.font, "§0NOMBRE: §l" + playerName.toUpperCase(), textX, faceY + 2, 0, false);
-        graphics.drawString(this.font, "§5TÍTULO: §0Aspirante de " + MainGuiScreen.getTranslatedRole(roleName), textX, faceY + 14, 0, false);
+        graphics.drawString(this.font, "§5TÍTULO: §0Aspirante de " + getTranslatedRole(roleName), textX, faceY + 14, 0, false);
         graphics.drawString(this.font, "§1NIVEL: §2" + ClientPacketHandler.hudPlayerLevel, textX, faceY + 26, 0, false);
         graphics.drawString(this.font, "§1CAMPAÑA: §0Etapa " + ClientPacketHandler.hudTutorialLevel + " / 10", textX, faceY + 38, 0, false);
 
@@ -361,6 +361,20 @@ public class RoleCardScreen extends Screen {
             case 8 -> "Participa junto a tu equipo en la prueba de la Arena.";
             case 9 -> "Supera la prueba final de cargas para alcanzar el Nivel 10.";
             default -> "Habla con el Sacerdote siendo líder para reclamar el Trono de tu Reino.";
+        };
+    }
+
+    public static String getTranslatedRole(String role) {
+        if (role == null) return "Aspirante";
+        return switch (role.toLowerCase()) {
+            case "berserker" -> "Berserker";
+            case "guerrero" -> "Guerrero";
+            case "mago" -> "Mago";
+            case "arquero" -> "Arquero";
+            case "paladin" -> "Paladín";
+            case "draconico" -> "Dracónico";
+            case "clerigo" -> "Clérigo";
+            default -> "Aspirante";
         };
     }
 

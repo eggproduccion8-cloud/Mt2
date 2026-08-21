@@ -46,12 +46,10 @@ public class GameEventHandler {
         ThroneManager.init();
         RoleManager.init();
         ProgressionManager.init();
-        com.mundodetronos2.dialogue.NpcDialogueManager.init();
         AltarManager.load();
         TimeManager.init();
         PortalsManager.load();
         com.mundodetronos2.role.EquipmentManager.init();
-        com.mundodetronos2.npc.NpcRegistryManager.init();
         com.mundodetronos2.tutorial.TutorialManager.init();
     }
 
