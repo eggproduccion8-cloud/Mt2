@@ -181,6 +181,12 @@ public class NpcRegistryManager {
         registerDef(new NpcDefinition("custodio_trono", "Custodio del Trono", "Grog", "custodio_trono", false, 0, 0, null, null, null));
         registerDef(new NpcDefinition("maestro_roles", "Maestro de Roles", "Alex", "maestro_roles", false, 0, 0, null, null, null));
         registerDef(new NpcDefinition("mercader_gremio", "Mercader del Gremio", "Steve", "mercader_gremio", false, 0, 0, null, null, null));
+
+        // New Character NPCs
+        registerDef(new NpcDefinition("adventurer", "Aventurero", "adventurer", "adventurer", false, 0, 0, null, null, null));
+        registerDef(new NpcDefinition("king", "Rey", "king", "king", false, 0, 0, null, null, null));
+        registerDef(new NpcDefinition("miner", "Minero", "miner", "miner", false, 0, 0, null, null, null));
+        registerDef(new NpcDefinition("pirate", "Pirata", "pirate", "pirate", false, 0, 0, null, null, null));
     }
 
     private static void registerDef(NpcDefinition def) {
@@ -233,7 +239,7 @@ public class NpcRegistryManager {
         }
     }
 
-    public static void registerNpcInstance(GoddessNPCEntity entity, NpcDefinition def, String customName) {
+    public static void registerNpcInstance(com.mundodetronos2.entity.CustomNPCEntity entity, NpcDefinition def, String customName) {
         NpcConfig data = new NpcConfig(
                 entity.getUUID(),
                 def,
@@ -287,7 +293,7 @@ public class NpcRegistryManager {
         }
 
         for (Entity e : level.getAllEntities()) {
-            if (e instanceof GoddessNPCEntity) {
+            if (e instanceof com.mundodetronos2.entity.CustomNPCEntity) {
                 e.discard();
                 count++;
             }
@@ -302,7 +308,7 @@ public class NpcRegistryManager {
         if (server != null) {
             for (ServerLevel level : server.getAllLevels()) {
                 for (Entity e : level.getAllEntities()) {
-                    if (e instanceof GoddessNPCEntity) {
+                    if (e instanceof com.mundodetronos2.entity.CustomNPCEntity) {
                         e.discard();
                         count++;
                     }

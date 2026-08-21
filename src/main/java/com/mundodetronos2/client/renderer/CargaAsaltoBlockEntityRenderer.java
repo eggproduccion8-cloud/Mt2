@@ -22,54 +22,37 @@ public class CargaAsaltoBlockEntityRenderer implements BlockEntityRenderer<Carga
 
     @Override
     public void render(CargaAsaltoBlockEntity blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLight, int packedOverlay) {
-        int chargeLvl = blockEntity.getChargeLevel();
+        BlockModelRegistry.Entry entry = BlockModelRegistry.get("230426_bomb");
+        if (entry != null && entry.model != null) {
+            poseStack.pushPose();
+            poseStack.translate(0.5D, 0.0D, 0.5D);
+            poseStack.scale(-1.0F, 1.0F, -1.0F);
+            poseStack.translate(-0.5D, 0.0D, -0.5D);
 
-        if (chargeLvl == 2) {
-            BlockModelRegistry.Entry entry = BlockModelRegistry.get("230426_bomb");
-            if (entry != null && entry.model != null) {
-                poseStack.pushPose();
-                poseStack.translate(0.5D, 0.0D, 0.5D);
-                poseStack.scale(-1.0F, 1.0F, -1.0F);
-                poseStack.translate(-0.5D, 0.0D, -0.5D);
-
-                VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(entry.textureLocation));
-                BlockbenchModel model = entry.model;
-                for (BlockbenchModel.BoneGroup rootBone : model.rootBones) {
-                    renderBoneGroup(rootBone, poseStack, vc, packedLight, model.texWidth, model.texHeight);
-                }
-
-                poseStack.popPose();
-                return;
+            VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(entry.textureLocation));
+            BlockbenchModel model = entry.model;
+            for (BlockbenchModel.BoneGroup rootBone : model.rootBones) {
+                renderBoneGroup(rootBone, poseStack, vc, packedLight, model.texWidth, model.texHeight);
             }
+
+            poseStack.popPose();
         }
 
-        // Level 1: Vanilla TNT block texture rendering
-        ResourceLocation tntTex = new ResourceLocation("minecraft", "textures/block/tnt_side.png");
-        VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(tntTex));
+        // Render stacked count label (e.g. "x2" or "x3") above the charge if stacked
+        int count = blockEntity.getChargeCount();
+        if (count > 1) {
+            poseStack.pushPose();
+            poseStack.translate(0.5D, 0.6D, 0.5D);
+            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+            poseStack.mulPose(mc.getEntityRenderDispatcher().cameraOrientation());
+            poseStack.scale(-0.025F, -0.025F, 0.025F);
 
-        poseStack.pushPose();
-        poseStack.translate(0.5D, 0.0D, 0.5D);
-
-        Matrix4f poseMat = poseStack.last().pose();
-        Matrix3f normMat = poseStack.last().normal();
-
-        // Render small 0.5x0.5x0.5 cube
-        float min = -0.25F;
-        float max = 0.25F;
-        float h = 0.5F;
-
-        // North
-        renderQuad(poseMat, normMat, vc, min, 0, min, max, 0, min, max, h, min, min, h, min, 0, 0, -1, packedLight);
-        // South
-        renderQuad(poseMat, normMat, vc, max, 0, max, min, 0, max, min, h, max, max, h, max, 0, 0, 1, packedLight);
-        // West
-        renderQuad(poseMat, normMat, vc, min, 0, max, min, 0, min, min, h, min, min, h, max, -1, 0, 0, packedLight);
-        // East
-        renderQuad(poseMat, normMat, vc, max, 0, min, max, 0, max, max, h, max, max, h, min, 1, 0, 0, packedLight);
-        // Up
-        renderQuad(poseMat, normMat, vc, min, h, max, max, h, max, max, h, min, min, h, min, 0, 1, 0, packedLight);
-
-        poseStack.popPose();
+            String text = "x" + count;
+            float textWidth = mc.font.width(text);
+            Matrix4f matrix = poseStack.last().pose();
+            mc.font.drawInBatch(text, -textWidth / 2.0F, 0.0F, 0xFFFF00, false, matrix, buffer, net.minecraft.client.gui.Font.DisplayMode.NORMAL, 0, packedLight);
+            poseStack.popPose();
+        }
     }
 
     private void renderQuad(Matrix4f pose, Matrix3f norm, VertexConsumer vc,

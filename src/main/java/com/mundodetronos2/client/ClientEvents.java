@@ -310,15 +310,9 @@ public class ClientEvents {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null || mc.options.hideGui) return;
 
-        // Cancelar overlays vanilla durante gameplay
+        // Cancel strictly chat if custom chat is enabled
         ResourceLocation id = event.getOverlay().id();
-        if ((id.equals(VanillaGuiOverlay.CHAT_PANEL.id()) && enableCustomChat)
-            || id.equals(VanillaGuiOverlay.HOTBAR.id())
-            || id.equals(VanillaGuiOverlay.PLAYER_HEALTH.id())
-            || id.equals(VanillaGuiOverlay.FOOD_LEVEL.id())
-            || id.equals(VanillaGuiOverlay.AIR_LEVEL.id())
-            || id.equals(VanillaGuiOverlay.ARMOR_LEVEL.id())
-            || id.equals(VanillaGuiOverlay.EXPERIENCE_BAR.id())) {
+        if (id.equals(VanillaGuiOverlay.CHAT_PANEL.id()) && enableCustomChat) {
             event.setCanceled(true);
         }
     }

@@ -120,16 +120,20 @@ public class GuildScreen extends Screen {
         }
     }
 
+    private static final ResourceLocation FONDO_TEX = new ResourceLocation("mundodetronos2", "textures/gui/inventory/fondo.png");
+
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(graphics);
+        // Draw full-screen background image fondo.png preserving aspect ratio
+        RenderSystem.setShaderTexture(0, FONDO_TEX);
+        graphics.blit(FONDO_TEX, 0, 0, 0, 0, this.width, this.height, this.width, this.height);
 
         int centerX = this.width / 2;
         int centerY = this.height / 2;
 
         if (!initialData.hasRealm()) {
-            graphics.drawCenteredString(this.font, "§6§l✦ GREMIO — SELECCIÓN DE EQUIPO ✦", centerX, centerY - 85, 0xFFFFFFFF);
-            graphics.drawCenteredString(this.font, "§7Elige el equipo/color al que deseas pertenecer (Máximo 6 por equipo)", centerX, centerY - 72, 0xFFCCCCCC);
+            graphics.drawCenteredString(this.font, "§6§l✦ GREMIO — IVÁN TE DA LA BIENVENIDA ✦", centerX, centerY - 85, 0xFFFFFFFF);
+            graphics.drawCenteredString(this.font, "§7Elige el equipo al que deseas pertenecer (Máximo 6 miembros por equipo)", centerX, centerY - 72, 0xFFCCCCCC);
         } else {
             graphics.drawCenteredString(this.font, "§6§l✦ GREMIO DE MUNDO DE TRONOS ✦", centerX, centerY - 85, 0xFFFFFFFF);
 
@@ -137,10 +141,10 @@ public class GuildScreen extends Screen {
             int x = centerX - 50;
             int y = centerY - 50;
 
-            graphics.drawString(this.font, "§0Equipo: §1" + initialData.getRealmName(), x, y, 0, false);
-            graphics.drawString(this.font, "§0Color: §5" + initialData.getRealmColor(), x, y + 14, 0, false);
-            graphics.drawString(this.font, "§0Líder: §d" + (initialData.isOwner() ? "Tú eres el Líder" : "Líder Asignado"), x, y + 28, 0, false);
-            graphics.drawString(this.font, "§0Miembros: §2" + initialData.getMemberCount() + " / 6", x, y + 42, 0, false);
+            graphics.drawString(this.font, "§fEquipo: §1" + initialData.getRealmName(), x, y, 0xFFFFFFFF, false);
+            graphics.drawString(this.font, "§fColor: §5" + initialData.getRealmColor(), x, y + 14, 0xFFFFFFFF, false);
+            graphics.drawString(this.font, "§fLíder: §d" + (initialData.isOwner() ? "Tú eres el Líder" : "Líder Asignado"), x, y + 28, 0xFFFFFFFF, false);
+            graphics.drawString(this.font, "§fMiembros: §2" + initialData.getMemberCount() + " / 6", x, y + 42, 0xFFFFFFFF, false);
 
             if (showingRename && renameBox != null) {
                 this.renameBox.render(graphics, mouseX, mouseY, partialTicks);

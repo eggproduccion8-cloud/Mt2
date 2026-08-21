@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 public class CargaAsaltoBlockEntity extends BlockEntity {
 
     private int chargeLevel = 1;
+    private int chargeCount = 1;
 
     public CargaAsaltoBlockEntity(BlockPos pos, BlockState state) {
         super(BlockEntityInit.CARGA_ASALTO_BE.get(), pos, state);
@@ -22,9 +23,36 @@ public class CargaAsaltoBlockEntity extends BlockEntity {
         return chargeLevel;
     }
 
-    public void setChargeLevel(int level) {
-        this.chargeLevel = level;
+    public void setChargeLevel(int lvl) {
+        this.chargeLevel = lvl;
         setChanged();
+        if (this.level != null && !this.level.isClientSide) {
+            this.level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
+    }
+
+    public int getChargeCount() {
+        return chargeCount;
+    }
+
+    public void setChargeCount(int count) {
+        this.chargeCount = Math.min(3, Math.max(1, count));
+        setChanged();
+        if (this.level != null && !this.level.isClientSide) {
+            this.level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
+    }
+
+    public boolean addCharge() {
+        if (chargeCount < 3) {
+            chargeCount++;
+            setChanged();
+            if (this.level != null && !this.level.isClientSide) {
+                this.level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+            }
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -33,12 +61,16 @@ public class CargaAsaltoBlockEntity extends BlockEntity {
         if (tag.contains("ChargeLevel")) {
             this.chargeLevel = tag.getInt("ChargeLevel");
         }
+        if (tag.contains("ChargeCount")) {
+            this.chargeCount = tag.getInt("ChargeCount");
+        }
     }
 
     @Override
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.putInt("ChargeLevel", this.chargeLevel);
+        tag.putInt("ChargeCount", this.chargeCount);
     }
 
     @Override

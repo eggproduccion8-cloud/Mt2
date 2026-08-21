@@ -29,7 +29,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import com.mundodetronos2.entity.GoddessNPCEntity;
+import com.mundodetronos2.entity.CustomNPCEntity;
 import com.mundodetronos2.init.EntityInit;
 
 import java.util.List;
@@ -1361,13 +1361,13 @@ public class TronosCommand {
             player.getX() + range, player.getY() + range, player.getZ() + range
         );
 
-        java.util.List<com.mundodetronos2.entity.GoddessNPCEntity> npcs = player.level().getEntitiesOfClass(com.mundodetronos2.entity.GoddessNPCEntity.class, area);
+        java.util.List<com.mundodetronos2.entity.CustomNPCEntity> npcs = player.level().getEntitiesOfClass(com.mundodetronos2.entity.CustomNPCEntity.class, area);
         if (npcs.isEmpty()) {
             src.sendFailure(Component.literal("§c[Mundo de Tronos] No se encontró ningún NPC cerca para eliminar."));
             return 1;
         }
 
-        com.mundodetronos2.entity.GoddessNPCEntity npc = npcs.get(0);
+        com.mundodetronos2.entity.CustomNPCEntity npc = npcs.get(0);
         String name = npc.getCustomName() != null ? npc.getCustomName().getString() : "NPC";
         com.mundodetronos2.npc.NpcRegistryManager.removeNpcInstance(npc.getUUID());
         npc.discard();
@@ -1395,21 +1395,21 @@ public class TronosCommand {
         return 1;
     }
 
-    public static com.mundodetronos2.entity.GoddessNPCEntity findNpcByNameOrType(ServerPlayer player, String target) {
+    public static com.mundodetronos2.entity.CustomNPCEntity findNpcByNameOrType(ServerPlayer player, String target) {
         double range = 32.0D;
         net.minecraft.world.phys.AABB area = new net.minecraft.world.phys.AABB(
             player.getX() - range, player.getY() - range, player.getZ() - range,
             player.getX() + range, player.getY() + range, player.getZ() + range
         );
 
-        java.util.List<com.mundodetronos2.entity.GoddessNPCEntity> npcs = player.level().getEntitiesOfClass(com.mundodetronos2.entity.GoddessNPCEntity.class, area);
+        java.util.List<com.mundodetronos2.entity.CustomNPCEntity> npcs = player.level().getEntitiesOfClass(com.mundodetronos2.entity.CustomNPCEntity.class, area);
         if (npcs.isEmpty()) return null;
 
-        com.mundodetronos2.entity.GoddessNPCEntity closest = null;
+        com.mundodetronos2.entity.CustomNPCEntity closest = null;
         double minDistSq = Double.MAX_VALUE;
-        for (com.mundodetronos2.entity.GoddessNPCEntity npc : npcs) {
+        for (com.mundodetronos2.entity.CustomNPCEntity npc : npcs) {
             String name = npc.getCustomName() != null ? npc.getCustomName().getString().toLowerCase() : "";
-            String type = npc.getNpcType().toLowerCase();
+            String type = npc.getNpcModel().toLowerCase();
             if (target == null || name.contains(target.toLowerCase()) || type.equals(target.toLowerCase())) {
                 double d = player.distanceToSqr(npc);
                 if (d < minDistSq) {
@@ -1427,7 +1427,7 @@ public class TronosCommand {
             return 0;
         }
 
-        com.mundodetronos2.entity.GoddessNPCEntity npc = findNpcByNameOrType(player, null);
+        com.mundodetronos2.entity.CustomNPCEntity npc = findNpcByNameOrType(player, null);
         if (npc == null) {
             src.sendFailure(Component.literal("§c[Mundo de Tronos] No se encontró ningún NPC cerca."));
             return 1;
@@ -1436,10 +1436,9 @@ public class TronosCommand {
         String name = npc.getCustomName() != null ? npc.getCustomName().getString() : "Desconocido";
         src.sendSuccess(() -> Component.literal("§6=== NPC INFO ==="), false);
         src.sendSuccess(() -> Component.literal("§7Nombre: §f" + name), false);
-        src.sendSuccess(() -> Component.literal("§7Tipo: §e" + npc.getNpcType()), false);
-        src.sendSuccess(() -> Component.literal("§7Skin: §a" + npc.getSkinName()), false);
+        src.sendSuccess(() -> Component.literal("§7Modelo: §e" + npc.getNpcModel()), false);
+        src.sendSuccess(() -> Component.literal("§7Textura: §a" + npc.getNpcTexture()), false);
         src.sendSuccess(() -> Component.literal("§7ID: §d" + npc.getId()), false);
-        src.sendSuccess(() -> Component.literal("§7Diálogos: §b" + npc.getCustomDialogues().size() + " líneas registradas."), false);
         return 1;
     }
 
@@ -1449,14 +1448,17 @@ public class TronosCommand {
             return 0;
         }
 
-        com.mundodetronos2.entity.GoddessNPCEntity npc = findNpcByNameOrType(player, npcName);
+        com.mundodetronos2.entity.CustomNPCEntity npc = findNpcByNameOrType(player, npcName);
         if (npc == null) {
             src.sendFailure(Component.literal("§c[Mundo de Tronos] No se encontró ningún NPC con el nombre o tipo '" + npcName + "'."));
             return 1;
         }
 
-        npc.clearDialogues();
-        npc.addDialogue(texto);
+        com.mundodetronos2.dialogue.DialogueNode node = com.mundodetronos2.dialogue.NpcDialogueManager.getNode(npc.getNpcModel(), "inicio");
+        if (node != null) {
+            node.setText(texto);
+            com.mundodetronos2.dialogue.NpcDialogueManager.save();
+        }
         src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Diálogo establecido exitosamente para '" + npcName + "'."), true);
         return 1;
     }
@@ -1467,13 +1469,17 @@ public class TronosCommand {
             return 0;
         }
 
-        com.mundodetronos2.entity.GoddessNPCEntity npc = findNpcByNameOrType(player, npcName);
+        com.mundodetronos2.entity.CustomNPCEntity npc = findNpcByNameOrType(player, npcName);
         if (npc == null) {
             src.sendFailure(Component.literal("§c[Mundo de Tronos] No se encontró ningún NPC con el nombre o tipo '" + npcName + "'."));
             return 1;
         }
 
-        npc.addDialogue(texto);
+        com.mundodetronos2.dialogue.DialogueNode node = com.mundodetronos2.dialogue.NpcDialogueManager.getNode(npc.getNpcModel(), "inicio");
+        if (node != null) {
+            node.setText(node.getText() + " " + texto);
+            com.mundodetronos2.dialogue.NpcDialogueManager.save();
+        }
         src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Línea de diálogo añadida a '" + npcName + "'."), true);
         return 1;
     }
@@ -1484,13 +1490,17 @@ public class TronosCommand {
             return 0;
         }
 
-        com.mundodetronos2.entity.GoddessNPCEntity npc = findNpcByNameOrType(player, npcName);
+        com.mundodetronos2.entity.CustomNPCEntity npc = findNpcByNameOrType(player, npcName);
         if (npc == null) {
             src.sendFailure(Component.literal("§c[Mundo de Tronos] No se encontró ningún NPC con el nombre o tipo '" + npcName + "'."));
             return 1;
         }
 
-        npc.clearDialogues();
+        com.mundodetronos2.dialogue.DialogueNode node = com.mundodetronos2.dialogue.NpcDialogueManager.getNode(npc.getNpcModel(), "inicio");
+        if (node != null) {
+            node.setText("");
+            com.mundodetronos2.dialogue.NpcDialogueManager.save();
+        }
         src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Diálogos limpiados para '" + npcName + "'."), true);
         return 1;
     }
@@ -1604,29 +1614,29 @@ public class TronosCommand {
 
     private static int invocarKarlaCmd(CommandSourceStack src) {
         if (!(src.getEntity() instanceof ServerPlayer player)) {
-            src.sendFailure(Component.literal("Este comando solo puede ser executed por un jugador."));
+            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
             return 0;
         }
 
         AABB searchArea = player.getBoundingBox().inflate(16.0D);
-        List<GoddessNPCEntity> existing = player.level().getEntitiesOfClass(GoddessNPCEntity.class, searchArea,
-                npc -> "karla".equalsIgnoreCase(npc.getNpcType()) || (npc.getCustomName() != null && npc.getCustomName().getString().toLowerCase().contains("karla")));
+        List<CustomNPCEntity> existing = player.level().getEntitiesOfClass(CustomNPCEntity.class, searchArea,
+                npc -> "adventurer".equalsIgnoreCase(npc.getNpcModel()) || (npc.getCustomName() != null && npc.getCustomName().getString().toLowerCase().contains("karla")));
 
         if (!existing.isEmpty()) {
             src.sendFailure(Component.literal("§c[Mundo de Tronos] Ya existe una Karla cercana."));
             return 0;
         }
 
-        GoddessNPCEntity karla = EntityInit.GODDESS_NPC.get().create(player.level());
+        CustomNPCEntity karla = EntityInit.CUSTOM_NPC.get().create(player.level());
         if (karla != null) {
-            karla.setNpcType("karla");
-            karla.setSkinName("karla");
+            karla.setNpcModel("adventurer");
+            karla.setNpcTexture("adventurer");
             karla.moveTo(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot());
             karla.setCustomName(Component.literal("§6Karla (Gremio)"));
             karla.setCustomNameVisible(true);
             player.level().addFreshEntity(karla);
 
-            src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] NPC Karla invocada correctamente."), true);
+            src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] NPC Karla (CustomNPCEntity) invocada correctamente."), true);
             return 1;
         }
         return 0;

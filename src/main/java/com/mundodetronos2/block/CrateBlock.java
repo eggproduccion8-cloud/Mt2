@@ -74,9 +74,10 @@ public class CrateBlock extends BaseEntityBlock {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof CrateBlockEntity crateBE) {
                 int crateLvl = state.getValue(LEVEL);
+                crateBE.setCrateLevel(crateLvl);
                 String title = "Cofre Nivel " + crateLvl;
                 MenuProvider provider = new SimpleMenuProvider(
-                        (containerId, playerInv, p) -> ChestMenu.threeRows(containerId, playerInv, crateBE),
+                        (containerId, playerInv, p) -> crateLvl >= 2 ? ChestMenu.sixRows(containerId, playerInv, crateBE) : ChestMenu.threeRows(containerId, playerInv, crateBE),
                         Component.literal(title)
                 );
                 player.openMenu(provider);
