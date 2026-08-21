@@ -3,7 +3,6 @@ package com.mundodetronos2.client;
 import com.mundodetronos2.config.ConfigManager;
 import com.mundodetronos2.gui.GoddessCinematicScreen;
 import com.mundodetronos2.gui.GoddessPortalScreen;
-import com.mundodetronos2.gui.MainGuiScreen;
 import com.mundodetronos2.gui.RoleCardScreen;
 import com.mundodetronos2.gui.RoleSelectionScreen;
 import com.mundodetronos2.network.NetworkManager;
@@ -72,17 +71,6 @@ public class ClientPacketHandler {
         }
     }
 
-    public static void handleOpenMainGui(NetworkManager.S2COpenMainGuiPacket data, String roleName, int roleLevel) {
-        Minecraft mc = Minecraft.getInstance();
-        mc.setScreen(new MainGuiScreen(data, roleName, roleLevel));
-    }
-
-    public static void handleRealmList(List<NetworkManager.S2CRealmListPacket.RealmInfo> list) {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.screen instanceof MainGuiScreen) {
-            ((MainGuiScreen) mc.screen).updateRealmList(list);
-        }
-    }
 
     public static void handleSyncThroneData(String realmName, int health, int maxHealth, String state) {
         targetThroneRealmName = realmName;
@@ -207,12 +195,6 @@ public class ClientPacketHandler {
         mc.setScreen(new com.mundodetronos2.gui.GoddessIntroDialogueScreen());
     }
 
-    // --- MANEJO DE APERTURA DE DIÁLOGO GENERAL DE NPC ---
-    public static void handleOpenNpcDialogueWithData(int entityId, String npcType, String npcName, String text, String nodeId, String skinName, java.util.List<String> optionTexts) {
-        Minecraft mc = Minecraft.getInstance();
-        mc.setScreen(new com.mundodetronos2.gui.NpcDialogueScreen(entityId, npcType, npcName, text, nodeId, skinName, optionTexts));
-    }
-
     // --- MANEJO DE ALERTA DE ATAQUE AL TRONO ---
     public static void handleThroneAttackAlert(boolean active, String baseName, int hp, int maxHp, String attacker, int seconds) {
         activeAttackActive = active;
@@ -228,13 +210,6 @@ public class ClientPacketHandler {
         Minecraft mc = Minecraft.getInstance();
         mc.setScreen(new com.mundodetronos2.gui.DefuseMinigameScreen(pos));
     }
-
-    // --- MANEJO DE APERTURA DEL EDITOR ADMINISTRATIVO DE NPC ---
-    public static void handleOpenNpcEditor(int entityId, String npcType, String npcName, String skinName, String text) {
-        Minecraft mc = Minecraft.getInstance();
-        mc.setScreen(new com.mundodetronos2.gui.NpcEditorScreen(entityId, npcType, npcName, skinName, text));
-    }
-
 
     // --- MANEJO DE APERTURA DEL ÁRBOL DE HABILIDADES ---
     public static void handleOpenSkillTree(String roleId, int level, int skillPoints, java.util.List<String> unlockedSkills) {

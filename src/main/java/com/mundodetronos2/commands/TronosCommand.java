@@ -39,30 +39,11 @@ public class TronosCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("tronos")
-                // Jugador Commands
-                .then(Commands.literal("crear")
-                        .requires(src -> src.hasPermission(2))
-                        .then(Commands.argument("nombre", StringArgumentType.greedyString())
-                                .executes(ctx -> crearReino(ctx.getSource(), StringArgumentType.getString(ctx, "nombre")))))
                 .then(Commands.literal("gremio")
                         .then(Commands.literal("llave")
                                 .requires(src -> src.hasPermission(2))
                                 .then(Commands.argument("jugador", EntityArgument.player())
                                         .executes(ctx -> darLlaveLider(ctx.getSource(), EntityArgument.getPlayer(ctx, "jugador"))))))
-                .then(Commands.literal("buscar")
-                        .executes(ctx -> buscarReinos(ctx.getSource())))
-                .then(Commands.literal("misreinos")
-                        .executes(ctx -> misReinos(ctx.getSource())))
-                .then(Commands.literal("invitaciones")
-                        .executes(ctx -> verInvitaciones(ctx.getSource())))
-                .then(Commands.literal("aceptar")
-                        .then(Commands.argument("id", StringArgumentType.string())
-                                .executes(ctx -> aceptarInvitacion(ctx.getSource(), StringArgumentType.getString(ctx, "id")))))
-                .then(Commands.literal("rechazar")
-                        .then(Commands.argument("id", StringArgumentType.string())
-                                .executes(ctx -> rechazarInvitacion(ctx.getSource(), StringArgumentType.getString(ctx, "id")))))
-                .then(Commands.literal("salir")
-                        .executes(ctx -> salirReino(ctx.getSource())))
                 .then(Commands.literal("info")
                         .executes(ctx -> infoReino(ctx.getSource())))
 
@@ -157,58 +138,6 @@ public class TronosCommand {
                                 .executes(ctx -> setPortalBlock(ctx.getSource())))
                 )
 
-                // SISTEMA DE NPC COMMANDS
-                .then(Commands.literal("npc")
-                        .requires(src -> src.hasPermission(2))
-                        .then(Commands.literal("guardia")
-                                .then(Commands.literal("rojo")
-                                        .then(Commands.argument("nombre", StringArgumentType.string())
-                                                .executes(ctx -> crearGuardiaRojoCmd(ctx.getSource(), StringArgumentType.getString(ctx, "nombre"))))
-                                        .executes(ctx -> crearGuardiaRojoCmd(ctx.getSource(), "Guardia Rojo"))))
-                        .then(Commands.literal("modelos")
-                                .executes(ctx -> listarModelosNpc(ctx.getSource())))
-                        .then(Commands.literal("soldado")
-                                .then(Commands.argument("equipo", StringArgumentType.string())
-                                        .executes(ctx -> crearSoldado(ctx.getSource(), StringArgumentType.getString(ctx, "equipo")))))
-                        .then(Commands.literal("soldados")
-                                .then(Commands.argument("equipo", StringArgumentType.string())
-                                        .then(Commands.argument("cantidad", IntegerArgumentType.integer(1, 100))
-                                                .executes(ctx -> crearSoldados(ctx.getSource(), StringArgumentType.getString(ctx, "equipo"), IntegerArgumentType.getInteger(ctx, "cantidad"))))))
-                        .then(Commands.literal("batalla")
-                                .then(Commands.literal("iniciar")
-                                        .executes(ctx -> iniciarBatalla(ctx.getSource())))
-                                .then(Commands.literal("detener")
-                                        .executes(ctx -> detenerBatalla(ctx.getSource()))))
-                        .then(Commands.literal("listar")
-                                .executes(ctx -> listarNpcs(ctx.getSource())))
-                        .then(Commands.literal("crear")
-                                .then(Commands.argument("tipo", StringArgumentType.string())
-                                        .then(Commands.argument("nombre", StringArgumentType.string())
-                                                .executes(ctx -> crearNpc(ctx.getSource(), StringArgumentType.getString(ctx, "tipo"), StringArgumentType.getString(ctx, "nombre"))))
-                                        .executes(ctx -> crearNpc(ctx.getSource(), StringArgumentType.getString(ctx, "tipo"), null))))
-                        .then(Commands.literal("eliminar")
-                                .then(Commands.literal("todos")
-                                        .executes(ctx -> eliminarTodosNpcs(ctx.getSource())))
-                                .executes(ctx -> eliminarNpc(ctx.getSource())))
-                        .then(Commands.literal("reiniciar")
-                                .executes(ctx -> reiniciarNpcs(ctx.getSource())))
-                        .then(Commands.literal("info")
-                                .executes(ctx -> infoNpc(ctx.getSource())))
-                        .then(Commands.literal("dialogo")
-                                .then(Commands.literal("add")
-                                        .then(Commands.argument("npc", StringArgumentType.string())
-                                                .then(Commands.argument("texto", StringArgumentType.string())
-                                                        .executes(ctx -> addNpcDialogue(ctx.getSource(), StringArgumentType.getString(ctx, "npc"), StringArgumentType.getString(ctx, "texto"))))))
-                                .then(Commands.literal("clear")
-                                        .then(Commands.argument("npc", StringArgumentType.string())
-                                                .executes(ctx -> clearNpcDialogue(ctx.getSource(), StringArgumentType.getString(ctx, "npc")))))
-                                .then(Commands.argument("npc", StringArgumentType.string())
-                                        .then(Commands.argument("texto", StringArgumentType.string())
-                                                .executes(ctx -> setNpcDialogue(ctx.getSource(), StringArgumentType.getString(ctx, "npc"), StringArgumentType.getString(ctx, "texto"))))))
-                        .then(Commands.literal("skin")
-                                .then(Commands.argument("nombre", StringArgumentType.string())
-                                        .then(Commands.argument("skin", StringArgumentType.string())
-                                                .executes(ctx -> setNpcSkin(ctx.getSource(), StringArgumentType.getString(ctx, "nombre"), StringArgumentType.getString(ctx, "skin")))))))
 
                 // SISTEMA DE GUÍA INTERACTIVA
                 .then(Commands.literal("guia")
@@ -258,11 +187,6 @@ public class TronosCommand {
                         .then(Commands.literal("karla")
                                 .executes(ctx -> invocarKarlaCmd(ctx.getSource()))))
                 .then(Commands.literal("team")
-                        .then(Commands.literal("unir")
-                                .then(Commands.argument("color", StringArgumentType.string())
-                                        .executes(ctx -> unirEquipoCmd(ctx.getSource(), StringArgumentType.getString(ctx, "color")))))
-                        .then(Commands.literal("salir")
-                                .executes(ctx -> salirEquipoCmd(ctx.getSource())))
                         .then(Commands.literal("lider")
                                 .then(Commands.argument("jugador", EntityArgument.player())
                                         .executes(ctx -> designarLiderCmd(ctx.getSource(), EntityArgument.getPlayer(ctx, "jugador")))))
@@ -425,102 +349,6 @@ public class TronosCommand {
         }
     }
 
-    private static int crearReino(CommandSourceStack src, String nombre) {
-        if (!(src.getEntity() instanceof ServerPlayer player)) {
-            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
-            return 0;
-        }
-
-        RealmData realm = RealmManager.createRealm(nombre, player.getUUID(), player.getGameProfile().getName());
-        if (realm != null) {
-            src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Reino '" + realm.getName() + "' creado exitosamente."), false);
-        } else {
-            src.sendFailure(Component.literal("§c[Mundo de Tronos] No se pudo crear el reino. Nombre duplicado o ya tienes un reino."));
-        }
-        return 1;
-    }
-
-    private static int buscarReinos(CommandSourceStack src) {
-        if (!(src.getEntity() instanceof ServerPlayer player)) {
-            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
-            return 0;
-        }
-        NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SRequestRealmListPacket());
-        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Abriendo listado de reinos en la GUI..."), false);
-        return 1;
-    }
-
-    private static int misReinos(CommandSourceStack src) {
-        if (!(src.getEntity() instanceof ServerPlayer player)) {
-            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
-            return 0;
-        }
-        NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SOpenMainGuiPacket());
-        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Abriendo menú de tu reino en la GUI..."), false);
-        return 1;
-    }
-
-    private static int verInvitaciones(CommandSourceStack src) {
-        if (!(src.getEntity() instanceof ServerPlayer player)) {
-            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
-            return 0;
-        }
-        NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SOpenMainGuiPacket());
-        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Mostrando invitaciones en la GUI..."), false);
-        return 1;
-    }
-
-    private static int aceptarInvitacion(CommandSourceStack src, String idStr) {
-        if (!(src.getEntity() instanceof ServerPlayer player)) {
-            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
-            return 0;
-        }
-        try {
-            UUID inviteId = UUID.fromString(idStr);
-            boolean ok = RealmManager.acceptInvite(inviteId, player.getUUID());
-            if (ok) {
-                src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] ¡Te has unido al reino exitosamente!"), false);
-            } else {
-                src.sendFailure(Component.literal("§c[Mundo de Tronos] No se pudo aceptar la invitación. Puede haber expirado o el reino está lleno."));
-            }
-        } catch (Exception e) {
-            src.sendFailure(Component.literal("§c[Mundo de Tronos] Formato de ID de invitación inválido."));
-        }
-        return 1;
-    }
-
-    private static int rechazarInvitacion(CommandSourceStack src, String idStr) {
-        if (!(src.getEntity() instanceof ServerPlayer player)) {
-            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
-            return 0;
-        }
-        try {
-            UUID inviteId = UUID.fromString(idStr);
-            boolean ok = RealmManager.rejectInvite(inviteId, player.getUUID());
-            if (ok) {
-                src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Invitación rechazada."), false);
-            } else {
-                src.sendFailure(Component.literal("§c[Mundo de Tronos] Invitación no encontrada."));
-            }
-        } catch (Exception e) {
-            src.sendFailure(Component.literal("§c[Mundo de Tronos] Formato de ID inválido."));
-        }
-        return 1;
-    }
-
-    private static int salirReino(CommandSourceStack src) {
-        if (!(src.getEntity() instanceof ServerPlayer player)) {
-            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
-            return 0;
-        }
-        boolean ok = RealmManager.leaveRealm(player.getUUID());
-        if (ok) {
-            src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Has salido del reino exitosamente."), false);
-        } else {
-            src.sendFailure(Component.literal("§c[Mundo de Tronos] No perteneces a ningún reino."));
-        }
-        return 1;
-    }
 
     private static int infoReino(CommandSourceStack src) {
         if (!(src.getEntity() instanceof ServerPlayer player)) {
@@ -879,13 +707,9 @@ public class TronosCommand {
     private static int resetHerreroKit(CommandSourceStack src, ServerPlayer target) {
         PlayerRoleData rData = RoleManager.getPlayerRoleData(target.getUUID());
         rData.setInitialKitClaimed(false);
-        rData.setHerreroMissionActive(false);
-        rData.setHerreroMissionCompleted(false);
-        rData.setSacerdoteMissionActive(false);
-        rData.setSacerdoteMissionCompleted(false);
         RoleManager.save(true);
 
-        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Todas las misiones de NPC y kit restablecidos para " + target.getGameProfile().getName() + "."), true);
+        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Kit restablecido para " + target.getGameProfile().getName() + "."), true);
         return 1;
     }
 
@@ -1314,86 +1138,6 @@ public class TronosCommand {
         return 1;
     }
 
-    private static int listarNpcs(CommandSourceStack src) {
-        src.sendSuccess(() -> Component.literal("§6=== NPC DISPONIBLES EN MUNDO DE TRONOS 2 ==="), false);
-        int index = 1;
-        for (com.mundodetronos2.npc.NpcRegistryManager.NpcDefinition def : com.mundodetronos2.npc.NpcRegistryManager.getCentralRegistry().values()) {
-            final int idx = index++;
-            String tutStr = def.isTutorial ? "§aSí (Orden: " + def.tutorialOrder + ")" : "§cNo";
-            src.sendSuccess(() -> Component.literal("§e" + idx + ". " + def.defaultName + " §7(ID: §f" + def.internalId + "§7) | Tutorial: " + tutStr + " §7| Nivel req: §6" + def.requiredLevel), false);
-        }
-        return 1;
-    }
-
-    private static int crearNpc(CommandSourceStack src, String tipoOrId, String nombre) {
-        if (!(src.getEntity() instanceof ServerPlayer player)) {
-            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
-            return 0;
-        }
-
-        // Standard custom NPC creation via model name or registered NPC definition
-        com.mundodetronos2.entity.CustomNPCEntity npc = com.mundodetronos2.init.EntityInit.CUSTOM_NPC.get().create(player.level());
-        if (npc == null) return 0;
-
-        npc.setNpcModel(tipoOrId);
-        npc.setNpcTexture(tipoOrId);
-        npc.moveTo(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot());
-
-        String finalName = nombre != null ? nombre : tipoOrId.toUpperCase();
-        npc.setCustomName(Component.literal(finalName));
-        npc.setCustomNameVisible(true);
-
-        player.level().addFreshEntity(npc);
-
-        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] NPC '" + finalName + "' (" + tipoOrId + ") creado exitosamente."), true);
-        return 1;
-    }
-
-    private static int eliminarNpc(CommandSourceStack src) {
-        if (!(src.getEntity() instanceof ServerPlayer player)) {
-            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
-            return 0;
-        }
-
-        double range = 8.0D;
-        net.minecraft.world.phys.AABB area = new net.minecraft.world.phys.AABB(
-            player.getX() - range, player.getY() - range, player.getZ() - range,
-            player.getX() + range, player.getY() + range, player.getZ() + range
-        );
-
-        java.util.List<com.mundodetronos2.entity.CustomNPCEntity> npcs = player.level().getEntitiesOfClass(com.mundodetronos2.entity.CustomNPCEntity.class, area);
-        if (npcs.isEmpty()) {
-            src.sendFailure(Component.literal("§c[Mundo de Tronos] No se encontró ningún NPC cerca para eliminar."));
-            return 1;
-        }
-
-        com.mundodetronos2.entity.CustomNPCEntity npc = npcs.get(0);
-        String name = npc.getCustomName() != null ? npc.getCustomName().getString() : "NPC";
-        com.mundodetronos2.npc.NpcRegistryManager.removeNpcInstance(npc.getUUID());
-        npc.discard();
-
-        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] NPC '" + name + "' eliminado exitosamente."), true);
-        return 1;
-    }
-
-    private static int eliminarTodosNpcs(CommandSourceStack src) {
-        if (!(src.getEntity() instanceof ServerPlayer player)) {
-            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
-            return 0;
-        }
-
-        ServerLevel level = player.serverLevel();
-        int count = com.mundodetronos2.npc.NpcRegistryManager.removeAllInDimension(level);
-        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Eliminados " + count + " NPCs de la dimensión actual."), true);
-        return 1;
-    }
-
-    private static int reiniciarNpcs(CommandSourceStack src) {
-        MinecraftServer server = src.getServer();
-        int count = com.mundodetronos2.npc.NpcRegistryManager.resetAll(server);
-        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Sistema de NPCs reiniciado por completo desde cero. Eliminadas " + count + " entidades y limpiado el registro."), true);
-        return 1;
-    }
 
     public static com.mundodetronos2.entity.CustomNPCEntity findNpcByNameOrType(ServerPlayer player, String target) {
         double range = 32.0D;
@@ -1442,68 +1186,6 @@ public class TronosCommand {
         return 1;
     }
 
-    private static int setNpcDialogue(CommandSourceStack src, String npcName, String texto) {
-        if (!(src.getEntity() instanceof ServerPlayer player)) {
-            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
-            return 0;
-        }
-
-        com.mundodetronos2.entity.CustomNPCEntity npc = findNpcByNameOrType(player, npcName);
-        if (npc == null) {
-            src.sendFailure(Component.literal("§c[Mundo de Tronos] No se encontró ningún NPC con el nombre o tipo '" + npcName + "'."));
-            return 1;
-        }
-
-        com.mundodetronos2.dialogue.DialogueNode node = com.mundodetronos2.dialogue.NpcDialogueManager.getNode(npc.getNpcModel(), "inicio");
-        if (node != null) {
-            node.setText(texto);
-            com.mundodetronos2.dialogue.NpcDialogueManager.save();
-        }
-        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Diálogo establecido exitosamente para '" + npcName + "'."), true);
-        return 1;
-    }
-
-    private static int addNpcDialogue(CommandSourceStack src, String npcName, String texto) {
-        if (!(src.getEntity() instanceof ServerPlayer player)) {
-            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
-            return 0;
-        }
-
-        com.mundodetronos2.entity.CustomNPCEntity npc = findNpcByNameOrType(player, npcName);
-        if (npc == null) {
-            src.sendFailure(Component.literal("§c[Mundo de Tronos] No se encontró ningún NPC con el nombre o tipo '" + npcName + "'."));
-            return 1;
-        }
-
-        com.mundodetronos2.dialogue.DialogueNode node = com.mundodetronos2.dialogue.NpcDialogueManager.getNode(npc.getNpcModel(), "inicio");
-        if (node != null) {
-            node.setText(node.getText() + " " + texto);
-            com.mundodetronos2.dialogue.NpcDialogueManager.save();
-        }
-        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Línea de diálogo añadida a '" + npcName + "'."), true);
-        return 1;
-    }
-
-    private static int clearNpcDialogue(CommandSourceStack src, String npcName) {
-        if (!(src.getEntity() instanceof ServerPlayer player)) {
-            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
-            return 0;
-        }
-
-        com.mundodetronos2.entity.CustomNPCEntity npc = findNpcByNameOrType(player, npcName);
-        if (npc == null) {
-            src.sendFailure(Component.literal("§c[Mundo de Tronos] No se encontró ningún NPC con el nombre o tipo '" + npcName + "'."));
-            return 1;
-        }
-
-        com.mundodetronos2.dialogue.DialogueNode node = com.mundodetronos2.dialogue.NpcDialogueManager.getNode(npc.getNpcModel(), "inicio");
-        if (node != null) {
-            node.setText("");
-            com.mundodetronos2.dialogue.NpcDialogueManager.save();
-        }
-        src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Diálogos limpiados para '" + npcName + "'."), true);
-        return 1;
-    }
 
     private static int darCarnetCmd(CommandSourceStack src, ServerPlayer target) {
         PlayerRoleData data = RoleManager.getPlayerRoleData(target.getUUID());
@@ -1548,39 +1230,6 @@ public class TronosCommand {
         return 1;
     }
 
-    private static int unirEquipoCmd(CommandSourceStack src, String color) {
-        if (!(src.getEntity() instanceof ServerPlayer player)) {
-            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
-            return 0;
-        }
-
-        String colorLower = color.toLowerCase().trim();
-        RealmData team = RealmManager.getRealmByColorKey(colorLower);
-        if (team == null) {
-            src.sendFailure(Component.literal("§c[Mundo de Tronos] No existe ningún equipo con el color '" + color + "'. Usa: rojo, azul, verde, amarillo, morado, cian, naranja, rosa, blanco, negro."));
-            return 0;
-        }
-
-        if (RealmManager.getPlayerRealmData(player.getUUID()) != null) {
-            src.sendFailure(Component.literal("§c[Mundo de Tronos] Ya perteneces a un equipo. Usa /tronos team salir primero."));
-            return 0;
-        }
-
-        if (team.getMembers().size() >= team.getMaxPlayers()) {
-            src.sendFailure(Component.literal("§c[Mundo de Tronos] El equipo " + colorLower.toUpperCase() + " ya tiene 6/6 jugadores."));
-            return 0;
-        }
-
-        boolean success = RealmManager.joinTeam(player, colorLower);
-        if (success) {
-            src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Te has unido al equipo " + colorLower.toUpperCase() + "."), false);
-            NetworkManager.syncHud(player);
-            return 1;
-        } else {
-            src.sendFailure(Component.literal("§c[Mundo de Tronos] No te pudiste unir al equipo " + colorLower.toUpperCase() + "."));
-            return 0;
-        }
-    }
 
     private static int invocarManuelCmd(CommandSourceStack src) {
         if (!(src.getEntity() instanceof ServerPlayer player)) {
@@ -1681,22 +1330,6 @@ public class TronosCommand {
         return 1;
     }
 
-    private static int salirEquipoCmd(CommandSourceStack src) {
-        if (!(src.getEntity() instanceof ServerPlayer player)) {
-            src.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
-            return 0;
-        }
-
-        boolean success = RealmManager.leaveRealm(player.getUUID());
-        if (success) {
-            src.sendSuccess(() -> Component.literal("§a[Mundo de Tronos] Has salido de tu equipo exitosamente."), false);
-            NetworkManager.syncHud(player);
-            return 1;
-        } else {
-            src.sendFailure(Component.literal("§c[Mundo de Tronos] No perteneces a ningún equipo actualmente."));
-            return 0;
-        }
-    }
 
     private static int darTronoEquipo(CommandSourceStack src, String color) {
         RealmData realm = RealmManager.getRealmByColorKey(color);

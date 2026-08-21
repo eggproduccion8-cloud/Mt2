@@ -33,8 +33,8 @@ public class AltarInteractionScreen extends Screen {
         } else {
             this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(
                 centerX - buttonWidth / 2, centerY - 35, buttonWidth, buttonHeight,
-                Component.literal("Ver Mi Rol"), btn -> {
-                    NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SOpenMainGuiPacket());
+                Component.literal("Ver Habilidades"), btn -> {
+                    NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SOpenSkillTreePacket());
                     this.onClose();
                 }
             ));
