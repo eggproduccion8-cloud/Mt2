@@ -239,7 +239,7 @@ public class NpcRegistryManager {
         }
     }
 
-    public static void registerNpcInstance(GoddessNPCEntity entity, NpcDefinition def, String customName) {
+    public static void registerNpcInstance(com.mundodetronos2.entity.CustomNPCEntity entity, NpcDefinition def, String customName) {
         NpcConfig data = new NpcConfig(
                 entity.getUUID(),
                 def,
@@ -293,7 +293,7 @@ public class NpcRegistryManager {
         }
 
         for (Entity e : level.getAllEntities()) {
-            if (e instanceof GoddessNPCEntity) {
+            if (e instanceof com.mundodetronos2.entity.CustomNPCEntity) {
                 e.discard();
                 count++;
             }
@@ -308,7 +308,7 @@ public class NpcRegistryManager {
         if (server != null) {
             for (ServerLevel level : server.getAllLevels()) {
                 for (Entity e : level.getAllEntities()) {
-                    if (e instanceof GoddessNPCEntity) {
+                    if (e instanceof com.mundodetronos2.entity.CustomNPCEntity) {
                         e.discard();
                         count++;
                     }

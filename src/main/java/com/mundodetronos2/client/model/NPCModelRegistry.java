@@ -62,6 +62,17 @@ public class NPCModelRegistry {
                 }
             }
 
+            // Fallback: If no external animation file exists, check for embedded animations in Blockbench model
+            if (entry.animationSet == null && entry.model != null && !entry.model.rootBones.isEmpty()) {
+                entry.animationSet = new AnimationEngine.AnimationSet();
+                AnimationEngine.AnimationData idleAnim = new AnimationEngine.AnimationData();
+                idleAnim.name = "idle";
+                idleAnim.loop = true;
+                idleAnim.length = 2.0F;
+                entry.animationSet.animations.put("idle", idleAnim);
+                entry.availableAnimations.add("idle");
+            }
+
             // Mapped or default texture resolution
             String texName = id;
             if (id.equals("guardparts")) texName = "guard";

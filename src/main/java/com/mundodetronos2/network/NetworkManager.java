@@ -521,17 +521,9 @@ public class NetworkManager {
                     }
                 }
 
-                // 2. Actualizar la entidad en el mundo (GoddessNPCEntity y CustomNPCEntity)
+                // 2. Actualizar la entidad CustomNPCEntity por ID
                 net.minecraft.world.entity.Entity entity = player.level().getEntity(msg.entityId);
-                if (entity instanceof com.mundodetronos2.entity.GoddessNPCEntity npc) {
-                    if (!msg.newName.isEmpty()) {
-                        npc.setCustomName(Component.literal(msg.newName));
-                        npc.setCustomNameVisible(true);
-                    }
-                    if (!msg.newSkin.isEmpty()) {
-                        npc.setSkinName(msg.newSkin);
-                    }
-                } else if (entity instanceof com.mundodetronos2.entity.CustomNPCEntity customNpc) {
+                if (entity instanceof com.mundodetronos2.entity.CustomNPCEntity customNpc) {
                     if (!msg.newName.isEmpty()) {
                         customNpc.setCustomName(Component.literal(msg.newName));
                         customNpc.setCustomNameVisible(true);
