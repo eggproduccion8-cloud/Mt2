@@ -165,7 +165,17 @@ public class CustomNPCEntity extends PathfinderMob {
 
     @Override
     public boolean isPushable() {
-        return false;
+        return true;
+    }
+
+    @Override
+    public boolean canBeCollidedWith() {
+        return true;
+    }
+
+    @Override
+    public boolean canCollideWith(net.minecraft.world.entity.Entity entity) {
+        return true;
     }
 
     @Override

@@ -42,12 +42,9 @@ public class ModHudOverlay {
         // 3. Brújula y Coordenadas
         drawCompassAndCoordinates(graphics, width);
 
-        // 4. Estatus MMORPG, Chat MMORPG y Hotbar MMORPG (Única fuente visual del HUD)
+        // 4. Estatus RPG y Chat MMORPG (La hotbar/vida/hambre son gestionadas por Vanilla)
         PlayerStatusHudRenderer.renderPlayerStatus(graphics, width, height);
         drawCleanChatOverlay(graphics);
-        if (mc.screen == null) {
-            MMORPGHotbarRenderer.renderHotbar(graphics, width, height);
-        }
 
         // 5. Alertas de Muerte y Trono Caído
         if (System.currentTimeMillis() < ClientEvents.deathAlertEndTime && ClientEvents.lastDeadPlayerId != null) {
