@@ -15,7 +15,17 @@ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
-public class CustomNPCEntity extends PathfinderMob {
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.core.animation.AnimatableManager;
+import software.bernie.geckolib.core.animation.AnimationController;
+import software.bernie.geckolib.core.animation.RawAnimation;
+import software.bernie.geckolib.core.object.PlayState;
+import software.bernie.geckolib.util.GeckoLibUtil;
+
+public class CustomNPCEntity extends PathfinderMob implements GeoEntity {
+
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     private static final EntityDataAccessor<String> NPC_MODEL = SynchedEntityData.defineId(CustomNPCEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<String> NPC_TEXTURE = SynchedEntityData.defineId(CustomNPCEntity.class, EntityDataSerializers.STRING);
@@ -239,6 +249,34 @@ public class CustomNPCEntity extends PathfinderMob {
                 }
             }
         }
+    }
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "controller", 5, event -> {
+            String tempAnim = getCurrentAnimation();
+            if (tempAnim != null && !tempAnim.isEmpty()) {
+                event.getController().setAnimation(RawAnimation.begin().thenPlay(tempAnim));
+                return PlayState.CONTINUE;
+            }
+
+            if (event.isMoving()) {
+                String walkAnim = getWalkAnimation();
+                if (walkAnim == null || walkAnim.isEmpty()) walkAnim = "walk";
+                event.getController().setAnimation(RawAnimation.begin().thenLoop(walkAnim));
+                return PlayState.CONTINUE;
+            }
+
+            String idleAnim = getIdleAnimation();
+            if (idleAnim == null || idleAnim.isEmpty()) idleAnim = "idle";
+            event.getController().setAnimation(RawAnimation.begin().thenLoop(idleAnim));
+            return PlayState.CONTINUE;
+        }));
+    }
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.cache;
     }
 
     @Override

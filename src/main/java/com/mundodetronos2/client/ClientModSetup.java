@@ -1,7 +1,6 @@
 package com.mundodetronos2.client;
 
-import com.mundodetronos2.client.model.NPCModelRegistry;
-import com.mundodetronos2.client.renderer.CustomNPCRenderer;
+import com.mundodetronos2.client.renderer.CustomNPCGeoRenderer;
 import com.mundodetronos2.init.EntityInit;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
@@ -15,7 +14,6 @@ public class ClientModSetup {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
-            NPCModelRegistry.initClient();
             com.mundodetronos2.client.model.BlockModelRegistry.initClient();
         });
     }
@@ -23,8 +21,8 @@ public class ClientModSetup {
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(EntityInit.GODDESS_NPC.get(), GoddessNPCRenderer::new);
-        event.registerEntityRenderer(EntityInit.CUSTOM_NPC.get(), CustomNPCRenderer::new);
-        event.registerEntityRenderer(EntityInit.SOLDIER.get(), CustomNPCRenderer::new);
+        event.registerEntityRenderer(EntityInit.CUSTOM_NPC.get(), CustomNPCGeoRenderer::new);
+        event.registerEntityRenderer(EntityInit.SOLDIER.get(), CustomNPCGeoRenderer::new);
         event.registerBlockEntityRenderer(com.mundodetronos2.init.BlockEntityInit.THRONE_BE.get(), com.mundodetronos2.client.renderer.ThroneBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(com.mundodetronos2.init.BlockEntityInit.CRATE_BE.get(), com.mundodetronos2.client.renderer.CrateBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(com.mundodetronos2.init.BlockEntityInit.CARGA_ASALTO_BE.get(), com.mundodetronos2.client.renderer.CargaAsaltoBlockEntityRenderer::new);

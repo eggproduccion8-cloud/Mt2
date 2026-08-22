@@ -1243,13 +1243,10 @@ public class TronosCommand {
     }
 
     private static int listarModelosNpc(CommandSourceStack src) {
-        src.sendSuccess(() -> Component.literal("§6=== MODELOS DE NPC REGISTRADOS EN EL MOD ==="), false);
-        java.util.Collection<String> registered = com.mundodetronos2.client.model.NPCModelRegistry.getRegisteredModelIds();
-        if (registered.isEmpty()) {
-            registered = java.util.Set.of("archer", "adventurer", "bard", "blacksmith", "butcher", "farmer", "guard", "king", "miner", "pirate", "tavern", "wizard");
-        }
+        src.sendSuccess(() -> Component.literal("§6=== MODELOS DE NPC REGISTRADOS EN EL MOD (GECKOLIB 4) ==="), false);
+        java.util.List<String> models = java.util.List.of("adventurer", "archer", "bard", "blacksmith", "butcher", "farmer", "guard", "guardred", "guardgreen", "guardcyan", "guardorange", "guardpink", "guardpurple", "guardyellow", "king", "miner", "pirate", "tavern", "wizard");
         int i = 1;
-        for (String m : registered) {
+        for (String m : models) {
             final int idx = i++;
             final String mName = m;
             src.sendSuccess(() -> Component.literal("§e" + idx + ". §f" + mName), false);

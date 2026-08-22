@@ -28,3 +28,10 @@ mandatory=true
 versionRange="[1.20.1]"
 ordering="NONE"
 side="BOTH"
+
+[[dependencies.mundodetronos2]]
+modId="geckolib"
+mandatory=true
+versionRange="[4.4.9,)"
+ordering="NONE"
+side="BOTH"
