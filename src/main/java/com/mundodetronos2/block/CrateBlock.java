@@ -50,7 +50,11 @@ public class CrateBlock extends BaseEntityBlock {
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        return this.defaultBlockState().setValue(LEVEL, 1).setValue(FACING, context.getHorizontalDirection().getOpposite());
+        int levelVal = 1;
+        if (context.getItemInHand().getItem() instanceof com.mundodetronos2.item.CrateBlockItem crateItem) {
+            levelVal = crateItem.getCrateLevel();
+        }
+        return this.defaultBlockState().setValue(LEVEL, levelVal).setValue(FACING, context.getHorizontalDirection().getOpposite());
     }
 
     @Override
