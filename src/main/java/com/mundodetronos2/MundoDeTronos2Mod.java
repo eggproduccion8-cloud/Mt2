@@ -44,6 +44,7 @@ public class MundoDeTronos2Mod {
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
         TronosCommand.register(event.getDispatcher());
+        com.mundodetronos2.commands.NpcCommand.register(event.getDispatcher());
         com.mundodetronos2.commands.CofreCommand.register(event.getDispatcher());
         LOGGER.info("Comandos de Mundo de Tronos 2 registrados con éxito.");
     }

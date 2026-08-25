@@ -4,6 +4,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
@@ -12,6 +14,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
@@ -22,6 +25,8 @@ public class CustomNPCEntity extends PathfinderMob {
     private static final EntityDataAccessor<String> IDLE_ANIMATION = SynchedEntityData.defineId(CustomNPCEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<String> WALK_ANIMATION = SynchedEntityData.defineId(CustomNPCEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<String> INTERACTION_ANIMATION = SynchedEntityData.defineId(CustomNPCEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<String> OVERRIDE_ANIMATION = SynchedEntityData.defineId(CustomNPCEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Integer> OVERRIDE_END_TICK = SynchedEntityData.defineId(CustomNPCEntity.class, EntityDataSerializers.INT);
 
     public CustomNPCEntity(EntityType<? extends PathfinderMob> type, Level level) {
         super(type, level);
@@ -38,8 +43,9 @@ public class CustomNPCEntity extends PathfinderMob {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        this.goalSelector.addGoal(2, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(1, new WaterAvoidingRandomStrollGoal(this, 1.0D));
+        this.goalSelector.addGoal(2, new LookAtPlayerGoal(this, Player.class, 8.0F));
+        this.goalSelector.addGoal(3, new RandomLookAroundGoal(this));
     }
 
     @Override
@@ -50,6 +56,8 @@ public class CustomNPCEntity extends PathfinderMob {
         this.entityData.define(IDLE_ANIMATION, "idle");
         this.entityData.define(WALK_ANIMATION, "walk");
         this.entityData.define(INTERACTION_ANIMATION, "greet");
+        this.entityData.define(OVERRIDE_ANIMATION, "");
+        this.entityData.define(OVERRIDE_END_TICK, 0);
     }
 
     public String getNpcModel() {
@@ -93,74 +101,53 @@ public class CustomNPCEntity extends PathfinderMob {
     }
 
     public void playAnimation(String animName) {
+        playAnimation(animName, 40); // 40 ticks (2 seconds) default for temporary animations
+    }
+
+    public void playAnimation(String animName, int durationTicks) {
         if (animName != null && !animName.isEmpty()) {
-            this.setIdleAnimation(animName);
+            this.entityData.set(OVERRIDE_ANIMATION, animName);
+            this.entityData.set(OVERRIDE_END_TICK, this.tickCount + durationTicks);
         }
     }
 
+    public void resetAnimation() {
+        this.entityData.set(OVERRIDE_ANIMATION, "");
+        this.entityData.set(OVERRIDE_END_TICK, 0);
+    }
+
     public String getActualCurrentAnimation() {
-        return getIdleAnimation();
+        String override = this.entityData.get(OVERRIDE_ANIMATION);
+        int endTick = this.entityData.get(OVERRIDE_END_TICK);
+
+        if (!override.isEmpty() && (endTick <= 0 || this.tickCount < endTick)) {
+            return override;
+        }
+
+        // Check horizontal movement
+        double dx = this.getX() - this.xo;
+        double dz = this.getZ() - this.zo;
+        boolean isMoving = (dx * dx + dz * dz) > 0.0004D;
+
+        if (isMoving) {
+            return getWalkAnimation();
+        } else {
+            return getIdleAnimation();
+        }
     }
 
     @Override
-    public net.minecraft.world.InteractionResult mobInteract(Player player, net.minecraft.world.InteractionHand hand) {
-        if (!player.level().isClientSide() && player instanceof net.minecraft.server.level.ServerPlayer sp) {
-            String name = this.getCustomName() != null ? this.getCustomName().getString() : "NPC";
-            String type = getNpcModel().toLowerCase().trim();
-            if (name.toLowerCase().contains("manuel")) type = "manuel";
-            else if (name.toLowerCase().contains("ivan") || name.toLowerCase().contains("karla")) type = "ivan";
-
-            if (sp.isCrouching() && sp.hasPermissions(2)) {
-                com.mundodetronos2.network.NetworkManager.S2COpenNpcEditorPacket editorPkt =
-                    new com.mundodetronos2.network.NetworkManager.S2COpenNpcEditorPacket(
-                        this.getId(),
-                        type,
-                        name,
-                        getNpcTexture(),
-                        com.mundodetronos2.dialogue.NpcDialogueManager.getSerializedNpcDialogues(type)
-                    );
-                com.mundodetronos2.network.NetworkManager.sendToPlayer(editorPkt, sp);
-                return net.minecraft.world.InteractionResult.sidedSuccess(player.level().isClientSide());
-            }
-
-            // Right click on Ivan opens Guild GUI directly!
-            if ("ivan".equalsIgnoreCase(type) || name.toLowerCase().contains("ivan")) {
-                com.mundodetronos2.realm.RealmData realm = com.mundodetronos2.realm.RealmManager.getPlayerRealm(sp.getUUID());
-                com.mundodetronos2.throne.ThroneData throne = realm != null && realm.getThroneId() != null ? com.mundodetronos2.throne.ThroneManager.getThroneById(realm.getThroneId()) : null;
-                java.util.List<com.mundodetronos2.realm.InviteData> invites = com.mundodetronos2.realm.RealmManager.getPlayerInvites(sp.getUUID());
-                com.mundodetronos2.network.NetworkManager.sendToPlayer(new com.mundodetronos2.network.NetworkManager.S2COpenMainGuiPacket(realm, throne, invites), sp);
-                playAnimation("greet");
-                return net.minecraft.world.InteractionResult.sidedSuccess(player.level().isClientSide());
-            }
-
-            com.mundodetronos2.dialogue.DialogueNode initialNode = com.mundodetronos2.dialogue.NpcDialogueManager.getNode(type, "inicio");
-            if (initialNode != null) {
-                playAnimation("greet");
-                java.util.List<String> optionTexts = new java.util.ArrayList<>();
-                for (com.mundodetronos2.dialogue.DialogueOption opt : initialNode.getOptions()) {
-                    optionTexts.add(opt.getText());
-                }
-
-                com.mundodetronos2.network.NetworkManager.S2COpenNpcDialoguePacket pkt =
-                    new com.mundodetronos2.network.NetworkManager.S2COpenNpcDialoguePacket(
-                        this.getId(),
-                        type,
-                        name,
-                        initialNode.getText(),
-                        initialNode.getId(),
-                        getNpcTexture(),
-                        optionTexts
-                    );
-                com.mundodetronos2.network.NetworkManager.sendToPlayer(pkt, sp);
-                return net.minecraft.world.InteractionResult.sidedSuccess(player.level().isClientSide());
-            }
+    public InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (hand == InteractionHand.MAIN_HAND) {
+            playAnimation(getInteractionAnimation(), 40);
+            return InteractionResult.sidedSuccess(this.level().isClientSide());
         }
         return super.mobInteract(player, hand);
     }
 
     @Override
     public boolean isInvulnerableTo(DamageSource source) {
-        return true; // Normal NPCs are invulnerable
+        return true;
     }
 
     @Override

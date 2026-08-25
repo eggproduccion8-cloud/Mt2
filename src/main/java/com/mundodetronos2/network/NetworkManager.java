@@ -42,111 +42,79 @@ public class NetworkManager {
     private static int packetId = 0;
 
     public static void registerPackets() {
-        // Servidor a Cliente: Mensaje/Feedback
         INSTANCE.registerMessage(packetId++, S2CShowMessagePacket.class,
                 S2CShowMessagePacket::encode, S2CShowMessagePacket::decode, S2CShowMessagePacket::handle);
 
-        // Cliente a Servidor: Abrir GUI Principal / Solicitar Sync
         INSTANCE.registerMessage(packetId++, C2SOpenMainGuiPacket.class,
                 C2SOpenMainGuiPacket::encode, C2SOpenMainGuiPacket::decode, C2SOpenMainGuiPacket::handle);
 
-        // Servidor a Cliente: Abrir GUI Principal con datos
         INSTANCE.registerMessage(packetId++, S2COpenMainGuiPacket.class,
                 S2COpenMainGuiPacket::encode, S2COpenMainGuiPacket::decode, S2COpenMainGuiPacket::handle);
 
-        // Cliente a Servidor: Crear Reino
         INSTANCE.registerMessage(packetId++, C2SCreateRealmPacket.class,
                 C2SCreateRealmPacket::encode, C2SCreateRealmPacket::decode, C2SCreateRealmPacket::handle);
 
-        // Cliente a Servidor: Abandonar Reino
         INSTANCE.registerMessage(packetId++, C2SLeaveRealmPacket.class,
                 C2SLeaveRealmPacket::encode, C2SLeaveRealmPacket::decode, C2SLeaveRealmPacket::handle);
 
-        // Cliente a Servidor: Solicitar Lista de Reinos (unirse)
         INSTANCE.registerMessage(packetId++, C2SRequestRealmListPacket.class,
                 C2SRequestRealmListPacket::encode, C2SRequestRealmListPacket::decode, C2SRequestRealmListPacket::handle);
 
-        // Servidor a Cliente: Enviar Lista de Reinos
         INSTANCE.registerMessage(packetId++, S2CRealmListPacket.class,
                 S2CRealmListPacket::encode, S2CRealmListPacket::decode, S2CRealmListPacket::handle);
 
-        // Cliente a Servidor: Solicitar unirse a reino / enviar invitación
         INSTANCE.registerMessage(packetId++, C2SRequestJoinRealmPacket.class,
                 C2SRequestJoinRealmPacket::encode, C2SRequestJoinRealmPacket::decode, C2SRequestJoinRealmPacket::handle);
 
-        // Cliente a Servidor: Aceptar invitación
         INSTANCE.registerMessage(packetId++, C2SAcceptInvitePacket.class,
                 C2SAcceptInvitePacket::encode, C2SAcceptInvitePacket::decode, C2SAcceptInvitePacket::handle);
 
-        // Cliente a Servidor: Rechazar invitación
         INSTANCE.registerMessage(packetId++, C2SRejectInvitePacket.class,
                 C2SRejectInvitePacket::encode, C2SRejectInvitePacket::decode, C2SRejectInvitePacket::handle);
 
-        // Servidor a Cliente: Reproducir Sonido de Golpe en el Trono
         INSTANCE.registerMessage(packetId++, S2CPlayThroneHitSoundPacket.class,
                 S2CPlayThroneHitSoundPacket::encode, S2CPlayThroneHitSoundPacket::decode, S2CPlayThroneHitSoundPacket::handle);
 
-        // Servidor a Cliente: Sincronizar datos de un Trono Específico (para barra de vida)
         INSTANCE.registerMessage(packetId++, S2CSyncThroneDataPacket.class,
                 S2CSyncThroneDataPacket::encode, S2CSyncThroneDataPacket::decode, S2CSyncThroneDataPacket::handle);
 
-        // --- SISTEMA DE ROLES PACKETS ---
-
-        // Servidor a Cliente: Abrir Selección de Roles
+        // --- ROLES SYSTEM PACKETS ---
         INSTANCE.registerMessage(packetId++, S2COpenRoleSelectionPacket.class,
                 S2COpenRoleSelectionPacket::encode, S2COpenRoleSelectionPacket::decode, S2COpenRoleSelectionPacket::handle);
 
-        // Cliente a Servidor: Seleccionar un Rol
         INSTANCE.registerMessage(packetId++, C2SSelectRolePacket.class,
                 C2SSelectRolePacket::encode, C2SSelectRolePacket::decode, C2SSelectRolePacket::handle);
 
-        // Servidor a Cliente: Enviar Datos de Carnet de Rol
         INSTANCE.registerMessage(packetId++, S2CRoleCardDataPacket.class,
                 S2CRoleCardDataPacket::encode, S2CRoleCardDataPacket::decode, S2CRoleCardDataPacket::handle);
 
-        // Servidor a Cliente: Iniciar Cinemática de Ojos (Pestañeo)
         INSTANCE.registerMessage(packetId++, S2CStartRoleCinematicPacket.class,
                 S2CStartRoleCinematicPacket::encode, S2CStartRoleCinematicPacket::decode, S2CStartRoleCinematicPacket::handle);
 
-        // --- S2C HUD SYNC PACKET ---
         INSTANCE.registerMessage(packetId++, S2CHudSyncPacket.class,
                 S2CHudSyncPacket::encode, S2CHudSyncPacket::decode, S2CHudSyncPacket::handle);
 
-        // --- PORTAL DE LA DIOSA PACKETS ---
-        INSTANCE.registerMessage(packetId++, S2COpenGoddessPortalPacket.class,
-                S2COpenGoddessPortalPacket::encode, S2COpenGoddessPortalPacket::decode, S2COpenGoddessPortalPacket::handle);
-
-        INSTANCE.registerMessage(packetId++, C2SEnterGoddessDimensionPacket.class,
-                C2SEnterGoddessDimensionPacket::encode, C2SEnterGoddessDimensionPacket::decode, C2SEnterGoddessDimensionPacket::handle);
-
-        // --- CLIENT TO SERVER: TELEPORT REQUEST (POST-CINEMATIC TYPEWRITER) ---
         INSTANCE.registerMessage(packetId++, C2SSelectRoleTeleportPacket.class,
                 C2SSelectRoleTeleportPacket::encode, C2SSelectRoleTeleportPacket::decode, C2SSelectRoleTeleportPacket::handle);
 
-        // --- S2C DEATH REBIRTH CINEMATIC PACKET ---
         INSTANCE.registerMessage(packetId++, S2CStartDeathRebirthCinematicPacket.class,
                 S2CStartDeathRebirthCinematicPacket::encode, S2CStartDeathRebirthCinematicPacket::decode, S2CStartDeathRebirthCinematicPacket::handle);
 
-        // --- S2C SHOW DEATH ALERT PACKET ---
         INSTANCE.registerMessage(packetId++, S2CShowDeathAlertPacket.class,
                 S2CShowDeathAlertPacket::encode, S2CShowDeathAlertPacket::decode, S2CShowDeathAlertPacket::handle);
 
-        // --- S2C SHOW THRONE LIFE LOSS ALERT PACKET ---
         INSTANCE.registerMessage(packetId++, S2CThroneLifeLossAlertPacket.class,
                 S2CThroneLifeLossAlertPacket::encode, S2CThroneLifeLossAlertPacket::decode, S2CThroneLifeLossAlertPacket::handle);
 
-        // --- S2C ROLE ANVIL PACKETS ---
         INSTANCE.registerMessage(packetId++, S2COpenRoleAnvilPacket.class,
                 S2COpenRoleAnvilPacket::encode, S2COpenRoleAnvilPacket::decode, S2COpenRoleAnvilPacket::handle);
 
         INSTANCE.registerMessage(packetId++, C2SForgeEquipmentPacket.class,
                 C2SForgeEquipmentPacket::encode, C2SForgeEquipmentPacket::decode, C2SForgeEquipmentPacket::handle);
 
-        // --- C2S ADMIN EQUIPMENT SWITCH PACKET ---
         INSTANCE.registerMessage(packetId++, C2SChangeAdminRoleMenuPacket.class,
                 C2SChangeAdminRoleMenuPacket::encode, C2SChangeAdminRoleMenuPacket::decode, C2SChangeAdminRoleMenuPacket::handle);
 
-        // --- SKILL TREE PACKETS ---
         INSTANCE.registerMessage(packetId++, C2SOpenSkillTreePacket.class,
                 C2SOpenSkillTreePacket::encode, C2SOpenSkillTreePacket::decode, C2SOpenSkillTreePacket::handle);
 
@@ -159,82 +127,42 @@ public class NetworkManager {
         INSTANCE.registerMessage(packetId++, C2SUnlockSkillNodePacket.class,
                 C2SUnlockSkillNodePacket::encode, C2SUnlockSkillNodePacket::decode, C2SUnlockSkillNodePacket::handle);
 
-        // --- BLACKSMITH TABLE PACKETS ---
         INSTANCE.registerMessage(packetId++, S2COpenBlacksmithTablePacket.class,
                 S2COpenBlacksmithTablePacket::encode, S2COpenBlacksmithTablePacket::decode, S2COpenBlacksmithTablePacket::handle);
 
         INSTANCE.registerMessage(packetId++, C2SClaimBlacksmithKitPacket.class,
                 C2SClaimBlacksmithKitPacket::encode, C2SClaimBlacksmithKitPacket::decode, C2SClaimBlacksmithKitPacket::handle);
 
-        // --- C2S COMPLETE ROLE SELECTION PACKET ---
         INSTANCE.registerMessage(packetId++, C2SCompleteRoleSelectionPacket.class,
                 C2SCompleteRoleSelectionPacket::encode, C2SCompleteRoleSelectionPacket::decode, C2SCompleteRoleSelectionPacket::handle);
 
-        // --- S2C OPEN ALTAR OPTION PACKET ---
         INSTANCE.registerMessage(packetId++, S2COpenAltarOptionPacket.class,
                 S2COpenAltarOptionPacket::encode, S2COpenAltarOptionPacket::decode, S2COpenAltarOptionPacket::handle);
 
-        // --- C2S EXIT ROLE DIMENSION PACKET ---
         INSTANCE.registerMessage(packetId++, C2SExitRoleDimensionPacket.class,
                 C2SExitRoleDimensionPacket::encode, C2SExitRoleDimensionPacket::decode, C2SExitRoleDimensionPacket::handle);
 
-        // --- C2S CLAIM GODDESS BOOK PACKET ---
         INSTANCE.registerMessage(packetId++, C2SClaimGoddessBookPacket.class,
                 C2SClaimGoddessBookPacket::encode, C2SClaimGoddessBookPacket::decode, C2SClaimGoddessBookPacket::handle);
 
-        // --- C2S DEFUSE SUCCESS PACKET ---
         INSTANCE.registerMessage(packetId++, C2SDefuseSuccessPacket.class,
                 C2SDefuseSuccessPacket::encode, C2SDefuseSuccessPacket::decode, C2SDefuseSuccessPacket::handle);
 
-        // --- C2S TRADE NPC PACKET ---
-        INSTANCE.registerMessage(packetId++, C2STradeNpcPacket.class,
-                C2STradeNpcPacket::encode, C2STradeNpcPacket::decode, C2STradeNpcPacket::handle);
-
-        // --- S2C THRONE ATTACK ALERT PACKET ---
         INSTANCE.registerMessage(packetId++, S2CThroneAttackAlertPacket.class,
                 S2CThroneAttackAlertPacket::encode, S2CThroneAttackAlertPacket::decode, S2CThroneAttackAlertPacket::handle);
 
-        // --- S2C OPEN NPC DIALOGUE PACKET ---
-        INSTANCE.registerMessage(packetId++, S2COpenNpcDialoguePacket.class,
-                S2COpenNpcDialoguePacket::encode, S2COpenNpcDialoguePacket::decode, S2COpenNpcDialoguePacket::handle);
-
-        // --- C2S CLAIM ROLE ARMOR PACKET ---
         INSTANCE.registerMessage(packetId++, C2SClaimRoleArmorPacket.class,
                 C2SClaimRoleArmorPacket::encode, C2SClaimRoleArmorPacket::decode, C2SClaimRoleArmorPacket::handle);
 
-        // --- C2S CLAIM SACERDOTE OFFERING PACKET ---
-        INSTANCE.registerMessage(packetId++, C2SClaimSacerdoteOfferingPacket.class,
-                C2SClaimSacerdoteOfferingPacket::encode, C2SClaimSacerdoteOfferingPacket::decode, C2SClaimSacerdoteOfferingPacket::handle);
-
-        // --- C2S SELECT DIALOGUE OPTION PACKET ---
-        INSTANCE.registerMessage(packetId++, C2SSelectDialogueOptionPacket.class,
-                C2SSelectDialogueOptionPacket::encode, C2SSelectDialogueOptionPacket::decode, C2SSelectDialogueOptionPacket::handle);
-
-        // --- C2S REPAIR INITIAL ARMOR PACKET ---
         INSTANCE.registerMessage(packetId++, C2SRepairInitialArmorPacket.class,
                 C2SRepairInitialArmorPacket::encode, C2SRepairInitialArmorPacket::decode, C2SRepairInitialArmorPacket::handle);
 
-        // --- C2S REQUEST NPC DIALOGUE PACKET ---
-        INSTANCE.registerMessage(packetId++, C2SRequestNpcDialoguePacket.class,
-                C2SRequestNpcDialoguePacket::encode, C2SRequestNpcDialoguePacket::decode, C2SRequestNpcDialoguePacket::handle);
-
-        // --- S2C OPEN NPC EDITOR PACKET ---
-        INSTANCE.registerMessage(packetId++, S2COpenNpcEditorPacket.class,
-                S2COpenNpcEditorPacket::encode, S2COpenNpcEditorPacket::decode, S2COpenNpcEditorPacket::handle);
-
-        // --- C2S UPDATE NPC DIALOGUE PACKET ---
-        INSTANCE.registerMessage(packetId++, C2SUpdateNpcDialoguePacket.class,
-                C2SUpdateNpcDialoguePacket::encode, C2SUpdateNpcDialoguePacket::decode, C2SUpdateNpcDialoguePacket::handle);
-
-        // --- S2C TOGGLE LIMITES PACKET ---
         INSTANCE.registerMessage(packetId++, S2CToggleLimitesPacket.class,
                 S2CToggleLimitesPacket::encode, S2CToggleLimitesPacket::decode, S2CToggleLimitesPacket::handle);
 
-        // --- S2C TOGGLE CHAT PACKET ---
         INSTANCE.registerMessage(packetId++, S2CToggleChatPacket.class,
                 S2CToggleChatPacket::encode, S2CToggleChatPacket::decode, S2CToggleChatPacket::handle);
 
-        // --- C2S OPEN RPG INVENTORY PACKET ---
         INSTANCE.registerMessage(packetId++, C2SOpenRPGInventoryPacket.class,
                 C2SOpenRPGInventoryPacket::encode, C2SOpenRPGInventoryPacket::decode, C2SOpenRPGInventoryPacket::handle);
     }
@@ -285,77 +213,12 @@ public class NetworkManager {
             }
         }
 
-        // Active Mission Title and Progress
-        String missionTitle = "";
-        String missionProgress = "";
-
-        // Check MissionManager custom/general active missions
-        UUID groupId = com.mundodetronos2.missions.MissionManager.getGroupId(player);
-        java.util.Map<String, com.mundodetronos2.missions.MissionProgress> pMap = com.mundodetronos2.missions.MissionManager.getGroupProgressMap(groupId);
-
-        for (com.mundodetronos2.missions.MissionProgress mp : pMap.values()) {
-            if ("ACTIVE".equalsIgnoreCase(mp.getStatus())) {
-                com.mundodetronos2.missions.Mission m = com.mundodetronos2.missions.MissionManager.getMission(mp.getMissionId());
-                if (m != null) {
-                    missionTitle = m.getName();
-                    int target = m.getObjective() != null ? m.getObjective().getTargetCount() : 1;
-                    missionProgress = mp.getCurrentCount() + " / " + target;
-                    break;
-                }
-            }
-        }
-
-        // If no custom active mission, check team tutorial stage
-        if (missionTitle.isEmpty()) {
-            if (realm == null) {
-                missionTitle = "Paso 1: Habla con Manuel";
-                missionProgress = "Habla con Manuel en Spawn";
-            } else {
-                com.mundodetronos2.tutorial.TutorialManager.RealmTutorialData tut = com.mundodetronos2.tutorial.TutorialManager.getTutorialData(realm.getId());
-                int totalMembers = Math.max(1, realm.getMembers().size());
-
-                switch (tut.tutorialLevel) {
-                    case 1 -> { missionTitle = "Gremio: Ve con Karla"; missionProgress = "Habla con Karla en Gremio"; }
-                    case 2 -> { missionTitle = "Misión 1 del Gremio: Laura"; missionProgress = "Trigo: " + tut.wheatCount + " / 150"; }
-                    case 3 -> { missionTitle = "Oscar: Armadura Inicial"; missionProgress = tut.oscarArmorClaimedMembers.size() + " / " + totalMembers; }
-                    case 4 -> { missionTitle = "Samuel: Prueba del Acero"; missionProgress = tut.samuelGolemHitMembers.size() + " / " + totalMembers; }
-                    case 5 -> { missionTitle = "Heraldo: Cargas de Asalto"; missionProgress = "Aprender Demolición"; }
-                    case 6 -> { missionTitle = "Guardia del Rey: Ojos del Reino"; missionProgress = tut.guardiaCheckpointsVisited.size() + " / 4"; }
-                    case 7 -> { missionTitle = "Sacerdote: Leyenda de María"; missionProgress = "Escuchar Leyenda"; }
-                    case 8 -> { missionTitle = "Capitán: Prueba de Unidad"; missionProgress = tut.arenaParticipatedMembers.size() + " / " + totalMembers; }
-                    case 9 -> { missionTitle = "Maestro: Prueba Final"; missionProgress = "Asedio Final"; }
-                    case 10 -> {
-                        if (!tut.throneClaimed) {
-                            missionTitle = "Sacerdote: Reclamar Trono"; missionProgress = "Líder debe Reclamar";
-                        } else {
-                            missionTitle = "Tutorial Completado"; missionProgress = "Aventura Libre";
-                        }
-                    }
-                }
-            }
-        }
-
-        S2CHudSyncPacket pkt = new S2CHudSyncPacket(lives, points, remaining, roleStr, level, currentXp, neededXp, tutorialLevel, missionTitle, missionProgress, teamName, tx, ty, tz, tDim);
+        S2CHudSyncPacket pkt = new S2CHudSyncPacket(lives, points, remaining, roleStr, level, currentXp, neededXp, tutorialLevel, "", "", teamName, tx, ty, tz, tDim);
         sendToPlayer(pkt, player);
     }
 
-    public static net.minecraft.world.item.ItemStack createThroneGuideBook() {
-        net.minecraft.world.item.ItemStack book = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.WRITTEN_BOOK);
-        net.minecraft.nbt.CompoundTag tag = book.getOrCreateTag();
-        tag.putString("title", "§6Guía del Trono");
-        tag.putString("author", "El Custodio");
+    // --- PACKET DEFINITIONS ---
 
-        net.minecraft.nbt.ListTag pages = new net.minecraft.nbt.ListTag();
-        pages.add(net.minecraft.nbt.StringTag.valueOf("{\"text\":\"§1§lGuía del Trono§r\\n\\n1. Solo el líder puede colocar el Trono.\\n2. Colócalo donde quieras establecer tu base.\\n3. El Trono será el centro de tu protección.\\n4. La protección será de 150x150 bloques.\"}"));
-        pages.add(net.minecraft.nbt.StringTag.valueOf("{\"text\":\"5. Tus miembros podrán construir dentro.\\n6. Durante un asedio la protección se desactiva.\\n7. El Trono tiene vidas.\\n8. Las Cargas de Asalto son necesarias para destruirlo.\"}"));
-        pages.add(net.minecraft.nbt.StringTag.valueOf("{\"text\":\"9. Si el Trono llega a 0 HP pierde una vida y entra en reconstrucción.\\n10. El Trono no se debe volver a colocar después de ser dañado.\"}"));
-        tag.put("pages", pages);
-        return book;
-    }
-
-    // ------------------ PACKET DEFINITIONS ------------------
-
-    // S2C Show Message
     public static class S2CShowMessagePacket {
         private final String message;
         private final boolean isError;
@@ -384,7 +247,6 @@ public class NetworkManager {
         }
     }
 
-    // --- S2C TOGGLE CHAT PACKET ---
     public static class S2CToggleChatPacket {
         public S2CToggleChatPacket() {}
         public static void encode(S2CToggleChatPacket msg, FriendlyByteBuf buf) {}
@@ -401,199 +263,6 @@ public class NetworkManager {
         }
     }
 
-    // --- S2C OPEN NPC EDITOR PACKET ---
-    public static class S2COpenNpcEditorPacket {
-        private final int entityId;
-        private final String npcType;
-        private final String npcName;
-        private final String skinName;
-        private final String text;
-
-        public S2COpenNpcEditorPacket(int entityId, String npcType, String npcName, String skinName, String text) {
-            this.entityId = entityId;
-            this.npcType = npcType;
-            this.npcName = npcName;
-            this.skinName = skinName;
-            this.text = text;
-        }
-
-        public static void encode(S2COpenNpcEditorPacket msg, FriendlyByteBuf buf) {
-            buf.writeInt(msg.entityId);
-            buf.writeUtf(msg.npcType);
-            buf.writeUtf(msg.npcName);
-            buf.writeUtf(msg.skinName);
-            buf.writeUtf(msg.text);
-        }
-
-        public static S2COpenNpcEditorPacket decode(FriendlyByteBuf buf) {
-            return new S2COpenNpcEditorPacket(
-                    buf.readInt(),
-                    buf.readUtf(),
-                    buf.readUtf(),
-                    buf.readUtf(),
-                    buf.readUtf()
-            );
-        }
-
-        public static void handle(S2COpenNpcEditorPacket msg, Supplier<NetworkEvent.Context> ctx) {
-            ctx.get().enqueueWork(() -> {
-                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-                    com.mundodetronos2.client.ClientPacketHandler.handleOpenNpcEditor(
-                            msg.entityId,
-                            msg.npcType,
-                            msg.npcName,
-                            msg.skinName,
-                            msg.text
-                    );
-                });
-            });
-            ctx.get().setPacketHandled(true);
-        }
-    }
-
-    // --- C2S UPDATE NPC DIALOGUE PACKET ---
-    public static class C2SUpdateNpcDialoguePacket {
-        private final int entityId;
-        private final String npcType;
-        private final String nodeId;
-        private final String text;
-        private final String newName;
-        private final String newSkin;
-
-        public C2SUpdateNpcDialoguePacket(int entityId, String npcType, String nodeId, String text, String newName, String newSkin) {
-            this.entityId = entityId;
-            this.npcType = npcType;
-            this.nodeId = nodeId;
-            this.text = text;
-            this.newName = newName;
-            this.newSkin = newSkin;
-        }
-
-        public static void encode(C2SUpdateNpcDialoguePacket msg, FriendlyByteBuf buf) {
-            buf.writeInt(msg.entityId);
-            buf.writeUtf(msg.npcType);
-            buf.writeUtf(msg.nodeId);
-            buf.writeUtf(msg.text);
-            buf.writeUtf(msg.newName);
-            buf.writeUtf(msg.newSkin);
-        }
-
-        public static C2SUpdateNpcDialoguePacket decode(FriendlyByteBuf buf) {
-            return new C2SUpdateNpcDialoguePacket(
-                    buf.readInt(),
-                    buf.readUtf(),
-                    buf.readUtf(),
-                    buf.readUtf(),
-                    buf.readUtf(),
-                    buf.readUtf()
-            );
-        }
-
-        public static void handle(C2SUpdateNpcDialoguePacket msg, Supplier<NetworkEvent.Context> ctx) {
-            ctx.get().enqueueWork(() -> {
-                ServerPlayer player = ctx.get().getSender();
-                if (player == null || !player.hasPermissions(2)) return;
-
-                // 1. Guardar NpcConfig si el JSON contiene la estructura del editor
-                if (msg.text.trim().startsWith("{")) {
-                    try {
-                        com.mundodetronos2.npc.NpcRegistryManager.NpcConfig config = new com.google.gson.Gson().fromJson(msg.text, com.mundodetronos2.npc.NpcRegistryManager.NpcConfig.class);
-                        if (config != null && config.uuid != null) {
-                            com.mundodetronos2.npc.NpcRegistryManager.updateNpcConfig(UUID.fromString(config.uuid), config);
-                        } else {
-                            java.lang.reflect.Type type = new com.google.gson.reflect.TypeToken<java.util.HashMap<String, com.mundodetronos2.dialogue.DialogueNode>>() {}.getType();
-                            java.util.Map<String, com.mundodetronos2.dialogue.DialogueNode> parsed = new com.google.gson.Gson().fromJson(msg.text, type);
-                            if (parsed != null && !parsed.isEmpty()) {
-                                java.util.Map<String, com.mundodetronos2.dialogue.DialogueNode> npcMap = com.mundodetronos2.dialogue.NpcDialogueManager.getOrCreateNpcTypeMap(msg.npcType);
-                                npcMap.clear();
-                                npcMap.putAll(parsed);
-                                com.mundodetronos2.dialogue.NpcDialogueManager.save();
-                            }
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    com.mundodetronos2.dialogue.DialogueNode node = com.mundodetronos2.dialogue.NpcDialogueManager.getNode(msg.npcType, msg.nodeId);
-                    if (node != null) {
-                        node.setText(msg.text);
-                        com.mundodetronos2.dialogue.NpcDialogueManager.save();
-                    }
-                }
-
-                // 2. Actualizar la entidad CustomNPCEntity por ID
-                net.minecraft.world.entity.Entity entity = player.level().getEntity(msg.entityId);
-                if (entity instanceof com.mundodetronos2.entity.CustomNPCEntity customNpc) {
-                    if (!msg.newName.isEmpty()) {
-                        customNpc.setCustomName(Component.literal(msg.newName));
-                        customNpc.setCustomNameVisible(true);
-                    }
-                    if (!msg.newSkin.isEmpty()) {
-                        customNpc.setNpcTexture(msg.newSkin);
-                    }
-                }
-
-                MessageManager.actionBar(player, "§a✔ ¡NPC guardado con éxito!");
-            });
-            ctx.get().setPacketHandled(true);
-        }
-    }
-
-    // --- C2S REQUEST NPC DIALOGUE PACKET ---
-    public static class C2SRequestNpcDialoguePacket {
-        private final String npcType;
-
-        public C2SRequestNpcDialoguePacket(String npcType) {
-            this.npcType = npcType;
-        }
-
-        public static void encode(C2SRequestNpcDialoguePacket msg, FriendlyByteBuf buf) {
-            buf.writeUtf(msg.npcType);
-        }
-
-        public static C2SRequestNpcDialoguePacket decode(FriendlyByteBuf buf) {
-            return new C2SRequestNpcDialoguePacket(buf.readUtf());
-        }
-
-        public static void handle(C2SRequestNpcDialoguePacket msg, Supplier<NetworkEvent.Context> ctx) {
-            ctx.get().enqueueWork(() -> {
-                ServerPlayer player = ctx.get().getSender();
-                if (player == null) return;
-
-                // Buscar un CustomNPCEntity de este tipo en la dimensión actual
-                com.mundodetronos2.entity.CustomNPCEntity targetNpc = null;
-                for (ServerLevel level : player.getServer().getAllLevels()) {
-                    if (level.dimension().location().toString().equals(player.level().dimension().location().toString())) {
-                        for (net.minecraft.world.entity.Entity e : level.getAllEntities()) {
-                            if (e instanceof com.mundodetronos2.entity.CustomNPCEntity npc && npc.getNpcModel().equalsIgnoreCase(msg.npcType)) {
-                                targetNpc = npc;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if (targetNpc != null) {
-                    targetNpc.mobInteract(player, net.minecraft.world.InteractionHand.MAIN_HAND);
-                } else {
-                    String defaultName = "Manuel";
-                    if (msg.npcType.equalsIgnoreCase("ivan")) defaultName = "Iván";
-
-                    com.mundodetronos2.dialogue.DialogueNode initialNode = com.mundodetronos2.dialogue.NpcDialogueManager.getNode(msg.npcType, "inicio");
-                    if (initialNode != null) {
-                        List<String> optionTexts = new ArrayList<>();
-                        for (com.mundodetronos2.dialogue.DialogueOption opt : initialNode.getOptions()) {
-                            optionTexts.add(opt.getText());
-                        }
-                        sendToPlayer(new S2COpenNpcDialoguePacket(0, msg.npcType.toLowerCase(), defaultName, initialNode.getText(), initialNode.getId(), msg.npcType, optionTexts), player);
-                    }
-                }
-            });
-            ctx.get().setPacketHandled(true);
-        }
-    }
-
-    // --- C2S UNLOCK SKILL NODE PACKET ---
     public static class C2SUnlockSkillNodePacket {
         private final String roleId;
         private final String skillId;
@@ -616,21 +285,16 @@ public class NetworkManager {
             ctx.get().enqueueWork(() -> {
                 ServerPlayer player = ctx.get().getSender();
                 if (player == null) return;
-
                 com.mundodetronos2.skills.SkillPointManager.tryUnlockSkill(player.getUUID(), msg.roleId, msg.skillId, player);
             });
             ctx.get().setPacketHandled(true);
         }
     }
 
-    // C2S Open Main Gui
     public static class C2SOpenMainGuiPacket {
         public C2SOpenMainGuiPacket() {}
-
         public static void encode(C2SOpenMainGuiPacket msg, FriendlyByteBuf buf) {}
-        public static C2SOpenMainGuiPacket decode(FriendlyByteBuf buf) {
-            return new C2SOpenMainGuiPacket();
-        }
+        public static C2SOpenMainGuiPacket decode(FriendlyByteBuf buf) { return new C2SOpenMainGuiPacket(); }
 
         public static void handle(C2SOpenMainGuiPacket msg, Supplier<NetworkEvent.Context> ctx) {
             ctx.get().enqueueWork(() -> {
@@ -645,8 +309,6 @@ public class NetworkManager {
                 }
 
                 List<InviteData> playerInvites = RealmManager.getPlayerInvites(playerId);
-
-                // Enviar S2COpenMainGuiPacket
                 S2COpenMainGuiPacket s2c = new S2COpenMainGuiPacket(playerRealm, playerThrone, playerInvites);
                 sendToPlayer(s2c, player);
             });
@@ -654,7 +316,6 @@ public class NetworkManager {
         }
     }
 
-    // S2C Open Main Gui
     public static class S2COpenMainGuiPacket {
         private final boolean hasRealm;
         private final String realmName;
@@ -669,7 +330,6 @@ public class NetworkManager {
         private final int throneHealth;
         private final int throneMaxHealth;
         private final List<InviteData> invites;
-
         private final String playerRole;
         private final int playerRoleLevel;
 
@@ -820,7 +480,6 @@ public class NetworkManager {
         public int getPlayerRoleLevel() { return playerRoleLevel; }
     }
 
-    // C2S Create Realm
     public static class C2SCreateRealmPacket {
         private final String realmName;
 
@@ -854,14 +513,10 @@ public class NetworkManager {
         }
     }
 
-    // C2S Leave Realm
     public static class C2SLeaveRealmPacket {
         public C2SLeaveRealmPacket() {}
-
         public static void encode(C2SLeaveRealmPacket msg, FriendlyByteBuf buf) {}
-        public static C2SLeaveRealmPacket decode(FriendlyByteBuf buf) {
-            return new C2SLeaveRealmPacket();
-        }
+        public static C2SLeaveRealmPacket decode(FriendlyByteBuf buf) { return new C2SLeaveRealmPacket(); }
 
         public static void handle(C2SLeaveRealmPacket msg, Supplier<NetworkEvent.Context> ctx) {
             ctx.get().enqueueWork(() -> {
@@ -880,14 +535,10 @@ public class NetworkManager {
         }
     }
 
-    // C2S Request Realm List
     public static class C2SRequestRealmListPacket {
         public C2SRequestRealmListPacket() {}
-
         public static void encode(C2SRequestRealmListPacket msg, FriendlyByteBuf buf) {}
-        public static C2SRequestRealmListPacket decode(FriendlyByteBuf buf) {
-            return new C2SRequestRealmListPacket();
-        }
+        public static C2SRequestRealmListPacket decode(FriendlyByteBuf buf) { return new C2SRequestRealmListPacket(); }
 
         public static void handle(C2SRequestRealmListPacket msg, Supplier<NetworkEvent.Context> ctx) {
             ctx.get().enqueueWork(() -> {
@@ -901,7 +552,6 @@ public class NetworkManager {
         }
     }
 
-    // S2C Realm List Packet
     public static class S2CRealmListPacket {
         private final List<RealmInfo> realms;
 
@@ -962,7 +612,6 @@ public class NetworkManager {
         }
     }
 
-    // C2S Request Join Realm
     public static class C2SRequestJoinRealmPacket {
         private final UUID realmId;
 
@@ -1000,7 +649,6 @@ public class NetworkManager {
         }
     }
 
-    // C2S Accept Invite
     public static class C2SAcceptInvitePacket {
         private final UUID inviteId;
 
@@ -1033,7 +681,6 @@ public class NetworkManager {
         }
     }
 
-    // C2S Reject Invite
     public static class C2SRejectInvitePacket {
         private final UUID inviteId;
 
@@ -1066,7 +713,6 @@ public class NetworkManager {
         }
     }
 
-    // S2C Play Throne Hit Sound
     public static class S2CPlayThroneHitSoundPacket {
         private final double x;
         private final double y;
@@ -1101,7 +747,6 @@ public class NetworkManager {
         }
     }
 
-    // S2C Sync Throne Data (For Barra de vida)
     public static class S2CSyncThroneDataPacket {
         private final String realmName;
         private final int health;
@@ -1136,9 +781,6 @@ public class NetworkManager {
         }
     }
 
-    // --- PACKETS FOR ROLES SYSTEM ---
-
-    // S2C Open Role Selection
     public static class S2COpenRoleSelectionPacket {
         public S2COpenRoleSelectionPacket() {}
         public static void encode(S2COpenRoleSelectionPacket msg, FriendlyByteBuf buf) {}
@@ -1153,7 +795,6 @@ public class NetworkManager {
         }
     }
 
-    // C2S Select Role
     public static class C2SSelectRolePacket {
         private final String roleId;
 
@@ -1186,14 +827,12 @@ public class NetworkManager {
                     return;
                 }
 
-                // Iniciar cinemática de pestañeo y minijuego en el cliente sin asignar el rol aún!
                 sendToPlayer(new S2CStartRoleCinematicPacket(role.name().toLowerCase()), player);
             });
             ctx.get().setPacketHandled(true);
         }
     }
 
-    // S2C Role Card Data
     public static class S2CRoleCardDataPacket {
         private final UUID playerId;
         private final String playerName;
@@ -1240,7 +879,6 @@ public class NetworkManager {
         }
     }
 
-    // S2C Start Role Cinematic
     public static class S2CStartRoleCinematicPacket {
         private final String roleId;
 
@@ -1259,14 +897,13 @@ public class NetworkManager {
         public static void handle(S2CStartRoleCinematicPacket msg, Supplier<NetworkEvent.Context> ctx) {
             ctx.get().enqueueWork(() -> {
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-                    com.mundodetronos2.client.ClientPacketHandler.handleStartCinematic(msg.roleId);
+                    // Start role cinematic logic on client if needed
                 });
             });
             ctx.get().setPacketHandled(true);
         }
     }
 
-    // S2C HUD Sync
     public static class S2CHudSyncPacket {
         private final int throneLives;
         private final int sharedPoints;
@@ -1343,91 +980,6 @@ public class NetworkManager {
         }
     }
 
-    // S2C Open Goddess Portal
-    public static class S2COpenGoddessPortalPacket {
-        public S2COpenGoddessPortalPacket() {}
-        public static void encode(S2COpenGoddessPortalPacket msg, FriendlyByteBuf buf) {}
-        public static S2COpenGoddessPortalPacket decode(FriendlyByteBuf buf) { return new S2COpenGoddessPortalPacket(); }
-        public static void handle(S2COpenGoddessPortalPacket msg, Supplier<NetworkEvent.Context> ctx) {
-            ctx.get().enqueueWork(() -> {
-                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-                    com.mundodetronos2.client.ClientPacketHandler.handleOpenGoddessPortal();
-                });
-            });
-            ctx.get().setPacketHandled(true);
-        }
-    }
-
-    // C2S Enter Goddess Dimension
-    public static class C2SEnterGoddessDimensionPacket {
-        public C2SEnterGoddessDimensionPacket() {}
-        public static void encode(C2SEnterGoddessDimensionPacket msg, FriendlyByteBuf buf) {}
-        public static C2SEnterGoddessDimensionPacket decode(FriendlyByteBuf buf) { return new C2SEnterGoddessDimensionPacket(buf); }
-
-        public C2SEnterGoddessDimensionPacket(FriendlyByteBuf buf) {}
-
-        public static void handle(C2SEnterGoddessDimensionPacket msg, Supplier<NetworkEvent.Context> ctx) {
-            ctx.get().enqueueWork(() -> {
-                ServerPlayer player = ctx.get().getSender();
-                if (player == null) return;
-
-                // Verificar si ya tiene un rol asignado para tepear gratis e instantáneo
-                PlayerRoleData rData = RoleManager.getPlayerRoleData(player.getUUID());
-                if (rData.isHasRole() && rData.getRole() != PlayerRole.NONE) {
-                    try {
-                        ResourceLocation dimRl = new ResourceLocation("mundodetronos2", "role_dimension");
-                        ResourceKey<net.minecraft.world.level.Level> dimKey = ResourceKey.create(Registries.DIMENSION, dimRl);
-                        ServerLevel level = player.getServer().getLevel(dimKey);
-                        if (level != null) {
-                            player.teleportTo(level, 0.5D, 64.0D, 0.5D, 0.0F, 0.0F);
-                            sendToPlayer(new S2CShowMessagePacket("§a¡Has regresado al templo de la Diosa María!", false), player);
-                        } else {
-                            sendToPlayer(new S2CShowMessagePacket("§cLa dimensión de roles no se encuentra cargada en el servidor.", true), player);
-                        }
-                    } catch (Exception e) {
-                        sendToPlayer(new S2CShowMessagePacket("§cError al cruzar el portal: " + e.getMessage(), true), player);
-                    }
-                    return;
-                }
-
-                boolean hasOffering = false;
-                net.minecraft.world.item.ItemStack offeringStack = null;
-                for (net.minecraft.world.item.ItemStack stack : player.getInventory().items) {
-                    if (stack.getItem() == net.minecraft.world.item.Items.POPPY && stack.hasTag() && stack.getTag().getBoolean("IsGoddessOffering")) {
-                        hasOffering = true;
-                        offeringStack = stack;
-                        break;
-                    }
-                }
-
-                if (!hasOffering) {
-                    sendToPlayer(new S2CShowMessagePacket("§cNo tienes la Ofrenda de la Diosa María en tu inventario.", true), player);
-                    return;
-                }
-
-                // Consumir la ofrenda (1 amapola sagrada)
-                offeringStack.shrink(1);
-
-                // Teletransportar a la dimensión de la Diosa
-                try {
-                    ResourceLocation dimRl = new ResourceLocation("mundodetronos2", "role_dimension");
-                    ResourceKey<net.minecraft.world.level.Level> dimKey = ResourceKey.create(Registries.DIMENSION, dimRl);
-                    ServerLevel level = player.getServer().getLevel(dimKey);
-                    if (level != null) {
-                        player.teleportTo(level, 0.5D, 64.0D, 0.5D, 0.0F, 0.0F);
-                        sendToPlayer(new S2CShowMessagePacket("§a¡Has depositado tu ofrenda y cruzado al templo de la Diosa María!", false), player);
-                    } else {
-                        sendToPlayer(new S2CShowMessagePacket("§cLa dimensión de roles no se encuentra cargada en el servidor.", true), player);
-                    }
-                } catch (Exception e) {
-                    sendToPlayer(new S2CShowMessagePacket("§cError al cruzar el portal: " + e.getMessage(), true), player);
-                }
-            });
-            ctx.get().setPacketHandled(true);
-        }
-    }
-
-    // --- C2S SELECT ROLE TELEPORT PACKET (POST-TYPEWRITER PORT) ---
     public static class C2SSelectRoleTeleportPacket {
         public C2SSelectRoleTeleportPacket() {}
         public static void encode(C2SSelectRoleTeleportPacket msg, FriendlyByteBuf buf) {}
@@ -1466,7 +1018,6 @@ public class NetworkManager {
         }
     }
 
-    // --- S2C DEATH REBIRTH CINEMATIC PACKET ---
     public static class S2CStartDeathRebirthCinematicPacket {
         public S2CStartDeathRebirthCinematicPacket() {}
         public static void encode(S2CStartDeathRebirthCinematicPacket msg, FriendlyByteBuf buf) {}
@@ -1474,14 +1025,13 @@ public class NetworkManager {
         public static void handle(S2CStartDeathRebirthCinematicPacket msg, Supplier<NetworkEvent.Context> ctx) {
             ctx.get().enqueueWork(() -> {
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-                    com.mundodetronos2.client.ClientPacketHandler.handleOpenDeathRebirthCinematic();
+                    // Client death rebirth cinematic handling
                 });
             });
             ctx.get().setPacketHandled(true);
         }
     }
 
-    // --- S2C SHOW DEATH ALERT PACKET ---
     public static class S2CShowDeathAlertPacket {
         private final UUID deadPlayerId;
         private final String deadPlayerName;
@@ -1510,7 +1060,6 @@ public class NetworkManager {
         }
     }
 
-    // --- S2C OPEN ROLE ANVIL PACKET ---
     public static class S2COpenRoleAnvilPacket {
         public S2COpenRoleAnvilPacket() {}
         public static void encode(S2COpenRoleAnvilPacket msg, FriendlyByteBuf buf) {}
@@ -1525,7 +1074,6 @@ public class NetworkManager {
         }
     }
 
-    // --- C2S FORGE EQUIPMENT PACKET ---
     public static class C2SForgeEquipmentPacket {
         private final int itemSlot;
 
@@ -1566,14 +1114,12 @@ public class NetworkManager {
                     return;
                 }
 
-                // Autorizar el item en el inventario del jugador
                 String itemKey = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath();
                 String uniqueId = roleNameLower + "_" + itemKey + "_" + (100 + player.getRandom().nextInt(900));
 
                 stack.getOrCreateTag().putString("AuthorizedRole", roleNameLower);
                 stack.getOrCreateTag().putString("RoleItemID", uniqueId);
 
-                // Renombrar sutilmente con color dorado
                 String roleTranslated = "Guerrero";
                 if (roleNameLower.equalsIgnoreCase("berserker")) roleTranslated = "Berserker";
                 else if (roleNameLower.equalsIgnoreCase("mage")) roleTranslated = "Mago";
@@ -1583,7 +1129,6 @@ public class NetworkManager {
                     stack.setHoverName(Component.literal("§6" + customName + " de " + roleTranslated));
                 }
 
-                // Sonido de yunque y chispas
                 player.serverLevel().playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.ANVIL_USE, net.minecraft.sounds.SoundSource.PLAYERS, 1.2F, 0.9F);
                 player.serverLevel().sendParticles(
                     net.minecraft.core.particles.ParticleTypes.CRIT,
@@ -1597,7 +1142,6 @@ public class NetworkManager {
         }
     }
 
-    // --- C2S REPAIR INITIAL ARMOR PACKET ---
     public static class C2SRepairInitialArmorPacket {
         private final int itemSlot;
 
@@ -1629,7 +1173,6 @@ public class NetworkManager {
                     return;
                 }
 
-                // Verificar si tiene al menos 3 lingotes de hierro
                 int ironCount = 0;
                 for (net.minecraft.world.item.ItemStack s : player.getInventory().items) {
                     if (!s.isEmpty() && s.getItem() == net.minecraft.world.item.Items.IRON_INGOT) {
@@ -1643,13 +1186,11 @@ public class NetworkManager {
                     return;
                 }
 
-                // Verificar si está dañada
                 if (stack.getDamageValue() <= 0) {
                     MessageManager.actionBar(player, "§c⚠ La armadura ya está completamente reparada.");
                     return;
                 }
 
-                // Consumir 3 lingotes de hierro
                 int remainingToTake = 3;
                 for (net.minecraft.world.item.ItemStack s : player.getInventory().items) {
                     if (!s.isEmpty() && s.getItem() == net.minecraft.world.item.Items.IRON_INGOT) {
@@ -1665,10 +1206,7 @@ public class NetworkManager {
                     }
                 }
 
-                // Reparar fijando el daño en 0
                 stack.setDamageValue(0);
-
-                // Sonido clásico de yunque reparador
                 player.serverLevel().playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.ANVIL_USE, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.2F);
                 MessageManager.actionBar(player, "§a✔ ¡Armadura reparada exitosamente!");
                 sendToPlayer(new S2CShowMessagePacket("¡Armadura reparada exitosamente!", false), player);
@@ -1677,7 +1215,6 @@ public class NetworkManager {
         }
     }
 
-    // --- C2S CHANGE ADMIN ROLE MENU PACKET ---
     public static class C2SChangeAdminRoleMenuPacket {
         private final String role;
 
@@ -1706,7 +1243,6 @@ public class NetworkManager {
         }
     }
 
-    // --- C2S OPEN SKILL TREE PACKET ---
     public static class C2SOpenSkillTreePacket {
         public C2SOpenSkillTreePacket() {}
         public static void encode(C2SOpenSkillTreePacket msg, FriendlyByteBuf buf) {}
@@ -1729,7 +1265,6 @@ public class NetworkManager {
         }
     }
 
-    // --- S2C OPEN SKILL TREE PACKET ---
     public static class S2COpenSkillTreePacket {
         private final String roleId;
         private final int level;
@@ -1775,7 +1310,6 @@ public class NetworkManager {
         }
     }
 
-    // --- C2S CAST SKILL PACKET ---
     public static class C2SCastSkillPacket {
         public C2SCastSkillPacket() {}
         public static void encode(C2SCastSkillPacket msg, FriendlyByteBuf buf) {}
@@ -1784,14 +1318,12 @@ public class NetworkManager {
             ctx.get().enqueueWork(() -> {
                 ServerPlayer player = ctx.get().getSender();
                 if (player == null) return;
-
                 com.mundodetronos2.role.SkillTreeManager.executeSkill(player);
             });
             ctx.get().setPacketHandled(true);
         }
     }
 
-    // --- S2C OPEN BLACKSMITH TABLE PACKET ---
     public static class S2COpenBlacksmithTablePacket {
         public S2COpenBlacksmithTablePacket() {}
         public static void encode(S2COpenBlacksmithTablePacket msg, FriendlyByteBuf buf) {}
@@ -1806,7 +1338,6 @@ public class NetworkManager {
         }
     }
 
-    // --- C2S CLAIM BLACKSMITH KIT PACKET ---
     public static class C2SClaimBlacksmithKitPacket {
         public C2SClaimBlacksmithKitPacket() {}
         public static void encode(C2SClaimBlacksmithKitPacket msg, FriendlyByteBuf buf) {}
@@ -1822,10 +1353,8 @@ public class NetworkManager {
                     return;
                 }
 
-                // Crear el kit de aventura plain (sin encantamientos) sin restricciones de rol
                 net.minecraft.world.item.ItemStack helmet = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.LEATHER_HELMET);
-                helmet.getOrCreateTag().putBoolean("IsGoddessOffering", false); // evitar tags cruzados
-                helmet.getOrCreateTag().putString("AuthorizedRole", "any"); // Permitir a todas las clases usar esta armadura inicial!
+                helmet.getOrCreateTag().putString("AuthorizedRole", "any");
                 helmet.getOrCreateTag().putString("RoleItemID", "kit_inicial_helmet");
                 helmet.setHoverName(Component.literal("§6Casco de Cuero de Aventura"));
 
@@ -1864,7 +1393,6 @@ public class NetworkManager {
                 torches.getOrCreateTag().putString("RoleItemID", "kit_inicial_torches");
                 torches.setHoverName(Component.literal("§eAntorcha de Explorador"));
 
-                // Entregar el kit al jugador de inmediato
                 player.getInventory().add(helmet);
                 player.getInventory().add(chest);
                 player.getInventory().add(leggings);
@@ -1877,7 +1405,6 @@ public class NetworkManager {
                 rData.setInitialKitClaimed(true);
                 RoleManager.save(false);
 
-                // Sonido de yunque y sparks
                 player.serverLevel().playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.ITEM_PICKUP, net.minecraft.sounds.SoundSource.PLAYERS, 1.2F, 1.1F);
                 player.serverLevel().sendParticles(
                     net.minecraft.core.particles.ParticleTypes.HAPPY_VILLAGER,
@@ -1891,7 +1418,6 @@ public class NetworkManager {
         }
     }
 
-    // --- C2S COMPLETE ROLE SELECTION PACKET ---
     public static class C2SCompleteRoleSelectionPacket {
         private final String roleId;
 
@@ -1918,11 +1444,9 @@ public class NetworkManager {
                 PlayerRoleData data = RoleManager.getPlayerRoleData(player.getUUID());
                 if (data.isHasRole()) return;
 
-                // 1. Asignar rol de forma permanente en el servidor
                 RoleManager.setPlayerRole(player.getUUID(), role);
-                NetworkManager.syncHud(player); // Sincronizar rol de inmediato para evitar que K o M queden bloqueados!
+                NetworkManager.syncHud(player);
 
-                // Generar sonido y explosión de partículas mágicas en el servidor
                 player.serverLevel().sendParticles(
                     net.minecraft.core.particles.ParticleTypes.WITCH,
                     player.getX(), player.getY() + 1.0D, player.getZ(),
@@ -1940,7 +1464,6 @@ public class NetworkManager {
                     1.4F, 1.2F
                 );
 
-                // 2. Dar Carnet físico de Aspirante y Guía
                 net.minecraft.world.item.ItemStack carnetStack = new net.minecraft.world.item.ItemStack(com.mundodetronos2.init.ItemInit.ROLE_CARD.get());
                 CompoundTag tag = carnetStack.getOrCreateTag();
                 tag.putString("OwnerUUID", player.getUUID().toString());
@@ -1949,10 +1472,6 @@ public class NetworkManager {
                 tag.putInt("Level", 1);
                 player.getInventory().add(carnetStack);
 
-                // Dar Libro de la Diosa María
-                player.getInventory().add(createGoddessBook());
-
-                // 3. Teletransportar de inmediato a su trono (Overworld)
                 BlockPos targetPos = null;
                 ServerLevel targetLevel = player.serverLevel();
 
@@ -1984,7 +1503,6 @@ public class NetworkManager {
         }
     }
 
-    // --- S2C SHOW THRONE LIFE LOSS ALERT PACKET ---
     public static class S2CThroneLifeLossAlertPacket {
         private final String realmName;
         private final UUID attackerId;
@@ -2022,7 +1540,6 @@ public class NetworkManager {
         }
     }
 
-    // --- S2C OPEN ALTAR OPTION PACKET ---
     public static class S2COpenAltarOptionPacket {
         private final boolean hasRole;
 
@@ -2048,7 +1565,6 @@ public class NetworkManager {
         }
     }
 
-    // --- C2S EXIT ROLE DIMENSION PACKET ---
     public static class C2SExitRoleDimensionPacket {
         public C2SExitRoleDimensionPacket() {}
 
@@ -2062,13 +1578,11 @@ public class NetworkManager {
                 ServerPlayer player = ctx.get().getSender();
                 if (player == null) return;
 
-                // Teleport out of role dimension
                 BlockPos targetPos = null;
                 ServerLevel targetLevel = player.getServer().getLevel(net.minecraft.world.level.Level.OVERWORLD);
 
                 RealmData rData = RealmManager.getPlayerRealm(player.getUUID());
                 if (rData != null) {
-                    // Priority 1: Throne Pos
                     if (rData.getThroneId() != null) {
                         ThroneData tData = ThroneManager.getThroneById(rData.getThroneId());
                         if (tData != null) {
@@ -2083,7 +1597,6 @@ public class NetworkManager {
                         }
                     }
 
-                    // Priority 2: Safe Spawn / Base spawn of their Kingdom
                     if (targetPos == null) {
                         if (targetLevel != null) {
                             targetPos = targetLevel.getSharedSpawnPos();
@@ -2091,7 +1604,6 @@ public class NetworkManager {
                     }
                 }
 
-                // Priority 3: safe general spawn
                 if (targetPos == null) {
                     if (targetLevel != null) {
                         targetPos = targetLevel.getSharedSpawnPos();
@@ -2109,7 +1621,6 @@ public class NetworkManager {
         }
     }
 
-    // --- C2S CLAIM GODDESS BOOK PACKET ---
     public static class C2SClaimGoddessBookPacket {
         public C2SClaimGoddessBookPacket() {}
         public static void encode(C2SClaimGoddessBookPacket msg, FriendlyByteBuf buf) {}
@@ -2127,7 +1638,30 @@ public class NetworkManager {
         }
     }
 
-    // --- C2S DEFUSE SUCCESS PACKET ---
+    public static net.minecraft.world.item.ItemStack createGoddessBook() {
+        net.minecraft.world.item.ItemStack book = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.WRITTEN_BOOK);
+        net.minecraft.nbt.CompoundTag tag = book.getOrCreateTag();
+        tag.putString("title", "§6Guía de la Diosa María");
+        tag.putString("author", "Diosa María");
+
+        net.minecraft.nbt.ListTag pages = new net.minecraft.nbt.ListTag();
+        pages.add(net.minecraft.nbt.StringTag.valueOf("{\"text\":\"§1§l¡Bienvenido, Aspirante!§r\\n\\nEn este libro sagrado encontrarás instrucciones sobre cómo obtener tus §2§lSkill Points§r y los detalles de cada rol.\\n\\n§d¡Lee con atención!\"}"));
+        tag.put("pages", pages);
+        return book;
+    }
+
+    public static net.minecraft.world.item.ItemStack createThroneGuideBook() {
+        net.minecraft.world.item.ItemStack book = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.WRITTEN_BOOK);
+        net.minecraft.nbt.CompoundTag tag = book.getOrCreateTag();
+        tag.putString("title", "§6Guía del Trono");
+        tag.putString("author", "El Custodio");
+
+        net.minecraft.nbt.ListTag pages = new net.minecraft.nbt.ListTag();
+        pages.add(net.minecraft.nbt.StringTag.valueOf("{\"text\":\"§1§lGuía del Trono§r\\n\\n1. Solo el líder puede colocar el Trono.\\n2. Colócalo donde quieras establecer tu base.\\n3. El Trono será el centro de tu protección.\\n4. La protección será de 150x150 bloques.\"}"));
+        tag.put("pages", pages);
+        return book;
+    }
+
     public static class C2SDefuseSuccessPacket {
         private final BlockPos chargePos;
 
@@ -2160,106 +1694,6 @@ public class NetworkManager {
         }
     }
 
-    // --- C2S TRADE NPC PACKET ---
-    public static class C2STradeNpcPacket {
-        private final String npcUuid;
-        private final String tradeId;
-
-        public C2STradeNpcPacket(String npcUuid, String tradeId) {
-            this.npcUuid = npcUuid;
-            this.tradeId = tradeId;
-        }
-
-        public static void encode(C2STradeNpcPacket msg, FriendlyByteBuf buf) {
-            buf.writeUtf(msg.npcUuid != null ? msg.npcUuid : "");
-            buf.writeUtf(msg.tradeId != null ? msg.tradeId : "");
-        }
-
-        public static C2STradeNpcPacket decode(FriendlyByteBuf buf) {
-            return new C2STradeNpcPacket(buf.readUtf(), buf.readUtf());
-        }
-
-        public static void handle(C2STradeNpcPacket msg, Supplier<NetworkEvent.Context> ctx) {
-            ctx.get().enqueueWork(() -> {
-                ServerPlayer player = ctx.get().getSender();
-                if (player == null) return;
-
-                RealmData realm = RealmManager.getPlayerRealm(player.getUUID());
-                if (realm == null) {
-                    MessageManager.actionBar(player, "§c⚠ No perteneces a ningún equipo para comerciar.");
-                    return;
-                }
-
-                net.minecraft.world.item.Item inputItem = null;
-                int inputQty = 0;
-                int pointsCost = 0;
-                net.minecraft.world.item.ItemStack outputStack = null;
-
-                com.mundodetronos2.npc.NpcRegistryManager.NpcConfig config = null;
-                try {
-                    if (msg.npcUuid != null && !msg.npcUuid.isEmpty()) {
-                        config = com.mundodetronos2.npc.NpcRegistryManager.getNpcConfig(UUID.fromString(msg.npcUuid));
-                    }
-                } catch (Exception ignored) {}
-
-                if ("trade_0".equalsIgnoreCase(msg.tradeId) || "0".equals(msg.tradeId)) {
-                    inputItem = net.minecraft.world.item.Items.EMERALD;
-                    inputQty = 1;
-                    pointsCost = 10;
-                    outputStack = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.POPPY);
-                    outputStack.setHoverName(Component.literal("§dOfrenda de la Diosa María"));
-                    outputStack.getOrCreateTag().putBoolean("IsGoddessOffering", true);
-                } else if ("trade_1".equalsIgnoreCase(msg.tradeId) || "1".equals(msg.tradeId)) {
-                    inputItem = net.minecraft.world.item.Items.GOLD_INGOT;
-                    inputQty = 1;
-                    pointsCost = 20;
-                    outputStack = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.GOLDEN_APPLE);
-                } else if ("trade_2".equalsIgnoreCase(msg.tradeId) || "2".equals(msg.tradeId)) {
-                    inputItem = net.minecraft.world.item.Items.IRON_INGOT;
-                    inputQty = 5;
-                    pointsCost = 5;
-                    outputStack = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.LAPIS_LAZULI);
-                } else {
-                    return;
-                }
-
-                if (realm.getSharedPoints() < pointsCost) {
-                    MessageManager.actionBar(player, "§c⚠ Tu equipo no tiene suficientes puntos (requiere " + pointsCost + " pts).");
-                    return;
-                }
-
-                boolean hasInput = false;
-                net.minecraft.world.item.ItemStack matchedStack = null;
-                for (net.minecraft.world.item.ItemStack stack : player.getInventory().items) {
-                    if (stack.getItem() == inputItem && stack.getCount() >= inputQty) {
-                        hasInput = true;
-                        matchedStack = stack;
-                        break;
-                    }
-                }
-
-                if (!hasInput) {
-                    MessageManager.actionBar(player, "§c⚠ No tienes " + inputQty + " " + inputItem.getDescription().getString() + " en tu inventario.");
-                    return;
-                }
-
-                matchedStack.shrink(inputQty);
-                realm.setSharedPoints(realm.getSharedPoints() - pointsCost);
-                RealmManager.save(false);
-
-                if (!player.getInventory().add(outputStack)) {
-                    player.drop(outputStack, false);
-                }
-
-                player.serverLevel().playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.VILLAGER_YES, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.0F);
-                MessageManager.actionBar(player, "§a✔ ¡Comercio realizado con éxito!");
-                NetworkManager.syncHud(player);
-            });
-            ctx.get().setPacketHandled(true);
-        }
-    }
-
-    // --- S2C THRONE ATTACK ALERT PACKET ---
     public static class S2CThroneAttackAlertPacket {
         private final boolean active;
         private final String baseName;
@@ -2314,7 +1748,6 @@ public class NetworkManager {
         }
     }
 
-    // --- C2S CLAIM ROLE ARMOR PACKET ---
     public static class C2SClaimRoleArmorPacket {
         private final int entityId;
 
@@ -2342,240 +1775,12 @@ public class NetworkManager {
                 }
 
                 com.mundodetronos2.commands.TronosCommand.darArmaduraDirecto(player, rData.getRole().name());
-                MessageManager.actionBar(player, "§a✔ ¡Armadura de rol entregada!");
+                MessageManager.actionBar(player, "§a✔ ¡Armadura de rol delivered!");
             });
             ctx.get().setPacketHandled(true);
         }
     }
 
-    // --- C2S CLAIM SACERDOTE OFFERING PACKET ---
-    public static class C2SClaimSacerdoteOfferingPacket {
-        private final int entityId;
-
-        public C2SClaimSacerdoteOfferingPacket(int entityId) {
-            this.entityId = entityId;
-        }
-
-        public static void encode(C2SClaimSacerdoteOfferingPacket msg, FriendlyByteBuf buf) {
-            buf.writeInt(msg.entityId);
-        }
-
-        public static C2SClaimSacerdoteOfferingPacket decode(FriendlyByteBuf buf) {
-            return new C2SClaimSacerdoteOfferingPacket(buf.readInt());
-        }
-
-        public static void handle(C2SClaimSacerdoteOfferingPacket msg, Supplier<NetworkEvent.Context> ctx) {
-            ctx.get().enqueueWork(() -> {
-                ServerPlayer player = ctx.get().getSender();
-                if (player == null) return;
-
-                net.minecraft.world.item.Item chickenItem = net.minecraft.world.item.Items.CHICKEN;
-                boolean hasChicken = false;
-                net.minecraft.world.item.ItemStack matchedStack = null;
-
-                for (net.minecraft.world.item.ItemStack stack : player.getInventory().items) {
-                    if (stack.getItem() == chickenItem && stack.getCount() >= 1) {
-                        hasChicken = true;
-                        matchedStack = stack;
-                        break;
-                    }
-                }
-
-                if (!hasChicken) {
-                    MessageManager.actionBar(player, "§cNecesitas 1 pollo para recibir la ofrenda.");
-                    return;
-                }
-
-                // Consumir 1 pollo
-                matchedStack.shrink(1);
-
-                // Dar ofrenda de la Diosa María
-                net.minecraft.world.item.ItemStack ofrenda = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.POPPY);
-                ofrenda.setHoverName(Component.literal("§dOfrenda de la Diosa María"));
-                ofrenda.getOrCreateTag().putBoolean("IsGoddessOffering", true);
-
-                if (!player.getInventory().add(ofrenda)) {
-                    player.drop(ofrenda, false);
-                }
-
-                player.serverLevel().playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.ITEM_PICKUP, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.0F);
-                MessageManager.actionBar(player, "§a✔ ¡Ofrenda canjeada!");
-            });
-            ctx.get().setPacketHandled(true);
-        }
-    }
-
-    // --- S2C OPEN NPC DIALOGUE PACKET ---
-    public static class S2COpenNpcDialoguePacket {
-        private final int entityId;
-        private final String npcType;
-        private final String npcName;
-        private final String text;
-        private final String nodeId;
-        private final String skinName;
-        private final List<String> optionTexts;
-
-        public S2COpenNpcDialoguePacket(int entityId, String npcType, String npcName, String text, String nodeId, String skinName, List<String> optionTexts) {
-            this.entityId = entityId;
-            this.npcType = npcType;
-            this.npcName = npcName;
-            this.text = text;
-            this.nodeId = nodeId;
-            this.skinName = skinName != null ? skinName : "Wyldune";
-            this.optionTexts = optionTexts != null ? optionTexts : new ArrayList<>();
-        }
-
-        public static void encode(S2COpenNpcDialoguePacket msg, FriendlyByteBuf buf) {
-            buf.writeInt(msg.entityId);
-            buf.writeUtf(msg.npcType);
-            buf.writeUtf(msg.npcName);
-            buf.writeUtf(msg.text);
-            buf.writeUtf(msg.nodeId);
-            buf.writeUtf(msg.skinName);
-            buf.writeInt(msg.optionTexts.size());
-            for (String t : msg.optionTexts) {
-                buf.writeUtf(t);
-            }
-        }
-
-        public static S2COpenNpcDialoguePacket decode(FriendlyByteBuf buf) {
-            int entityId = buf.readInt();
-            String npcType = buf.readUtf();
-            String npcName = buf.readUtf();
-            String text = buf.readUtf();
-            String nodeId = buf.readUtf();
-            String skinName = buf.readUtf();
-            int size = buf.readInt();
-            List<String> options = new ArrayList<>();
-            for (int i = 0; i < size; i++) {
-                options.add(buf.readUtf());
-            }
-            return new S2COpenNpcDialoguePacket(entityId, npcType, npcName, text, nodeId, skinName, options);
-        }
-
-        public static void handle(S2COpenNpcDialoguePacket msg, Supplier<NetworkEvent.Context> ctx) {
-            ctx.get().enqueueWork(() -> {
-                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-                    com.mundodetronos2.client.ClientPacketHandler.handleOpenNpcDialogueWithData(
-                            msg.entityId,
-                            msg.npcType,
-                            msg.npcName,
-                            msg.text,
-                            msg.nodeId,
-                            msg.skinName,
-                            msg.optionTexts
-                    );
-                });
-            });
-            ctx.get().setPacketHandled(true);
-        }
-    }
-
-    // --- C2S SELECT DIALOGUE OPTION PACKET ---
-    public static class C2SSelectDialogueOptionPacket {
-        private final int entityId;
-        private final String npcType;
-        private final String nodeId;
-        private final int optionIndex;
-
-        public C2SSelectDialogueOptionPacket(int entityId, String npcType, String nodeId, int optionIndex) {
-            this.entityId = entityId;
-            this.npcType = npcType;
-            this.nodeId = nodeId;
-            this.optionIndex = optionIndex;
-        }
-
-        public static void encode(C2SSelectDialogueOptionPacket msg, FriendlyByteBuf buf) {
-            buf.writeInt(msg.entityId);
-            buf.writeUtf(msg.npcType);
-            buf.writeUtf(msg.nodeId);
-            buf.writeInt(msg.optionIndex);
-        }
-
-        public static C2SSelectDialogueOptionPacket decode(FriendlyByteBuf buf) {
-            return new C2SSelectDialogueOptionPacket(
-                    buf.readInt(),
-                    buf.readUtf(),
-                    buf.readUtf(),
-                    buf.readInt()
-            );
-        }
-
-        public static void handle(C2SSelectDialogueOptionPacket msg, Supplier<NetworkEvent.Context> ctx) {
-            ctx.get().enqueueWork(() -> {
-                ServerPlayer player = ctx.get().getSender();
-                if (player == null) return;
-
-                com.mundodetronos2.dialogue.DialogueNode node = com.mundodetronos2.dialogue.NpcDialogueManager.getNode(msg.npcType, msg.nodeId);
-                if (node == null || msg.optionIndex < 0 || msg.optionIndex >= node.getOptions().size()) {
-                    return;
-                }
-
-                com.mundodetronos2.dialogue.DialogueOption option = node.getOptions().get(msg.optionIndex);
-                String action = option.getAction();
-                PlayerRoleData rData = RoleManager.getPlayerRoleData(player.getUUID());
-
-                if (action != null && !action.trim().isEmpty()) {
-                    boolean handledByDispatcher = com.mundodetronos2.npc.NpcActionExecutor.execute(player, action);
-                    if (!handledByDispatcher) {
-                        if (action.equalsIgnoreCase("close")) {
-                            return;
-                        } else if (action.equalsIgnoreCase("close_and_open_role_selection")) {
-                            sendToPlayer(new S2COpenRoleSelectionPacket(), player);
-                            return;
-                        } else if (action.equalsIgnoreCase("open_guide_book")) {
-                            player.getInventory().add(createGoddessBook());
-                            MessageManager.actionBar(player, "§a✔ Has obtenido la Guía de la Diosa María.");
-                            return;
-                        }
-                    }
-                }
-
-                // Transición al siguiente diálogo node si existe
-                if (option.getNextNodeId() != null) {
-                    com.mundodetronos2.dialogue.DialogueNode nextNode = com.mundodetronos2.dialogue.NpcDialogueManager.getNode(msg.npcType, option.getNextNodeId());
-                    if (nextNode != null) {
-                        List<String> optionTexts = new ArrayList<>();
-                        for (com.mundodetronos2.dialogue.DialogueOption opt : nextNode.getOptions()) {
-                            optionTexts.add(opt.getText());
-                        }
-
-                        net.minecraft.world.entity.Entity entity = player.level().getEntity(msg.entityId);
-                        String npcName = entity != null && entity.getCustomName() != null ? entity.getCustomName().getString() : "NPC";
-                        String skinName = "Wyldune";
-                        if (entity instanceof com.mundodetronos2.entity.GoddessNPCEntity npc) {
-                            skinName = npc.getSkinName();
-                        }
-
-                        sendToPlayer(new S2COpenNpcDialoguePacket(msg.entityId, msg.npcType, npcName, nextNode.getText(), nextNode.getId(), skinName, optionTexts), player);
-                    }
-                }
-            });
-            ctx.get().setPacketHandled(true);
-        }
-    }
-
-    public static net.minecraft.world.item.ItemStack createGoddessBook() {
-        net.minecraft.world.item.ItemStack book = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.WRITTEN_BOOK);
-        net.minecraft.nbt.CompoundTag tag = book.getOrCreateTag();
-        tag.putString("title", "§6Guía de la Diosa María");
-        tag.putString("author", "Diosa María");
-
-        net.minecraft.nbt.ListTag pages = new net.minecraft.nbt.ListTag();
-        pages.add(net.minecraft.nbt.StringTag.valueOf("{\"text\":\"§1§l¡Bienvenido, Aspirante!§r\\n\\nEn este libro sagrado encontrarás instrucciones sobre cómo obtener tus §2§lSkill Points§r y los detalles de cada rol.\\n\\n§d¡Lee con atención!\"}"));
-        pages.add(net.minecraft.nbt.StringTag.valueOf("{\"text\":\"§1§l¿Cómo obtener puntos?§r\\n\\nObtienes §2§lSkill Points§r cada vez que subes de nivel de rol.\\n\\nPara subir de nivel, debes realizar §6Misiones§r. Al completarlas, ganarás §eXP de progreso§r. ¡Al acumular suficiente XP, subirás de nivel!\"}"));
-        pages.add(net.minecraft.nbt.StringTag.valueOf("{\"text\":\"§1§lGuerrero§r\\n\\n§0Especialista en la defensa activa y combate físico. Sus habilidades le permiten bloquear daño y resistir los asaltos más duros.\\n\\n§c⚔ Defensa Activa\\n§0Costo: 10 SP\"}"));
-        pages.add(net.minecraft.nbt.StringTag.valueOf("{\"text\":\"§1§lBerserker§r\\n\\n§0Guerrero guiado por la furia. Aumenta drásticamente su velocidad de ataque y puede ignorar la defensa del enemigo.\\n\\n§c🩸 Golpe de Furia\\n§0Costo: 10 SP\"}"));
-        pages.add(net.minecraft.nbt.StringTag.valueOf("{\"text\":\"§1§lMago§r\\n\\n§0Manipulador de las artes arcanas. Lanza proyectiles mágicos y desata tormentas elementales devastadoras.\\n\\n§c🧙 Proyectil Mágico\\n§0Costo: 10 SP\"}"));
-        pages.add(net.minecraft.nbt.StringTag.valueOf("{\"text\":\"§1§lArquero§r\\n\\n§0Maestro del combate a distancia. Dispara ráfagas de flechas veloces, tiros múltiples y disparos venenosos.\\n\\n§c🏹 Disparo Preciso\\n§0Costo: 10 SP\"}"));
-        pages.add(net.minecraft.nbt.StringTag.valueOf("{\"text\":\"§1§lPaladín§r\\n\\n§0Caballero sagrado que protege a sus aliados con auras, cura heridas leves y consagra el suelo.\\n\\n§c🛡 Escudo Protector\\n§0Costo: 10 SP\"}"));
-        pages.add(net.minecraft.nbt.StringTag.valueOf("{\"text\":\"§1§lDracónico§r\\n\\n§0Invocador del fuego del dragón. Su piel resiste las llamas y puede desatar alientos térmicos destructivos.\\n\\n§c🐉 Aliento Dracónico\\n§0Costo: 10 SP\"}"));
-        pages.add(net.minecraft.nbt.StringTag.valueOf("{\"text\":\"§1§lClérigo§r\\n\\n§0Sanador supremo del reino. Cura en área, otorga escudos de fe y puede obrar milagros de restauración.\\n\\n§c💚 Cantar de Sanación\\n§0Costo: 10 SP\"}"));
-        tag.put("pages", pages);
-        return book;
-    }
-
-    // --- C2S OPEN RPG INVENTORY PACKET ---
     public static class C2SOpenRPGInventoryPacket {
         public C2SOpenRPGInventoryPacket() {}
         public static void encode(C2SOpenRPGInventoryPacket msg, FriendlyByteBuf buf) {}
@@ -2595,7 +1800,6 @@ public class NetworkManager {
         }
     }
 
-    // --- S2C TOGGLE LIMITES PACKET ---
     public static class S2CToggleLimitesPacket {
         public S2CToggleLimitesPacket() {}
         public static void encode(S2CToggleLimitesPacket msg, FriendlyByteBuf buf) {}

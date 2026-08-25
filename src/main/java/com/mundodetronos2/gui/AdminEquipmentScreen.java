@@ -32,7 +32,7 @@ public class AdminEquipmentScreen extends AbstractContainerScreen<AdminEquipment
         String[] row1Labels = {"Ber", "Gue", "Mag", "Arq"};
         for (int i = 0; i < 4; i++) {
             final String role = row1Roles[i];
-            this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(
+            this.addRenderableWidget(new TransparentButton(
                 startX + 6 + i * (btnW + spacing), startY - 32, btnW, btnH, Component.literal(row1Labels[i]), btn -> {
                     changeRole(role);
                 }
@@ -44,7 +44,7 @@ public class AdminEquipmentScreen extends AbstractContainerScreen<AdminEquipment
         String[] row2Labels = {"Pal", "Dra", "Cle"};
         for (int i = 0; i < 3; i++) {
             final String role = row2Roles[i];
-            this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(
+            this.addRenderableWidget(new TransparentButton(
                 startX + 6 + i * (btnW + spacing), startY - 16, btnW, btnH, Component.literal(row2Labels[i]), btn -> {
                     changeRole(role);
                 }
@@ -52,7 +52,7 @@ public class AdminEquipmentScreen extends AbstractContainerScreen<AdminEquipment
         }
 
         // Add [CERRAR] button
-        this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(
+        this.addRenderableWidget(new TransparentButton(
             startX + 140, startY - 16, 50, btnH, Component.literal("Cerrar"), btn -> this.onClose()
         ));
     }
