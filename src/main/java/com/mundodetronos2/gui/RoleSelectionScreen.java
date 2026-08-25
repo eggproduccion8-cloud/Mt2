@@ -31,7 +31,7 @@ public class RoleSelectionScreen extends Screen {
         int y = centerY - menuHeight / 2 - 10;
 
         // Botón [X] para cerrar en la esquina superior derecha del pergamino
-        this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(
+        this.addRenderableWidget(new TransparentButton(
             x + menuWidth - 22, y + 8, 14, 14,
             Component.literal("X"), btn -> this.onClose()
         ));

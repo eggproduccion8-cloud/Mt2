@@ -46,12 +46,10 @@ public class GameEventHandler {
         ThroneManager.init();
         RoleManager.init();
         ProgressionManager.init();
-        com.mundodetronos2.dialogue.NpcDialogueManager.init();
         AltarManager.load();
         TimeManager.init();
         PortalsManager.load();
         com.mundodetronos2.role.EquipmentManager.init();
-        com.mundodetronos2.npc.NpcRegistryManager.init();
         com.mundodetronos2.tutorial.TutorialManager.init();
     }
 
@@ -676,25 +674,18 @@ public class GameEventHandler {
             event.setCanceled(true);
 
             if (player instanceof ServerPlayer sp) {
-                PlayerRoleData rData = RoleManager.getPlayerRoleData(sp.getUUID());
-                if (rData.isHasRole() && rData.getRole() != PlayerRole.NONE) {
-                    // Teletransportar de inmediato gratis e instantáneo con el carnet sin requerir ofrenda
-                    try {
-                        ResourceLocation dimRl = new ResourceLocation("mundodetronos2", "role_dimension");
-                        net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimKey = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, dimRl);
-                        ServerLevel level = sp.getServer().getLevel(dimKey);
-                        if (level != null) {
-                            sp.teleportTo(level, 0.5D, 64.0D, 0.5D, 0.0F, 0.0F);
-                            NetworkManager.sendToPlayer(new NetworkManager.S2CShowMessagePacket("§a¡Has regresado al templo de la Diosa María usando tu carnet!", false), sp);
-                        } else {
-                            NetworkManager.sendToPlayer(new NetworkManager.S2CShowMessagePacket("§cLa dimensión de roles no se encuentra cargada en el servidor.", true), sp);
-                        }
-                    } catch (Exception e) {
-                        NetworkManager.sendToPlayer(new NetworkManager.S2CShowMessagePacket("§cError al cruzar el portal: " + e.getMessage(), true), sp);
+                try {
+                    ResourceLocation dimRl = new ResourceLocation("mundodetronos2", "role_dimension");
+                    net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimKey = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, dimRl);
+                    ServerLevel level = sp.getServer().getLevel(dimKey);
+                    if (level != null) {
+                        sp.teleportTo(level, 0.5D, 64.0D, 0.5D, 0.0F, 0.0F);
+                        NetworkManager.sendToPlayer(new NetworkManager.S2CShowMessagePacket("§a¡Has cruzado al templo de la Diosa María!", false), sp);
+                    } else {
+                        NetworkManager.sendToPlayer(new NetworkManager.S2CShowMessagePacket("§cLa dimensión de roles no se encuentra cargada en el servidor.", true), sp);
                     }
-                } else {
-                    // Abrir la pantalla del portal de ofrenda en el cliente
-                    NetworkManager.sendToPlayer(new NetworkManager.S2COpenGoddessPortalPacket(), sp);
+                } catch (Exception e) {
+                    NetworkManager.sendToPlayer(new NetworkManager.S2CShowMessagePacket("§cError al cruzar el portal: " + e.getMessage(), true), sp);
                 }
             }
         }
