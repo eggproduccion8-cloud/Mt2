@@ -11,9 +11,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class GuildScreen extends Screen {
 
     private final NetworkManager.S2COpenMainGuiPacket initialData;
@@ -82,35 +79,30 @@ public class GuildScreen extends Screen {
                 this.showingLogo = false;
             }).bounds(bx, by, 90, 20).build());
 
-            this.addRenderableWidget(Button.builder(Component.literal("§2Misiones"), b -> {
-                NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SRequestNpcDialoguePacket("karla"));
-                this.onClose();
-            }).bounds(bx, by + 24, 90, 20).build());
-
             this.addRenderableWidget(Button.builder(Component.literal("§eMonedas"), b -> {
                 Minecraft.getInstance().player.displayClientMessage(Component.literal("§e✦ Monedas Personales: §f" + com.mundodetronos2.client.ClientPacketHandler.hudSharedPoints), false);
-            }).bounds(bx, by + 48, 90, 20).build());
+            }).bounds(bx, by + 24, 90, 20).build());
 
             this.addRenderableWidget(Button.builder(Component.literal("§bInformación"), b -> {
                 Minecraft.getInstance().player.displayClientMessage(Component.literal("§b[Gremio] Nombre: " + initialData.getRealmName() + " | Miembros: " + initialData.getMemberCount() + "/6"), false);
-            }).bounds(bx, by + 72, 90, 20).build());
+            }).bounds(bx, by + 48, 90, 20).build());
 
             if (initialData.isOwner()) {
                 this.addRenderableWidget(Button.builder(Component.literal("§dCambiar Nombre"), b -> {
                     this.showingRename = !this.showingRename;
                     this.showingLogo = false;
-                }).bounds(bx, by + 96, 90, 20).build());
+                }).bounds(bx, by + 72, 90, 20).build());
 
                 this.addRenderableWidget(Button.builder(Component.literal("§aCambiar Logo"), b -> {
                     this.showingLogo = !this.showingLogo;
                     this.showingRename = false;
-                }).bounds(bx, by + 120, 90, 20).build());
+                }).bounds(bx, by + 96, 90, 20).build());
             }
 
             this.addRenderableWidget(Button.builder(Component.literal("§cAbandonar"), b -> {
                 NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SLeaveRealmPacket());
                 this.onClose();
-            }).bounds(bx, by + 144, 90, 20).build());
+            }).bounds(bx, by + 120, 90, 20).build());
 
             this.renameBox = new EditBox(this.font, centerX - 40, centerY - 20, 140, 20, Component.literal("Nuevo Nombre"));
             this.addRenderableWidget(this.renameBox);
@@ -124,7 +116,6 @@ public class GuildScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        // Draw full-screen background image fondo.png preserving aspect ratio
         RenderSystem.setShaderTexture(0, FONDO_TEX);
         graphics.blit(FONDO_TEX, 0, 0, 0, 0, this.width, this.height, this.width, this.height);
 
@@ -137,7 +128,6 @@ public class GuildScreen extends Screen {
         } else {
             graphics.drawCenteredString(this.font, "§6§l✦ GREMIO DE MUNDO DE TRONOS ✦", centerX, centerY - 85, 0xFFFFFFFF);
 
-            // Informacion del Equipo
             int x = centerX - 50;
             int y = centerY - 50;
 

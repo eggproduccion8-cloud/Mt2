@@ -56,8 +56,6 @@ public class ClientPacketHandler {
     public static int hudCurrentXp = 0;
     public static int hudNeededXp = 150;
     public static int hudTutorialLevel = 1;
-    public static String hudActiveMissionTitle = "";
-    public static String hudActiveMissionProgress = "";
     public static String hudTeamName = "NINGUNO";
     public static int clientThroneX = 0;
     public static int clientThroneY = 0;
@@ -158,7 +156,7 @@ public class ClientPacketHandler {
     }
 
     // --- MANEJO DE SINCRONIZACIÓN DE HUD ---
-    public static void handleHudSync(int lives, int points, int seconds, String role, int level, int currentXp, int neededXp, int tutorialLevel, String missionTitle, String missionProgress, String teamName, int tx, int ty, int tz, String tDim) {
+    public static void handleHudSync(int lives, int points, int seconds, String role, int level, int currentXp, int neededXp, int tutorialLevel, String teamName, int tx, int ty, int tz, String tDim) {
         hudThroneLives = lives;
         hudSharedPoints = points;
         hudRemainingSeconds = seconds;
@@ -167,8 +165,6 @@ public class ClientPacketHandler {
         hudCurrentXp = currentXp;
         hudNeededXp = neededXp > 0 ? neededXp : 150;
         hudTutorialLevel = Math.max(1, tutorialLevel);
-        hudActiveMissionTitle = missionTitle != null ? missionTitle : "";
-        hudActiveMissionProgress = missionProgress != null ? missionProgress : "";
         hudTeamName = teamName != null && !teamName.isEmpty() ? teamName : "NINGUNO";
         clientThroneX = tx;
         clientThroneY = ty;
@@ -201,18 +197,6 @@ public class ClientPacketHandler {
         mc.setScreen(new com.mundodetronos2.gui.AltarInteractionScreen(hasRole));
     }
 
-    // --- MANEJO DE APERTURA DE DIÁLOGO DE LA DIOSA ---
-    public static void handleOpenGoddessDialogue() {
-        Minecraft mc = Minecraft.getInstance();
-        mc.setScreen(new com.mundodetronos2.gui.GoddessIntroDialogueScreen());
-    }
-
-    // --- MANEJO DE APERTURA DE DIÁLOGO GENERAL DE NPC ---
-    public static void handleOpenNpcDialogueWithData(int entityId, String npcType, String npcName, String text, String nodeId, String skinName, java.util.List<String> optionTexts) {
-        Minecraft mc = Minecraft.getInstance();
-        mc.setScreen(new com.mundodetronos2.gui.NpcDialogueScreen(entityId, npcType, npcName, text, nodeId, skinName, optionTexts));
-    }
-
     // --- MANEJO DE ALERTA DE ATAQUE AL TRONO ---
     public static void handleThroneAttackAlert(boolean active, String baseName, int hp, int maxHp, String attacker, int seconds) {
         activeAttackActive = active;
@@ -228,13 +212,6 @@ public class ClientPacketHandler {
         Minecraft mc = Minecraft.getInstance();
         mc.setScreen(new com.mundodetronos2.gui.DefuseMinigameScreen(pos));
     }
-
-    // --- MANEJO DE APERTURA DEL EDITOR ADMINISTRATIVO DE NPC ---
-    public static void handleOpenNpcEditor(int entityId, String npcType, String npcName, String skinName, String text) {
-        Minecraft mc = Minecraft.getInstance();
-        mc.setScreen(new com.mundodetronos2.gui.NpcEditorScreen(entityId, npcType, npcName, skinName, text));
-    }
-
 
     // --- MANEJO DE APERTURA DEL ÁRBOL DE HABILIDADES ---
     public static void handleOpenSkillTree(String roleId, int level, int skillPoints, java.util.List<String> unlockedSkills) {

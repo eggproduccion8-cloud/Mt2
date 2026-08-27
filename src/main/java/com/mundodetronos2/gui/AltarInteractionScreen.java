@@ -24,14 +24,14 @@ public class AltarInteractionScreen extends Screen {
         int centerY = this.height / 2;
 
         if (!hasRole) {
-            this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(
+            this.addRenderableWidget(new TransparentButton(
                 centerX - buttonWidth / 2, centerY - 35, buttonWidth, buttonHeight,
                 Component.literal("Elegir Mi Rol"), btn -> {
                     this.minecraft.setScreen(new RoleSelectionScreen());
                 }
             ));
         } else {
-            this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(
+            this.addRenderableWidget(new TransparentButton(
                 centerX - buttonWidth / 2, centerY - 35, buttonWidth, buttonHeight,
                 Component.literal("Ver Mi Rol"), btn -> {
                     NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SOpenMainGuiPacket());
@@ -41,7 +41,7 @@ public class AltarInteractionScreen extends Screen {
         }
 
         // Obtener Guía
-        this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(
+        this.addRenderableWidget(new TransparentButton(
             centerX - buttonWidth / 2, centerY - 10, buttonWidth, buttonHeight,
             Component.literal("Obtener Guía de Diosa"), btn -> {
                 NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SClaimGoddessBookPacket());
@@ -49,7 +49,7 @@ public class AltarInteractionScreen extends Screen {
             }
         ));
 
-        this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(
+        this.addRenderableWidget(new TransparentButton(
             centerX - buttonWidth / 2, centerY + 15, buttonWidth, buttonHeight,
             Component.literal("Salir de la Dimensión"), btn -> {
                 NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SExitRoleDimensionPacket());
@@ -58,7 +58,7 @@ public class AltarInteractionScreen extends Screen {
         ));
 
         // Close button
-        this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(
+        this.addRenderableWidget(new TransparentButton(
             centerX - buttonWidth / 2, centerY + 45, buttonWidth, buttonHeight,
             Component.literal("Cerrar"), btn -> this.onClose()
         ));
