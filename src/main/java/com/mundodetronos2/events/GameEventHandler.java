@@ -46,12 +46,10 @@ public class GameEventHandler {
         ThroneManager.init();
         RoleManager.init();
         ProgressionManager.init();
-        com.mundodetronos2.dialogue.NpcDialogueManager.init();
         AltarManager.load();
         TimeManager.init();
         PortalsManager.load();
         com.mundodetronos2.role.EquipmentManager.init();
-        com.mundodetronos2.npc.NpcRegistryManager.init();
         com.mundodetronos2.tutorial.TutorialManager.init();
     }
 
@@ -68,19 +66,12 @@ public class GameEventHandler {
     @SubscribeEvent
     public static void onServerTick(TickEvent.ServerTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
-            // Ticker de cargas de asalto (cuenta regresiva y explosión)
             com.mundodetronos2.throne.ThroneAttackManager.tick();
 
-            // Se ejecuta una vez por tick del servidor.
-            // Para optimizar al máximo, solo chequeamos los cooldowns de reparación una vez por segundo (cada 20 ticks)
             if (ServerTickCounter.tickCount++ % 20 == 0) {
                 ThroneManager.tick();
                 playRepairTickSounds();
-
-                // Decrementar tiempo de juego de forma optimizada
                 TimeManager.tick(net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer());
-
-                // Decrementar espectador fantasma de muerte
                 DeathSpectatorManager.tick(net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer());
             }
         }
@@ -90,10 +81,8 @@ public class GameEventHandler {
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase == TickEvent.Phase.END && !event.player.level().isClientSide) {
             if (event.player instanceof ServerPlayer sp) {
-                // Check Guardia del Rey exploration checkpoints
                 com.mundodetronos2.tutorial.TutorialManager.checkGuardiaExploration(sp);
 
-                // Push back non-member players trying to cross unbroken wall territory borders
                 if (!sp.hasPermissions(2)) {
                     BlockPos pos = sp.blockPosition();
                     String dim = sp.level().dimension().location().toString();
@@ -104,7 +93,6 @@ public class GameEventHandler {
                             if (Math.abs(tPos.getX() - pos.getX()) <= radius && Math.abs(tPos.getZ() - pos.getZ()) <= radius) {
                                 RealmData r = RealmManager.getRealm(t.getRealmId());
                                 if (r != null && !r.getMembers().contains(sp.getUUID())) {
-                                    // Check if closest wall is unbroken
                                     if (ThroneManager.isWallBlock(pos) || ThroneManager.isWallBlock(pos.below())) {
                                         sp.setDeltaMovement(sp.getDeltaMovement().x * -1.5D, 0.2D, sp.getDeltaMovement().z * -1.5D);
                                         sp.hurtMarked = true;
@@ -117,7 +105,6 @@ public class GameEventHandler {
                 }
             }
 
-            // Prevent player from falling into the void in the Goddess dimension
             if (event.player.level().dimension().location().toString().equals("mundodetronos2:role_dimension")) {
                 if (event.player.getY() < 50.0) {
                     event.player.teleportTo(0.5, 64.0, 0.5);
@@ -126,7 +113,6 @@ public class GameEventHandler {
                 }
             }
 
-            // Prevent custom role armor and initial kit armor from breaking, and move almost broken armor to inventory
             for (int i = 0; i < event.player.getInventory().armor.size(); i++) {
                 net.minecraft.world.item.ItemStack armor = event.player.getInventory().armor.get(i);
                 if (armor != null && !armor.isEmpty() && armor.hasTag()) {
@@ -138,9 +124,7 @@ public class GameEventHandler {
                         if (armor.getDamageValue() >= maxDamage - 1) {
                             armor.setDamageValue(maxDamage - 1);
 
-                            // Mover al inventario principal si es posible para que la reparen
                             if (event.player.getInventory().add(armor.copy())) {
-                                // Eliminar de la ranura de armadura equipada
                                 event.player.getInventory().armor.set(i, net.minecraft.world.item.ItemStack.EMPTY);
                                 if (event.player instanceof ServerPlayer sp) {
                                     com.mundodetronos2.network.MessageManager.actionBar(sp, "§c⚠ Tu armadura está dañada y ha sido guardada en tu inventario para que la repares.");
@@ -159,7 +143,6 @@ public class GameEventHandler {
             String toDimension = event.getTo().location().toString();
             if (toDimension.equals("mundodetronos2:role_dimension")) {
                 ServerLevel level = player.serverLevel();
-                // Create a solid 7x7 platform of barrier blocks centered at 0, 63, 0
                 for (int x = -3; x <= 3; x++) {
                     for (int z = -3; z <= 3; z++) {
                         BlockPos bp = new BlockPos(x, 63, z);
@@ -208,9 +191,7 @@ public class GameEventHandler {
             if (remaining <= 0) {
                 sp.connection.disconnect(Component.literal("Tu tiempo se terminó."));
             } else {
-                // Sincronizar nivel de tutorial con el equipo al entrar
                 com.mundodetronos2.tutorial.TutorialManager.syncPlayerLevelWithTeam(sp);
-                // Sincronizar HUD inicial al conectar
                 NetworkManager.syncHud(sp);
             }
         }
@@ -218,7 +199,6 @@ public class GameEventHandler {
 
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
-        // Otorgar XP por derrotar Mobs al jugador atacante
         if (event.getSource().getEntity() instanceof ServerPlayer killer && !(event.getEntity() instanceof Player)) {
             if (ConfigManager.get().enableMobKillXp) {
                 boolean isBoss = event.getEntity() instanceof net.minecraft.world.entity.boss.enderdragon.EnderDragon
@@ -229,25 +209,20 @@ public class GameEventHandler {
         }
 
         if (event.getEntity() instanceof ServerPlayer sp) {
-            // Cancelar el evento de muerte real para que no muera físicamente
             event.setCanceled(true);
 
-            // Iniciar espectador de muerte de 15 segundos donde murió
             DeathSpectatorManager.startPlayerDeathSpectating(sp);
 
-            // Enviar alerta global de muerte y pérdida de puntos a todos los jugadores online
             for (ServerPlayer player : sp.getServer().getPlayerList().getPlayers()) {
                 NetworkManager.sendToPlayer(new NetworkManager.S2CShowDeathAlertPacket(sp.getUUID(), sp.getGameProfile().getName()), player);
             }
 
             RealmData realm = RealmManager.getPlayerRealm(sp.getUUID());
             if (realm != null) {
-                // Deduct 5 points, ensuring it never goes below 0 (handled in RealmData)
                 realm.setSharedPoints(realm.getSharedPoints() - 5);
                 com.mundodetronos2.data.SaveManager.markDirty();
                 RealmManager.save(false);
 
-                // Sincronizar HUD a todos los integrantes online de este reino
                 for (UUID memberId : realm.getMembers()) {
                     ServerPlayer member = sp.getServer().getPlayerList().getPlayer(memberId);
                     if (member != null) {
@@ -261,7 +236,6 @@ public class GameEventHandler {
     private static void playRepairTickSounds() {
         for (ThroneData throne : ThroneManager.getThronesMap().values()) {
             if (throne.getState() == ThroneState.REPAIRING) {
-                // Sonido ocasional durante la reparación (15% de probabilidad cada segundo)
                 if (Math.random() < 0.15) {
                     BlockPos p = throne.getPos();
                     sendThroneSound(p.getX(), p.getY(), p.getZ(), "repair_tick", throne.getDimension());
@@ -272,12 +246,11 @@ public class GameEventHandler {
 
     public static void sendThroneSound(double x, double y, double z, String soundType, String dimensionStr) {
         NetworkManager.S2CPlayThroneHitSoundPacket pkt = new NetworkManager.S2CPlayThroneHitSoundPacket(x, y, z, soundType);
-        // Enviar solo a jugadores cercanos en la misma dimensión
         for (Player p : net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer().getPlayerList().getPlayers()) {
             if (p instanceof ServerPlayer sp) {
                 if (sp.level().dimension().location().toString().equals(dimensionStr)) {
                     double distSq = sp.distanceToSqr(x, y, z);
-                    if (distSq < 1024) { // 32 bloques
+                    if (distSq < 1024) {
                         NetworkManager.sendToPlayer(pkt, sp);
                     }
                 }
@@ -285,14 +258,11 @@ public class GameEventHandler {
         }
     }
 
-    // --- CONTROLADORES DE SEGURIDAD PARA EL TRONO INDESTRUCTIBLE Y DAÑO POR PROYECTILES ---
-
     public static boolean isPosProtectedByThrone(BlockPos pos, String dimension, Player player) {
         if (player.hasPermissions(2)) {
-            return false; // OPs/Admins can always bypass
+            return false;
         }
 
-        // Si el evento global de asalto está ACTIVO, la protección normal está desactivada!
         if (ThroneManager.isGlobalEventActive()) {
             return false;
         }
@@ -302,11 +272,9 @@ public class GameEventHandler {
                 BlockPos tPos = t.getPos();
                 int radius = t.getProtectionRadius();
                 if (Math.abs(tPos.getX() - pos.getX()) <= radius && Math.abs(tPos.getZ() - pos.getZ()) <= radius) {
-                    // El bloque está dentro de una zona de protección dinámica alrededor del trono!
-                    // Verificar si el jugador es miembro del equipo propietario
                     com.mundodetronos2.player.PlayerRealmData prd = RealmManager.getPlayerRealmData(player.getUUID());
                     if (prd == null || !prd.getRealmId().equals(t.getRealmId())) {
-                        return true; // Está protegido contra este jugador!
+                        return true;
                     }
                 }
             }
@@ -319,7 +287,6 @@ public class GameEventHandler {
         if (!event.getLevel().isClientSide()) {
             BlockPos pos = event.getPos();
             if (ThroneManager.getThroneAt(pos) != null) {
-                // Cancelar la rotura física del bloque del trono por completo, incluso para OPs
                 event.setCanceled(true);
                 if (event.getPlayer() instanceof ServerPlayer sp) {
                     NetworkManager.sendToPlayer(new NetworkManager.S2CShowMessagePacket("§c[Mundo de Tronos] ¡El bloque del trono es indestructible! Usa /tronos remover para quitarlo.", true), sp);
@@ -335,7 +302,6 @@ public class GameEventHandler {
                 return;
             }
 
-            // Protección de zona
             Player player = event.getPlayer();
             String dim = player.level().dimension().location().toString();
             if (isPosProtectedByThrone(pos, dim, player)) {
@@ -366,7 +332,6 @@ public class GameEventHandler {
                     heldItem = sp.getOffhandItem();
                 }
                 if (!heldItem.isEmpty() && heldItem.hasTag() && heldItem.getTag().getBoolean("mundodetronos2:throne_item")) {
-                    // Es la colocación de un trono oficial
                     RealmData realm = RealmManager.getPlayerRealm(sp.getUUID());
                     if (realm == null) {
                         event.setCanceled(true);
@@ -384,7 +349,6 @@ public class GameEventHandler {
                         return;
                     }
 
-                    // Registrar el Trono en esta posición con protección 150x150 (radio 75)
                     ThroneData throne = ThroneManager.registerThrone(realm.getId(), pos, dim, 3);
                     if (throne != null) {
                         throne.setProtectionRadius(75);
@@ -396,7 +360,6 @@ public class GameEventHandler {
                             pos.getX() + 0.5D, pos.getY() + 1.5D, pos.getZ() + 0.5D,
                             30, 0.5D, 0.5D, 0.5D, 0.1D
                         );
-                        // Forzar sincronización HUD de inmediato
                         NetworkManager.syncHud(sp);
                     } else {
                         event.setCanceled(true);
@@ -447,8 +410,7 @@ public class GameEventHandler {
             BlockPos pos = blockHit.getBlockPos();
             ThroneData throne = ThroneManager.getThroneAt(pos);
             if (throne != null) {
-                // El proyectil impactó el trono!
-                event.setCanceled(true); // Cancelar impacto vanilla
+                event.setCanceled(true);
                 if (event.getProjectile().getOwner() instanceof ServerPlayer sp) {
                     com.mundodetronos2.network.MessageManager.actionBar(sp, "§c⚠ El trono solo puede ser dañado con una Carga de Asalto.");
                 }
@@ -467,27 +429,21 @@ public class GameEventHandler {
             }
             int newLives = lives;
 
-            // 1. Enviar una línea de anuncio global usando Base / Equipo
             String globalMsg = "§6[Mundo de Tronos] §c¡La base '" + realm.getName() + "' ha perdido una vida del trono a manos de " + attackerName + "! (Vidas: " + oldLives + " → " + newLives + ")";
             broadcastMessage(globalMsg);
 
-            // 2. Enviar el paquete de la alerta lateral y reproducir el sonido de forma controlada
             NetworkManager.S2CThroneLifeLossAlertPacket alertPkt = new NetworkManager.S2CThroneLifeLossAlertPacket(
                 realm.getName(), attackerId, attackerName, oldLives, newLives
             );
 
-            // Sound and alert targets
             for (ServerPlayer srvPlayer : server.getPlayerList().getPlayers()) {
                 boolean isMember = realm.getMembers().contains(srvPlayer.getUUID());
                 boolean isAttacker = srvPlayer.getUUID().equals(attackerId);
                 boolean isClose = srvPlayer.level().dimension().location().toString().equals(throne.getDimension())
-                                  && srvPlayer.distanceToSqr(pos.getX(), pos.getY(), pos.getZ()) < 4096; // 64 bloques
+                                  && srvPlayer.distanceToSqr(pos.getX(), pos.getY(), pos.getZ()) < 4096;
 
                 if (isMember || isAttacker || isClose) {
-                    // Enviar la alerta lateral
                     NetworkManager.sendToPlayer(alertPkt, srvPlayer);
-
-                    // Sonido épico controlado
                     srvPlayer.playNotifySound(net.minecraft.sounds.SoundEvents.ENDER_DRAGON_DEATH, net.minecraft.sounds.SoundSource.PLAYERS, 1.2F, 0.8F);
                     srvPlayer.playNotifySound(net.minecraft.sounds.SoundEvents.WITHER_SPAWN, net.minecraft.sounds.SoundSource.PLAYERS, 0.8F, 0.9F);
                 }
@@ -509,46 +465,6 @@ public class GameEventHandler {
         }
     }
 
-    private static void applyDamageToThroneFromPlayer(ServerPlayer sp, ThroneData throne, BlockPos pos) {
-        UUID playerId = sp.getUUID();
-        RealmData playerRealm = RealmManager.getPlayerRealm(playerId);
-
-        // Validaciones
-        if (playerRealm != null && playerRealm.getId().equals(throne.getRealmId())) {
-            NetworkManager.sendToPlayer(new NetworkManager.S2CShowMessagePacket("§cNo puedes dañar el trono de tu propio reino.", true), sp);
-            return;
-        }
-
-        if (!ThroneManager.isGlobalEventActive()) {
-            NetworkManager.sendToPlayer(new NetworkManager.S2CShowMessagePacket("§eEl trono está protegido. No hay ningún evento activo.", true), sp);
-            return;
-        }
-
-        if (throne.getState() == ThroneState.REPAIRING) {
-            NetworkManager.sendToPlayer(new NetworkManager.S2CShowMessagePacket("§eEl trono se está reparando actualmente.", true), sp);
-            return;
-        }
-
-        int currentHp = throne.getHealth();
-        if (currentHp > 0) {
-            currentHp--;
-            throne.setHealth(currentHp);
-            throne.setLastAttacker(playerId);
-            com.mundodetronos2.data.SaveManager.markDirty();
-
-            RealmData throneRealm = RealmManager.getRealm(throne.getRealmId());
-            String realmName = throneRealm != null ? throneRealm.getName() : "Desconocido";
-            NetworkManager.sendToPlayer(new NetworkManager.S2CSyncThroneDataPacket(realmName, currentHp, throne.getMaxHealth(), throne.getState().name()), sp);
-
-            sendThroneSound(pos.getX(), pos.getY(), pos.getZ(), "hit", throne.getDimension());
-
-            if (currentHp <= 0) {
-                reduceThroneLife(sp.getServer(), sp.getUUID(), sp.getGameProfile().getName(), throne, pos);
-            }
-            RealmManager.save(false);
-        }
-    }
-
     @SubscribeEvent
     public static void onLeftClickBlock(PlayerInteractEvent.LeftClickBlock event) {
         Level world = event.getLevel();
@@ -558,13 +474,11 @@ public class GameEventHandler {
         ThroneData throne = ThroneManager.getThroneAt(pos);
         if (throne == null) return;
 
-        // Cancelar de inmediato para evitar que el bloque sea roto físicamente
         event.setCanceled(true);
 
         Player player = event.getEntity();
         if (!(player instanceof ServerPlayer sp)) return;
 
-        // Mandar el mensaje por action bar
         com.mundodetronos2.network.MessageManager.actionBar(sp, "§c⚠ El trono solo puede ser dañado con una Carga de Asalto.");
     }
 
@@ -573,10 +487,8 @@ public class GameEventHandler {
         Level world = event.getLevel();
         if (world.isClientSide) return;
 
-        // Solo procesar la mano principal para evitar doble ejecución (MAIN_HAND y OFF_HAND)
         if (event.getHand() != InteractionHand.MAIN_HAND) return;
 
-        // Validar equipamiento no autorizado en clic derecho a bloques
         Player player = event.getEntity();
         if (player instanceof ServerPlayer sp) {
             net.minecraft.world.item.ItemStack held = sp.getItemInHand(event.getHand());
@@ -624,7 +536,6 @@ public class GameEventHandler {
             }
         }
 
-        // Protección de zona para clic derecho (cofres, puertas, etc.)
         boolean isSpecBlock = AltarManager.isAltar(pos, dimension) || PortalsManager.isPortal(pos, dimension) || world.getBlockState(pos).is(com.mundodetronos2.init.BlockInit.CARGA_ASALTO_BLOCK.get());
         if (!isSpecBlock && isPosProtectedByThrone(pos, dimension, player)) {
             event.setCanceled(true);
@@ -635,17 +546,14 @@ public class GameEventHandler {
         }
 
         if (AltarManager.isAltar(pos, dimension)) {
-            // Cancelar el evento para evitar que el huevo de dragón se teletransporte por clic
             event.setCanceled(true);
 
             if (player instanceof ServerPlayer sp) {
                 PlayerRoleData data = RoleManager.getPlayerRoleData(sp.getUUID());
                 if (dimension.equalsIgnoreCase("mundodetronos2:role_dimension")) {
-                    // Abrir menú de interacción del Altar (Selección/Información o Salida)
                     NetworkManager.sendToPlayer(new NetworkManager.S2COpenAltarOptionPacket(data.isHasRole()), sp);
                 } else {
                     if (data.isHasRole()) {
-                        // Ya tiene rol: sincronizar datos y abrir carnet
                         RealmData realm = RealmManager.getPlayerRealm(sp.getUUID());
                         String rName = realm != null ? realm.getName() : "Ninguno";
                         String rRole = realm != null ? (realm.getOwnerId().equals(sp.getUUID()) ? "Líder" : "Miembro") : "N/A";
@@ -666,19 +574,16 @@ public class GameEventHandler {
                         );
                         NetworkManager.sendToPlayer(pkt, sp);
                     } else {
-                        // No tiene rol: abrir pantalla de selección
                         NetworkManager.sendToPlayer(new NetworkManager.S2COpenRoleSelectionPacket(), sp);
                     }
                 }
             }
         } else if (PortalsManager.isPortal(pos, dimension)) {
-            // Cancelar evento para abrir la interfaz del portal de la Diosa María
             event.setCanceled(true);
 
             if (player instanceof ServerPlayer sp) {
                 PlayerRoleData rData = RoleManager.getPlayerRoleData(sp.getUUID());
                 if (rData.isHasRole() && rData.getRole() != PlayerRole.NONE) {
-                    // Teletransportar de inmediato gratis e instantáneo con el carnet sin requerir ofrenda
                     try {
                         ResourceLocation dimRl = new ResourceLocation("mundodetronos2", "role_dimension");
                         net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimKey = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, dimRl);
@@ -693,14 +598,11 @@ public class GameEventHandler {
                         NetworkManager.sendToPlayer(new NetworkManager.S2CShowMessagePacket("§cError al cruzar el portal: " + e.getMessage(), true), sp);
                     }
                 } else {
-                    // Abrir la pantalla del portal de ofrenda en el cliente
                     NetworkManager.sendToPlayer(new NetworkManager.S2COpenGoddessPortalPacket(), sp);
                 }
             }
         }
     }
-
-    // --- NUEVOS CONTROLADORES DE BLOQUEO DE EQUIPAMIENTO POR ROL (EVENT-DRIVEN, SIN TICKS PESADOS) ---
 
     @SubscribeEvent
     public static void onPlayerAttack(net.minecraftforge.event.entity.player.AttackEntityEvent event) {
@@ -747,7 +649,6 @@ public class GameEventHandler {
                     PlayerRoleData roleData = RoleManager.getPlayerRoleData(sp.getUUID());
                     String role = roleData.isHasRole() ? roleData.getRole().name() : "none";
                     if (!com.mundodetronos2.role.EquipmentRestrictions.isItemAuthorized(toItem, role)) {
-                        // Es una armadura no autorizada equipada, removerla de inmediato
                         sp.setItemSlot(event.getSlot(), net.minecraft.world.item.ItemStack.EMPTY);
                         if (!sp.getInventory().add(toItem.copy())) {
                             sp.drop(toItem.copy(), false);
@@ -766,7 +667,6 @@ public class GameEventHandler {
         }
     }
 
-    // Clase auxiliar para ticks del servidor
     private static class ServerTickCounter {
         static int tickCount = 0;
     }

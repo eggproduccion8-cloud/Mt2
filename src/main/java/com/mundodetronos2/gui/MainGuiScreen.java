@@ -57,18 +57,18 @@ public class MainGuiScreen extends Screen {
 
         if (currentTab == Tab.MAIN) {
             if (initialData.hasRealm()) {
-                this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(centerX - buttonWidth / 2, centerY - 40, buttonWidth, buttonHeight, Component.literal("Mi Equipo"), btn -> {
+                this.addRenderableWidget(new TransparentButton(centerX - buttonWidth / 2, centerY - 40, buttonWidth, buttonHeight, Component.literal("Mi Equipo"), btn -> {
                     this.currentTab = Tab.MY_REALM;
                     this.init();
                 }));
             } else {
-                this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(centerX - buttonWidth / 2, centerY - 40, buttonWidth, buttonHeight, Component.literal("Crear Equipo"), btn -> {
+                this.addRenderableWidget(new TransparentButton(centerX - buttonWidth / 2, centerY - 40, buttonWidth, buttonHeight, Component.literal("Crear Equipo"), btn -> {
                     this.currentTab = Tab.CREATE;
                     this.init();
                 }));
             }
 
-            this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(centerX - buttonWidth / 2, centerY - 12, buttonWidth, buttonHeight, Component.literal("Mi Perfil"), btn -> {
+            this.addRenderableWidget(new TransparentButton(centerX - buttonWidth / 2, centerY - 12, buttonWidth, buttonHeight, Component.literal("Mi Perfil"), btn -> {
                 Minecraft mc = Minecraft.getInstance();
                 if (mc.player != null) {
                     mc.setScreen(new RoleCardScreen(
@@ -82,12 +82,12 @@ public class MainGuiScreen extends Screen {
                 }
             }));
 
-            this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(centerX - buttonWidth / 2, centerY + 16, buttonWidth, buttonHeight, Component.literal("Ver Invitaciones (" + initialData.getInvites().size() + ")"), btn -> {
+            this.addRenderableWidget(new TransparentButton(centerX - buttonWidth / 2, centerY + 16, buttonWidth, buttonHeight, Component.literal("Ver Invitaciones (" + initialData.getInvites().size() + ")"), btn -> {
                 this.currentTab = Tab.INVITES;
                 this.init();
             }));
 
-            this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(centerX - buttonWidth / 2, centerY + 44, buttonWidth, buttonHeight, Component.literal("Cerrar"), btn -> {
+            this.addRenderableWidget(new TransparentButton(centerX - buttonWidth / 2, centerY + 44, buttonWidth, buttonHeight, Component.literal("Cerrar"), btn -> {
                 this.onClose();
             }));
 
@@ -100,18 +100,18 @@ public class MainGuiScreen extends Screen {
             int colorX = centerX - 100;
             for (int i = 0; i < colors.length; i++) {
                 final String col = colors[i];
-                this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(colorX + i * 28, centerY - 5, 24, 20, Component.literal("■"), btn -> {
+                this.addRenderableWidget(new TransparentButton(colorX + i * 28, centerY - 5, 24, 20, Component.literal("■"), btn -> {
                     this.selectedColor = col;
                 }));
             }
 
-            this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(centerX - 102, centerY + 30, 100, buttonHeight, Component.literal("Confirmar"), btn -> {
+            this.addRenderableWidget(new TransparentButton(centerX - 102, centerY + 30, 100, buttonHeight, Component.literal("Confirmar"), btn -> {
                 String name = this.realmNameInput.getValue().trim();
                 NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SCreateRealmPacket(name));
                 this.onClose();
             }));
 
-            this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(centerX + 2, centerY + 30, 100, buttonHeight, Component.literal("Volver"), btn -> {
+            this.addRenderableWidget(new TransparentButton(centerX + 2, centerY + 30, 100, buttonHeight, Component.literal("Volver"), btn -> {
                 this.currentTab = Tab.MAIN;
                 this.init();
             }));
@@ -124,7 +124,7 @@ public class MainGuiScreen extends Screen {
                     NetworkManager.S2CRealmListPacket.RealmInfo info = cachedRealms.get(index);
                     int itemY = listY + i * 26;
 
-                    this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(centerX + 40, itemY, 60, 20, Component.literal("Unirse"), btn -> {
+                    this.addRenderableWidget(new TransparentButton(centerX + 40, itemY, 60, 20, Component.literal("Unirse"), btn -> {
                         NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SRequestJoinRealmPacket(info.id));
                         this.onClose();
                     }));
@@ -132,14 +132,14 @@ public class MainGuiScreen extends Screen {
             }
 
             if (cachedRealms.size() > 4) {
-                this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(centerX + 110, listY, 20, 20, Component.literal("▲"), btn -> {
+                this.addRenderableWidget(new TransparentButton(centerX + 110, listY, 20, 20, Component.literal("▲"), btn -> {
                     if (searchScrollOffset > 0) {
                         searchScrollOffset--;
                         this.init();
                     }
                 }));
 
-                this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(centerX + 110, listY + 78, 20, 20, Component.literal("▼"), btn -> {
+                this.addRenderableWidget(new TransparentButton(centerX + 110, listY + 78, 20, 20, Component.literal("▼"), btn -> {
                     if (searchScrollOffset < cachedRealms.size() - 4) {
                         searchScrollOffset++;
                         this.init();
@@ -147,7 +147,7 @@ public class MainGuiScreen extends Screen {
                 }));
             }
 
-            this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(centerX - 50, centerY + 65, 100, buttonHeight, Component.literal("Volver"), btn -> {
+            this.addRenderableWidget(new TransparentButton(centerX - 50, centerY + 65, 100, buttonHeight, Component.literal("Volver"), btn -> {
                 this.currentTab = Tab.MAIN;
                 this.init();
             }));
@@ -156,14 +156,14 @@ public class MainGuiScreen extends Screen {
             int buttonY = centerY + 35;
 
             if (initialData.hasRealm()) {
-                this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(centerX - 70, buttonY, 140, buttonHeight, Component.literal("Salir del Reino"), btn -> {
+                this.addRenderableWidget(new TransparentButton(centerX - 70, buttonY, 140, buttonHeight, Component.literal("Salir del Reino"), btn -> {
                     NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SLeaveRealmPacket());
                     this.onClose();
                 }));
                 buttonY += 24;
             }
 
-            this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(centerX - 70, buttonY, 140, buttonHeight, Component.literal("Volver"), btn -> {
+            this.addRenderableWidget(new TransparentButton(centerX - 70, buttonY, 140, buttonHeight, Component.literal("Volver"), btn -> {
                 this.currentTab = Tab.MAIN;
                 this.init();
             }));
@@ -178,12 +178,12 @@ public class MainGuiScreen extends Screen {
                     InviteData inv = invites.get(index);
                     int itemY = listY + i * 30;
 
-                    this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(centerX + 30, itemY, 20, 20, Component.literal("✓"), btn -> {
+                    this.addRenderableWidget(new TransparentButton(centerX + 30, itemY, 20, 20, Component.literal("✓"), btn -> {
                         NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SAcceptInvitePacket(inv.getInviteId()));
                         this.onClose();
                     }));
 
-                    this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(centerX + 55, itemY, 20, 20, Component.literal("✗"), btn -> {
+                    this.addRenderableWidget(new TransparentButton(centerX + 55, itemY, 20, 20, Component.literal("✗"), btn -> {
                         NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SRejectInvitePacket(inv.getInviteId()));
                         this.onClose();
                     }));
@@ -191,14 +191,14 @@ public class MainGuiScreen extends Screen {
             }
 
             if (invites.size() > 3) {
-                this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(centerX + 90, listY, 20, 20, Component.literal("▲"), btn -> {
+                this.addRenderableWidget(new TransparentButton(centerX + 90, listY, 20, 20, Component.literal("▲"), btn -> {
                     if (inviteScrollOffset > 0) {
                         inviteScrollOffset--;
                         this.init();
                     }
                 }));
 
-                this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(centerX + 90, listY + 60, 20, 20, Component.literal("▼"), btn -> {
+                this.addRenderableWidget(new TransparentButton(centerX + 90, listY + 60, 20, 20, Component.literal("▼"), btn -> {
                     if (inviteScrollOffset < invites.size() - 3) {
                         inviteScrollOffset++;
                         this.init();
@@ -206,7 +206,7 @@ public class MainGuiScreen extends Screen {
                 }));
             }
 
-            this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(centerX - 50, centerY + 65, 100, buttonHeight, Component.literal("Volver"), btn -> {
+            this.addRenderableWidget(new TransparentButton(centerX - 50, centerY + 65, 100, buttonHeight, Component.literal("Volver"), btn -> {
                 this.currentTab = Tab.MAIN;
                 this.init();
             }));

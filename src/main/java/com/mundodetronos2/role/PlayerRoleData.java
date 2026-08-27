@@ -9,11 +9,6 @@ public class PlayerRoleData {
     private long selectedAt;
     private int level = 1;
     private boolean initialKitClaimed = false;
-    private boolean sacerdoteMissionActive = false;
-    private boolean sacerdoteMissionCompleted = false;
-    private boolean herreroMissionActive = false;
-    private boolean herreroMissionCompleted = false;
-    private String tutorialState = "VISITAR_SAMUEL";
 
     public PlayerRoleData() {}
 
@@ -61,19 +56,4 @@ public class PlayerRoleData {
 
     public boolean isInitialKitClaimed() { return initialKitClaimed; }
     public void setInitialKitClaimed(boolean initialKitClaimed) { this.initialKitClaimed = initialKitClaimed; }
-
-    public boolean isSacerdoteMissionActive() { return sacerdoteMissionActive; }
-    public void setSacerdoteMissionActive(boolean active) { this.sacerdoteMissionActive = active; }
-
-    public boolean isSacerdoteMissionCompleted() { return sacerdoteMissionCompleted; }
-    public void setSacerdoteMissionCompleted(boolean completed) { this.sacerdoteMissionCompleted = completed; }
-
-    public boolean isHerreroMissionActive() { return herreroMissionActive; }
-    public void setHerreroMissionActive(boolean active) { this.herreroMissionActive = active; }
-
-    public boolean isHerreroMissionCompleted() { return herreroMissionCompleted; }
-    public void setHerreroMissionCompleted(boolean completed) { this.herreroMissionCompleted = completed; }
-
-    public String getTutorialState() { return tutorialState; }
-    public void setTutorialState(String state) { this.tutorialState = state != null ? state : "VISITAR_SAMUEL"; }
 }
