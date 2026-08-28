@@ -55,13 +55,29 @@ public class CustomNPCRenderer<T extends CustomNPCEntity> extends EntityRenderer
 
         float animTime = (entity.tickCount + partialTicks) / 20.0F;
 
-        // Determine active animation
-        String activeAnimName = entity.getActualCurrentAnimation();
+        // Determine active animation dynamically: temp (greet) > walk (if moving) > idle
+        String activeAnimName = entity.getTempAnimation();
+        if (activeAnimName == null || activeAnimName.isEmpty()) {
+            double dx = entity.getX() - entity.xo;
+            double dz = entity.getZ() - entity.zo;
+            double speedSqr = dx * dx + dz * dz;
+            boolean isMoving = speedSqr > 0.0001D || entity.walkAnimation.isMoving();
+            activeAnimName = isMoving ? entity.getWalkAnimation() : entity.getIdleAnimation();
+        }
+
         AnimationEngine.AnimationData animData = null;
-        if (entry.animationSet != null && activeAnimName != null && !activeAnimName.isEmpty()) {
-            animData = entry.animationSet.animations.get(activeAnimName);
+        if (entry.animationSet != null && entry.animationSet.animations != null && !entry.animationSet.animations.isEmpty()) {
+            if (activeAnimName != null) {
+                animData = entry.animationSet.animations.get(activeAnimName);
+            }
+            if (animData == null) {
+                animData = entry.animationSet.animations.get(entity.getIdleAnimation());
+            }
             if (animData == null) {
                 animData = entry.animationSet.animations.get("idle");
+            }
+            if (animData == null) {
+                animData = entry.animationSet.animations.values().stream().findFirst().orElse(null);
             }
         }
 

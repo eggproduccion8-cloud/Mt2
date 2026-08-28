@@ -39,7 +39,7 @@ public class RoleSkillTreeScreen extends Screen {
         int centerY = this.height / 2;
 
         // Botón Cerrar (Estilo elegante pergamino) posicionado en la parte inferior para evitar amontonamiento
-        this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(
+        this.addRenderableWidget(new TransparentButton(
             centerX - 40, this.height - 35, 80, 16,
             Component.literal("Cerrar"), btn -> this.onClose()
         ));

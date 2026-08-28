@@ -202,16 +202,8 @@ public class ClientPacketHandler {
     }
 
     // --- MANEJO DE APERTURA DE DIÁLOGO DE LA DIOSA ---
-    public static void handleOpenGoddessDialogue() {
-        Minecraft mc = Minecraft.getInstance();
-        mc.setScreen(new com.mundodetronos2.gui.GoddessIntroDialogueScreen());
-    }
 
     // --- MANEJO DE APERTURA DE DIÁLOGO GENERAL DE NPC ---
-    public static void handleOpenNpcDialogueWithData(int entityId, String npcType, String npcName, String text, String nodeId, String skinName, java.util.List<String> optionTexts) {
-        Minecraft mc = Minecraft.getInstance();
-        mc.setScreen(new com.mundodetronos2.gui.NpcDialogueScreen(entityId, npcType, npcName, text, nodeId, skinName, optionTexts));
-    }
 
     // --- MANEJO DE ALERTA DE ATAQUE AL TRONO ---
     public static void handleThroneAttackAlert(boolean active, String baseName, int hp, int maxHp, String attacker, int seconds) {
@@ -230,10 +222,6 @@ public class ClientPacketHandler {
     }
 
     // --- MANEJO DE APERTURA DEL EDITOR ADMINISTRATIVO DE NPC ---
-    public static void handleOpenNpcEditor(int entityId, String npcType, String npcName, String skinName, String text) {
-        Minecraft mc = Minecraft.getInstance();
-        mc.setScreen(new com.mundodetronos2.gui.NpcEditorScreen(entityId, npcType, npcName, skinName, text));
-    }
 
 
     // --- MANEJO DE APERTURA DEL ÁRBOL DE HABILIDADES ---

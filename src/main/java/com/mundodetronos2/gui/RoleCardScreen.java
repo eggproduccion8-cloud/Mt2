@@ -78,14 +78,14 @@ public class RoleCardScreen extends Screen {
         for (int i = 0; i < tabs.length; i++) {
             Tab tab = tabs[i];
             int btnX = x + 8 + (i * 50);
-            this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(btnX, btnY, btnW, btnH, Component.literal(tab.getLabel()), btn -> {
+            this.addRenderableWidget(new TransparentButton(btnX, btnY, btnW, btnH, Component.literal(tab.getLabel()), btn -> {
                 this.currentTab = tab;
                 this.init();
             }));
         }
 
         // Botón Regresar/Cerrar
-        this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(centerX - 40, y + cardHeight + 4, 80, 18, Component.literal("Cerrar"), btn -> {
+        this.addRenderableWidget(new TransparentButton(centerX - 40, y + cardHeight + 4, 80, 18, Component.literal("Cerrar"), btn -> {
             this.onClose();
         }));
     }

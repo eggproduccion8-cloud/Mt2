@@ -83,7 +83,7 @@ public class GuildScreen extends Screen {
             }).bounds(bx, by, 90, 20).build());
 
             this.addRenderableWidget(Button.builder(Component.literal("§2Misiones"), b -> {
-                NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SRequestNpcDialoguePacket("karla"));
+                Minecraft.getInstance().player.displayClientMessage(Component.literal("§a[Gremio] No hay misiones activas por ahora."), true);
                 this.onClose();
             }).bounds(bx, by + 24, 90, 20).build());
 
