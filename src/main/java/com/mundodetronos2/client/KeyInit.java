@@ -14,20 +14,6 @@ import org.lwjgl.glfw.GLFW;
 public class KeyInit {
     public static final String CATEGORY = "key.categories.mundodetronos2";
 
-    public static final KeyMapping OPEN_GUI_KEY = new KeyMapping(
-            "key.mundodetronos2.open_gui",
-            InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_K, // Tecla K por defecto para el menú principal
-            CATEGORY
-    );
-
-    public static final KeyMapping OPEN_SKILLS_KEY = new KeyMapping(
-            "key.mundodetronos2.open_skills",
-            InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_M, // Tecla M por defecto para el árbol de habilidades
-            CATEGORY
-    );
-
     public static final KeyMapping TOGGLE_HUD_KEY = new KeyMapping(
             "key.mundodetronos2.toggle_hud",
             InputConstants.Type.KEYSYM,
@@ -58,8 +44,6 @@ public class KeyInit {
 
     @SubscribeEvent
     public static void registerKeys(RegisterKeyMappingsEvent event) {
-        event.register(OPEN_GUI_KEY);
-        event.register(OPEN_SKILLS_KEY);
         event.register(TOGGLE_HUD_KEY);
         event.register(EDIT_HUD_KEY);
         event.register(OPEN_RPG_INVENTORY_KEY);

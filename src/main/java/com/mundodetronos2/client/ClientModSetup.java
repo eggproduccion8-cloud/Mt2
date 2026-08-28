@@ -22,7 +22,6 @@ public class ClientModSetup {
 
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        event.registerEntityRenderer(EntityInit.GODDESS_NPC.get(), GoddessNPCRenderer::new);
         event.registerEntityRenderer(EntityInit.CUSTOM_NPC.get(), CustomNPCRenderer::new);
         event.registerEntityRenderer(EntityInit.SOLDIER.get(), CustomNPCRenderer::new);
         event.registerBlockEntityRenderer(com.mundodetronos2.init.BlockEntityInit.THRONE_BE.get(), com.mundodetronos2.client.renderer.ThroneBlockEntityRenderer::new);

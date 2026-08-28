@@ -41,7 +41,7 @@ public class GoddessPortalScreen extends Screen {
         int centerY = this.height / 2;
 
         // Botones transparentes medievales elegantes
-        GoddessIntroDialogueScreen.TransparentButton enterBtn = new GoddessIntroDialogueScreen.TransparentButton(
+        TransparentButton enterBtn = new TransparentButton(
             centerX - buttonWidth / 2, centerY + 15, buttonWidth, buttonHeight,
             Component.literal("Depositar y Entrar"), btn -> {
                 NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SEnterGoddessDimensionPacket());
@@ -52,7 +52,7 @@ public class GoddessPortalScreen extends Screen {
         enterBtn.active = this.hasOffering;
         this.addRenderableWidget(enterBtn);
 
-        this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(
+        this.addRenderableWidget(new TransparentButton(
             centerX - buttonWidth / 2, centerY + 40, buttonWidth, buttonHeight,
             Component.literal("Cerrar"), btn -> this.onClose()
         ));

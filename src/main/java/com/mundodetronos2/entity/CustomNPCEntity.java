@@ -12,6 +12,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
@@ -22,6 +23,9 @@ public class CustomNPCEntity extends PathfinderMob {
     private static final EntityDataAccessor<String> IDLE_ANIMATION = SynchedEntityData.defineId(CustomNPCEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<String> WALK_ANIMATION = SynchedEntityData.defineId(CustomNPCEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<String> INTERACTION_ANIMATION = SynchedEntityData.defineId(CustomNPCEntity.class, EntityDataSerializers.STRING);
+
+    private String tempAnimation = null;
+    private int tempAnimationTicks = 0;
 
     public CustomNPCEntity(EntityType<? extends PathfinderMob> type, Level level) {
         super(type, level);
@@ -38,8 +42,9 @@ public class CustomNPCEntity extends PathfinderMob {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        this.goalSelector.addGoal(2, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(1, new WaterAvoidingRandomStrollGoal(this, 1.0D));
+        this.goalSelector.addGoal(2, new LookAtPlayerGoal(this, Player.class, 8.0F));
+        this.goalSelector.addGoal(3, new RandomLookAroundGoal(this));
     }
 
     @Override
@@ -94,11 +99,30 @@ public class CustomNPCEntity extends PathfinderMob {
 
     public void playAnimation(String animName) {
         if (animName != null && !animName.isEmpty()) {
-            this.setIdleAnimation(animName);
+            this.tempAnimation = animName;
+            this.tempAnimationTicks = 40; // 2 seconds duration
+        }
+    }
+
+    public String getTempAnimation() {
+        return this.tempAnimation;
+    }
+
+    @Override
+    public void aiStep() {
+        super.aiStep();
+        if (this.tempAnimationTicks > 0) {
+            this.tempAnimationTicks--;
+            if (this.tempAnimationTicks <= 0) {
+                this.tempAnimation = null;
+            }
         }
     }
 
     public String getActualCurrentAnimation() {
+        if (this.tempAnimation != null && !this.tempAnimation.isEmpty()) {
+            return this.tempAnimation;
+        }
         return getIdleAnimation();
     }
 
@@ -107,53 +131,16 @@ public class CustomNPCEntity extends PathfinderMob {
         if (!player.level().isClientSide() && player instanceof net.minecraft.server.level.ServerPlayer sp) {
             String name = this.getCustomName() != null ? this.getCustomName().getString() : "NPC";
             String type = getNpcModel().toLowerCase().trim();
-            if (name.toLowerCase().contains("manuel")) type = "manuel";
-            else if (name.toLowerCase().contains("ivan") || name.toLowerCase().contains("karla")) type = "ivan";
 
-            if (sp.isCrouching() && sp.hasPermissions(2)) {
-                com.mundodetronos2.network.NetworkManager.S2COpenNpcEditorPacket editorPkt =
-                    new com.mundodetronos2.network.NetworkManager.S2COpenNpcEditorPacket(
-                        this.getId(),
-                        type,
-                        name,
-                        getNpcTexture(),
-                        com.mundodetronos2.dialogue.NpcDialogueManager.getSerializedNpcDialogues(type)
-                    );
-                com.mundodetronos2.network.NetworkManager.sendToPlayer(editorPkt, sp);
-                return net.minecraft.world.InteractionResult.sidedSuccess(player.level().isClientSide());
-            }
-
-            // Right click on Ivan opens Guild GUI directly!
-            if ("ivan".equalsIgnoreCase(type) || name.toLowerCase().contains("ivan")) {
+            if ("ivan".equalsIgnoreCase(type) || name.toLowerCase().contains("ivan") || name.toLowerCase().contains("karla")) {
                 com.mundodetronos2.realm.RealmData realm = com.mundodetronos2.realm.RealmManager.getPlayerRealm(sp.getUUID());
                 com.mundodetronos2.throne.ThroneData throne = realm != null && realm.getThroneId() != null ? com.mundodetronos2.throne.ThroneManager.getThroneById(realm.getThroneId()) : null;
                 java.util.List<com.mundodetronos2.realm.InviteData> invites = com.mundodetronos2.realm.RealmManager.getPlayerInvites(sp.getUUID());
                 com.mundodetronos2.network.NetworkManager.sendToPlayer(new com.mundodetronos2.network.NetworkManager.S2COpenMainGuiPacket(realm, throne, invites), sp);
-                playAnimation("greet");
-                return net.minecraft.world.InteractionResult.sidedSuccess(player.level().isClientSide());
             }
 
-            com.mundodetronos2.dialogue.DialogueNode initialNode = com.mundodetronos2.dialogue.NpcDialogueManager.getNode(type, "inicio");
-            if (initialNode != null) {
-                playAnimation("greet");
-                java.util.List<String> optionTexts = new java.util.ArrayList<>();
-                for (com.mundodetronos2.dialogue.DialogueOption opt : initialNode.getOptions()) {
-                    optionTexts.add(opt.getText());
-                }
-
-                com.mundodetronos2.network.NetworkManager.S2COpenNpcDialoguePacket pkt =
-                    new com.mundodetronos2.network.NetworkManager.S2COpenNpcDialoguePacket(
-                        this.getId(),
-                        type,
-                        name,
-                        initialNode.getText(),
-                        initialNode.getId(),
-                        getNpcTexture(),
-                        optionTexts
-                    );
-                com.mundodetronos2.network.NetworkManager.sendToPlayer(pkt, sp);
-                return net.minecraft.world.InteractionResult.sidedSuccess(player.level().isClientSide());
-            }
+            playAnimation(getInteractionAnimation());
+            return net.minecraft.world.InteractionResult.sidedSuccess(player.level().isClientSide());
         }
         return super.mobInteract(player, hand);
     }

@@ -96,18 +96,7 @@ public class ClientEvents {
 
         Minecraft mc = Minecraft.getInstance();
         if (mc.screen == null && event.getAction() == org.lwjgl.glfw.GLFW.GLFW_PRESS) {
-            if (event.getKey() == KeyInit.OPEN_SKILLS_KEY.getKey().getValue()) {
-                String role = getClientPlayerRole();
-                if (role.equalsIgnoreCase("none") || role.isEmpty()) {
-                    if (mc.player != null) {
-                        mc.player.displayClientMessage(Component.literal("§c⚠ Aún no tienes un rol asignado."), true);
-                    }
-                } else {
-                    NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SOpenSkillTreePacket());
-                }
-            } else if (event.getKey() == KeyInit.OPEN_GUI_KEY.getKey().getValue()) {
-                NetworkManager.INSTANCE.sendToServer(new NetworkManager.C2SOpenMainGuiPacket());
-            } else if (event.getKey() == KeyInit.TOGGLE_HUD_KEY.getKey().getValue()) {
+            if (event.getKey() == KeyInit.TOGGLE_HUD_KEY.getKey().getValue()) {
                 showHud = !showHud;
                 mc.player.displayClientMessage(Component.literal(showHud ? "§a[+] Coordenadas Visibles" : "§c[-] Coordenadas Ocultas"), true);
             } else if (event.getKey() == KeyInit.EDIT_HUD_KEY.getKey().getValue()) {
@@ -137,8 +126,7 @@ public class ClientEvents {
             if (mc.player != null && mc.level != null) {
                 if (cinematicActive) {
                     if (mc.screen == null || !(mc.screen instanceof com.mundodetronos2.gui.GoddessCinematicScreen
-                        || mc.screen instanceof com.mundodetronos2.gui.GoddessIntroDialogueScreen
-                        || mc.screen instanceof com.mundodetronos2.gui.GoddessDeathRebirthScreen)) {
+                                                || mc.screen instanceof com.mundodetronos2.gui.GoddessDeathRebirthScreen)) {
                         cinematicActive = false;
                     } else {
                         // Forzar que el HUD vanilla no se oculte por F1 durante cinemáticas

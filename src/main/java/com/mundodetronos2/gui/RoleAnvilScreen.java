@@ -68,7 +68,7 @@ public class RoleAnvilScreen extends Screen {
         boolean canRepair = !selectedStack.isEmpty() && selectedStack.getDamageValue() > 0 && playerIronCount >= 3;
 
         // Botón Reparar
-        GoddessIntroDialogueScreen.TransparentButton repairBtn = new GoddessIntroDialogueScreen.TransparentButton(
+        TransparentButton repairBtn = new TransparentButton(
             centerX - 100, centerY + 65, 100, buttonHeight,
             Component.literal("REPARAR"), btn -> {
                 if (canRepair) {
@@ -81,7 +81,7 @@ public class RoleAnvilScreen extends Screen {
         this.addRenderableWidget(repairBtn);
 
         // Botón Cerrar
-        this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(
+        this.addRenderableWidget(new TransparentButton(
             centerX + 10, centerY + 65, 90, buttonHeight,
             Component.literal("Cerrar"), btn -> this.onClose()
         ));
@@ -99,7 +99,7 @@ public class RoleAnvilScreen extends Screen {
                 String displayName = stack.getHoverName().getString();
                 if (displayName.length() > 16) displayName = displayName.substring(0, 14) + "...";
 
-                this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(
+                this.addRenderableWidget(new TransparentButton(
                     listX, listY + i * 21, 95, 18, Component.literal(displayName), btn -> {
                         selectedInventorySlot = slotIndex;
                         this.init(); // Redibujar con el estado de selección actualizado
@@ -110,7 +110,7 @@ public class RoleAnvilScreen extends Screen {
 
         // Scroll de la lista de items
         if (repairableArmorSlots.size() > 4) {
-            this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(
+            this.addRenderableWidget(new TransparentButton(
                 centerX - 40, listY, 15, 18, Component.literal("▲"), btn -> {
                     if (scrollOffset > 0) {
                         scrollOffset--;
@@ -119,7 +119,7 @@ public class RoleAnvilScreen extends Screen {
                 }
             ));
 
-            this.addRenderableWidget(new GoddessIntroDialogueScreen.TransparentButton(
+            this.addRenderableWidget(new TransparentButton(
                 centerX - 40, listY + 63, 15, 18, Component.literal("▼"), btn -> {
                     if (scrollOffset < repairableArmorSlots.size() - 4) {
                         scrollOffset++;
